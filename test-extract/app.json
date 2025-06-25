@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "book-venue",
+    "slug": "book-venue",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/BookVenue_Logo.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/BookVenue_Logo.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser",
+      "expo-image-picker"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "splash": {
+      "image": "./assets/images/Splash-screen.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c9d390b2-108a-4a38-a4e1-eeb066b0a9c5"
+      }
+    },
+    "android": {
+      "package": "com.shivamnegi.bookvenue"
+    }
+  }
+}
