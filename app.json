@@ -37,7 +37,12 @@
       }
     },
     "android": {
-      "package": "com.shivamnegi.bookvenue"
+      "package": "com.shivamnegi.bookvenue",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
+        }
+      }
     }
   }
 }

@@ -37,7 +37,7 @@ export default function VenueDetailScreen() {
       try {
         if (!id) return;
         const response = await venueApi.getVenueBySlug(id);
-        console.log('Venue data:', response);
+        // console.log('Venue data:', response);
         setVenue(response);
         
         // Set initial selections
@@ -60,7 +60,7 @@ export default function VenueDetailScreen() {
   
   useEffect(() => {
     if (selectedDate && selectedCourt) {
-      console.log('Generating time slots for court:', selectedCourt);
+      // console.log('Generating time slots for court:', selectedCourt);
       
       // Ensure we have valid time data
       if (!selectedCourt.start_time || !selectedCourt.end_time) {
@@ -87,7 +87,7 @@ export default function VenueDetailScreen() {
         slots.push(timeString);
       }
 
-      console.log('Generated time slots:', slots);
+      // console.log('Generated time slots:', slots);
       setAvailableTimeSlots(slots);
       setSelectedTimeSlots([]);
     }
