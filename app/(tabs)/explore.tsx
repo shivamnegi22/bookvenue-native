@@ -6,7 +6,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { venueApi } from '@/api/venueApi';
 import { Venue } from '@/types/venue';
 import VenueCard from '@/components/VenueCard';
-import MapView, { Marker } from 'react-native-maps';
 
 export default function ExploreScreen() {
   const { query, filter } = useLocalSearchParams<{ query?: string; filter?: string }>();
@@ -282,28 +281,38 @@ export default function ExploreScreen() {
               </View>
             ) : (
               <View style={styles.mapContainer}>
-                <MapView
-                  style={styles.map}
-                  initialRegion={{
-                    latitude: 30.409520112380957,
-                    longitude: 77.95852843921004,
-                    latitudeDelta: 0.0922,
-                    longitudeDelta: 0.0421,
-                  }}
-                >
-                  {filteredVenues.map((venue) => (
-                    <Marker
-                      key={venue.id}
-                      coordinate={{
-                        latitude: venue.coordinates.latitude,
-                        longitude: venue.coordinates.longitude
+                {(() => {
+                  if (Platform.OS === 'web') {
+                    return null;
+                  }
+                  
+                  const { default: MapView, Marker } = require('react-native-maps');
+                  
+                  return (
+                    <MapView
+                      style={styles.map}
+                      initialRegion={{
+                        latitude: 30.409520112380957,
+                        longitude: 77.95852843921004,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
                       }}
-                      title={venue.name}
-                      description={`${venue.type} • $${venue.pricePerHour}/hr`}
-                      onPress={() => handleMarkerPress(venue)}
-                    />
-                  ))}
-                </MapView>
+                    >
+                      {filteredVenues.map((venue) => (
+                        <Marker
+                          key={venue.id}
+                          coordinate={{
+                            latitude: venue.coordinates.latitude,
+                            longitude: venue.coordinates.longitude
+                          }}
+                          title={venue.name}
+                          description={`${venue.type} • $${venue.pricePerHour}/hr`}
+                          onPress={() => handleMarkerPress(venue)}
+                        />
+                      ))}
+                    </MapView>
+                  );
+                })()}
               </View>
             )
           ) : (

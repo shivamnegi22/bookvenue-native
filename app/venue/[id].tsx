@@ -6,7 +6,6 @@ import { venueApi } from '@/api/venueApi';
 import { bookingApi } from '@/api/bookingApi';
 import { Venue, VenueService, VenueCourt } from '@/types/venue';
 import { ArrowLeft, Star, MapPin, Clock, IndianRupee, Calendar, ArrowRight, ChevronRight } from 'lucide-react-native';
-import MapView, { Marker } from 'react-native-maps';
 
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -302,23 +301,29 @@ export default function VenueDetailScreen() {
                 <Text style={styles.webMapText}>Map view is not available on web</Text>
               </View>
             ) : (
-              <MapView
-                style={styles.map}
-                initialRegion={{
-                  latitude: venue.coordinates.latitude,
-                  longitude: venue.coordinates.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-              >
-                <Marker
-                  coordinate={{
-                    latitude: venue.coordinates.latitude,
-                    longitude: venue.coordinates.longitude
-                  }}
-                  title={venue.name}
-                />
-              </MapView>
+              (() => {
+                const { default: MapView, Marker } = require('react-native-maps');
+                
+                return (
+                  <MapView
+                    style={styles.map}
+                    initialRegion={{
+                      latitude: venue.coordinates.latitude,
+                      longitude: venue.coordinates.longitude,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                  >
+                    <Marker
+                      coordinate={{
+                        latitude: venue.coordinates.latitude,
+                        longitude: venue.coordinates.longitude
+                      }}
+                      title={venue.name}
+                    />
+                  </MapView>
+                );
+              })()
             )}
             
             <TouchableOpacity style={styles.viewOnMapButton}>

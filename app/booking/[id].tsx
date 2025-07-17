@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { bookingApi } from '@/api/bookingApi';
 import { Booking } from '@/types/booking';
 import { ArrowLeft, MapPin, Calendar, Clock, IndianRupee, CheckCircle2, XCircle, Share2 } from 'lucide-react-native';
-import MapView, { Marker } from 'react-native-maps';
 
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -171,23 +170,35 @@ export default function BookingDetailScreen() {
           </View>
           
           <View style={styles.mapContainer}>
-            <MapView
-              style={styles.map}
-              initialRegion={{
-                latitude: booking.venue.coordinates.latitude,
-                longitude: booking.venue.coordinates.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }}
-            >
-              <Marker
-                coordinate={{
-                  latitude: booking.venue.coordinates.latitude,
-                  longitude: booking.venue.coordinates.longitude
-                }}
-                title={booking.venue.name}
-              />
-            </MapView>
+            {Platform.OS === 'web' ? (
+              <View style={styles.webMapFallback}>
+                <Text style={styles.webMapText}>Map view is not available on web</Text>
+              </View>
+            ) : (
+              (() => {
+                const { default: MapView, Marker } = require('react-native-maps');
+                
+                return (
+                  <MapView
+                    style={styles.map}
+                    initialRegion={{
+                      latitude: booking.venue.coordinates.latitude,
+                      longitude: booking.venue.coordinates.longitude,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                  >
+                    <Marker
+                      coordinate={{
+                        latitude: booking.venue.coordinates.latitude,
+                        longitude: booking.venue.coordinates.longitude
+                      }}
+                      title={booking.venue.name}
+                    />
+                  </MapView>
+                );
+              })()
+            )}
           </View>
         </View>
         
@@ -396,6 +407,17 @@ const styles = StyleSheet.create({
   map: {
     width: '100%',
     height: '100%',
+  },
+  webMapFallback: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  webMapText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+    color: '#6B7280',
   },
   bookingInfoContainer: {
     backgroundColor: '#FFFFFF',
