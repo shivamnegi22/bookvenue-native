@@ -76,7 +76,7 @@ export default function RegisterScreen() {
       setResendTimer(60);
     } catch (err: any) {
       console.error('Registration OTP error:', err);
-      setError(err?.response?.data?.message || err.message || 'Failed to send OTP');
+      setError(err.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
@@ -111,11 +111,15 @@ export default function RegisterScreen() {
     try {
       console.log('Verifying registration OTP:', { identifier, otp, name });
       await authApi.verifyRegisterOTP(identifier, otp, name);
-      console.log('Registration successful, navigating to tabs');
+      
+      // Get user profile after successful registration
+      const userData = await authApi.getProfile();
+      console.log('Registration successful, user data:', userData);
+      
       router.replace('/(tabs)');
     } catch (err: any) {
       console.error('Registration verification error:', err);
-      setError(err?.response?.data?.message || err.message || 'Registration failed');
+      setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }

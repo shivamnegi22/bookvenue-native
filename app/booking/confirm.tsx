@@ -128,7 +128,11 @@ export default function BookingConfirmScreen() {
       }
 
       // Update payment status as successful
-      await bookingApi.paymentSuccess(orderId, paymentId);
+      await bookingApi.paymentSuccess({
+        order_id: orderId,
+        payment_id: paymentId,
+        status: 'success'
+      });
 
       setBookingConfirmed(true);
 
@@ -143,7 +147,11 @@ export default function BookingConfirmScreen() {
       
       // Mark payment as failed
       try {
-        await bookingApi.paymentFailure(orderId);
+        await bookingApi.paymentFailure({
+          order_id: orderId,
+          status: 'failed',
+          error: error.message
+        });
       } catch (failureError) {
         console.error('Failed to mark payment as failed:', failureError);
       }
@@ -155,7 +163,11 @@ export default function BookingConfirmScreen() {
   const handlePaymentFailure = async (orderId: string, error: any) => {
     try {
       console.log('Payment failed:', error);
-      await bookingApi.paymentFailure(orderId);
+      await bookingApi.paymentFailure({
+        order_id: orderId,
+        status: 'failed',
+        error: error.message || 'Payment failed'
+      });
       setError('Payment failed. Please try again.');
     } catch (failureError: any) {
       console.error('Payment failure update error:', failureError);

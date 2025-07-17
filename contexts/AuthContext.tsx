@@ -42,13 +42,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkLoggedIn = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        // console.log('Checking logged-in status, token:', token);
+        console.log('Checking logged-in status, token exists:', !!token);
+        
         if (token) {
           const userData = await authApi.getProfile();
+          console.log('User profile loaded:', userData);
           setUser(userData);
         }
       } catch (error) {
         console.error('Error checking logged-in status:', error);
+        // Clear invalid token
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
       } finally {
         setLoading(false);
       }
@@ -59,11 +64,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (identifier: string, otp: string): Promise<void> => {
     try {
-      await authApi.verifyOTP(identifier, otp);
+      console.log('Login context called with:', { identifier, otp });
+      // The actual login is handled in the login screen
+      // This is just for context consistency
       const userData = await authApi.getProfile();
       setUser(userData);
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('Login context failed:', error);
       throw error;
     }
   };
@@ -75,10 +82,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isVenueOwner: boolean
   ): Promise<void> => {
     try {
-      const userData = await authApi.register({ name, email, password, isVenueOwner });
+      // This is handled in the register screen
+      const userData = await authApi.getProfile();
       setUser(userData);
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error('Registration context failed:', error);
       throw error;
     }
   };
@@ -87,8 +95,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authApi.logout();
       setUser(null);
+      console.log('User logged out successfully');
     } catch (error) {
       console.error('Logout failed:', error);
+      // Clear user anyway
+      setUser(null);
       throw error;
     }
   };
@@ -97,8 +108,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) throw new Error('User not logged in');
 
     try {
+      console.log('Updating user profile:', data);
       const updatedUser = await authApi.updateProfile({ ...user, ...data });
       setUser(updatedUser);
+      console.log('Profile updated successfully');
     } catch (error) {
       console.error('Profile update failed:', error);
       throw error;
@@ -109,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const userData = await authApi.getProfile();
       setUser(userData);
+      console.log('User profile refreshed');
     } catch (error) {
       console.error('Failed to refresh user:', error);
     }

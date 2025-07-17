@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIn
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { venueApi } from '@/api/venueApi';
+import { bookingApi } from '@/api/bookingApi';
 import { Venue, VenueService, VenueCourt } from '@/types/venue';
 import { ArrowLeft, Star, MapPin, Clock, IndianRupee, Calendar, ArrowRight, ChevronRight } from 'lucide-react-native';
 import MapView, { Marker } from 'react-native-maps';
@@ -19,6 +20,7 @@ export default function VenueDetailScreen() {
   const [selectedCourt, setSelectedCourt] = useState<VenueCourt | null>(null);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   
   const today = new Date();
   const nextDays = Array.from({ length: 15 }, (_, i) => {
@@ -37,7 +39,6 @@ export default function VenueDetailScreen() {
       try {
         if (!id) return;
         const response = await venueApi.getVenueBySlug(id);
-        // console.log('Venue data:', response);
         setVenue(response);
         
         // Set initial selections
@@ -58,17 +59,47 @@ export default function VenueDetailScreen() {
     fetchVenue();
   }, [id]);
   
+  // Fetch available time slots when date or court changes
   useEffect(() => {
-    if (selectedDate && selectedCourt) {
-      // console.log('Generating time slots for court:', selectedCourt);
-      
-      // Ensure we have valid time data
-      if (!selectedCourt.start_time || !selectedCourt.end_time) {
-        console.warn('Missing time data for court:', selectedCourt);
-        setAvailableTimeSlots([]);
-        return;
+    const fetchAvailability = async () => {
+      if (selectedDate && selectedCourt && venue) {
+        setAvailabilityLoading(true);
+        try {
+          console.log('Fetching availability for:', { venue: venue.id, court: selectedCourt.id, date: selectedDate });
+          const availability = await bookingApi.getCourtAvailability(
+            venue.id,
+            selectedCourt.id.toString(),
+            selectedDate
+          );
+          
+          console.log('Availability response:', availability);
+          
+          // Process availability data to get available slots
+          if (availability && availability.available_slots) {
+            setAvailableTimeSlots(availability.available_slots);
+          } else if (availability && availability.slots) {
+            // Handle different response structure
+            const availableSlots = availability.slots
+              .filter((slot: any) => slot.available || !slot.booked)
+              .map((slot: any) => slot.time || slot.start_time);
+            setAvailableTimeSlots(availableSlots);
+          } else {
+            // Fallback to generating slots if API doesn't return them
+            generateTimeSlots();
+          }
+        } catch (error) {
+          console.error('Error fetching availability:', error);
+          // Fallback to generating slots
+          generateTimeSlots();
+        } finally {
+          setAvailabilityLoading(false);
+        }
       }
+    };
 
+    const generateTimeSlots = () => {
+      if (!selectedCourt) return;
+      
       const openingHour = parseInt(selectedCourt.start_time.split(':')[0]);
       const closingHour = parseInt(selectedCourt.end_time.split(':')[0]);
       const duration = parseInt(selectedCourt.duration || '60');
@@ -87,11 +118,13 @@ export default function VenueDetailScreen() {
         slots.push(timeString);
       }
 
-      // console.log('Generated time slots:', slots);
+      console.log('Generated time slots:', slots);
       setAvailableTimeSlots(slots);
-      setSelectedTimeSlots([]);
-    }
-  }, [selectedDate, selectedCourt]);
+    };
+
+    fetchAvailability();
+    setSelectedTimeSlots([]);
+  }, [selectedDate, selectedCourt, venue]);
 
   const handleServiceChange = (service: VenueService) => {
     setSelectedService(service);
@@ -411,7 +444,12 @@ export default function VenueDetailScreen() {
             Select Time Slots {selectedTimeSlots.length > 0 && `(${selectedTimeSlots.length} selected)`}
           </Text>
           
-          {availableTimeSlots.length > 0 ? (
+          {availabilityLoading ? (
+            <View style={styles.loadingSlots}>
+              <ActivityIndicator size="small" color="#2563EB" />
+              <Text style={styles.loadingSlotsText}>Loading available slots...</Text>
+            </View>
+          ) : availableTimeSlots.length > 0 ? (
             <View style={styles.timeSlotContainer}>
               {availableTimeSlots.map((slot, index) => (
                 <TouchableOpacity 
@@ -435,7 +473,7 @@ export default function VenueDetailScreen() {
             </View>
           ) : (
             <View style={styles.noSlotsContainer}>
-              <Text style={styles.noSlotsText}>No time slots available for selected court</Text>
+              <Text style={styles.noSlotsText}>No time slots available for selected date</Text>
             </View>
           )}
         </View>
@@ -781,6 +819,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
     marginBottom: 12,
+  },
+  loadingSlots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingSlotsText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+    color: '#6B7280',
+    marginLeft: 8,
   },
   timeSlotContainer: {
     flexDirection: 'row',

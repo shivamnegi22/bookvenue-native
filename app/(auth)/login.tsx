@@ -61,73 +61,21 @@ export default function LoginScreen() {
     setError(null);
 
     try {
-      await authApi.login(identifier);
+      if (showInput === 'email') {
+        await authApi.loginEmail(identifier);
+      } else {
+        await authApi.login(identifier);
+      }
       setShowOTP(true);
       setResendTimer(60);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Failed to send OTP');
+      console.error('Send OTP error:', err);
+      setError(err.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
   };
 
-  // const handleVerifyOTP = async () => {
-  //   if (!/^[0-9]{6}$/.test(otp)) {
-  //     setError('Please enter a valid 6-digit OTP');
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   setError(null);
-
-  //   try {
-  //     await login(identifier, otp);
-  //     router.replace('/(tabs)');
-  //   } catch (err: any) {
-  //     setError(err?.response?.data?.message || err.message || 'OTP verification failed');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-  // const handleVerifyOTP = async () => {
-  //   const isMobileValid = mobile !== '' && /^[0-9]{10}$/.test(mobile);
-  //   const isEmailValid = email !== '' && /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email);
-  //   const isOtpValid = otp !== '' && /^[0-9]{6}$/.test(otp);
-
-  //   if (isMobileValid || isEmailValid) {
-  //     if (isOtpValid) {
-  //       setLoading(true);
-  //       setError(null);
-
-  //       try {
-  //         if (isMobileValid) {
-  //           await verifyOTP.mutateAsync({
-  //             mobile,
-  //             otp,
-  //             url: '/verify-otp',
-  //           });
-  //         } else {
-  //           await verifyEmailOTP.mutateAsync({
-  //             email,
-  //             otp,
-  //             url: '/verify-otp-via-email',
-  //           });
-  //         }
-
-  //         await login(email || mobile, otp); // Assuming login handles both internally
-  //         router.replace('/(tabs)');
-  //       } catch (err: any) {
-  //         setError(err?.response?.data?.message || err.message || 'OTP verification failed');
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     } else {
-  //       setError('Invalid OTP.');
-  //     }
-  //   } else {
-  //     setError('Invalid Mobile No. or Email.');
-  //   }
-  // };
   const handleVerifyOTP = async () => {
     const isEmail = showInput === 'email';
     const isMobile = showInput === 'phone';
@@ -136,31 +84,36 @@ export default function LoginScreen() {
     const isEmailValid = isEmail && /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(identifier);
     const isOtpValid = otp !== '' && /^[0-9]{6}$/.test(otp);
 
-    if (isMobileValid || isEmailValid) {
-      if (isOtpValid) {
-        setLoading(true);
-        setError(null);
-
-        try {
-          if (isMobileValid) {
-            await authApi.verifyOTP(identifier, otp);
-          } else {
-            console.log('Verifying email OTP:', { identifier, otp });
-            await authApi.verifyOTP(identifier, otp);
-          }
-
-          // await login(identifier, otp); // Handles both mobile/email
-          router.replace('/(tabs)');
-        } catch (err: any) {
-          setError(err?.response?.data?.message || err.message || 'OTP verification failed');
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setError('Invalid OTP.');
-      }
-    } else {
+    if (!isMobileValid && !isEmailValid) {
       setError('Invalid Mobile No. or Email.');
+      return;
+    }
+
+    if (!isOtpValid) {
+      setError('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (isEmailValid) {
+        await authApi.verifyOTPEmail(identifier, otp);
+      } else {
+        await authApi.verifyOTP(identifier, otp);
+      }
+
+      // Get user profile after successful login
+      const userData = await authApi.getProfile();
+      console.log('Login successful, user data:', userData);
+      
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      console.error('OTP verification error:', err);
+      setError(err.message || 'OTP verification failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -173,10 +126,9 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.logoContainer}>
             <Image
-              source={require('../../assets/images/BookVenue_Logo.png')} // adjust the path as needed
+              source={require('../../assets/images/BookVenue_Logo.png')}
               style={styles.logo}
             />
-
             <Text style={styles.appName}>BookVenue</Text>
             <Text style={styles.tagline}>Find and book venues with ease</Text>
           </View>
