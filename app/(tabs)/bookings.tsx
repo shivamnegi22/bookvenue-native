@@ -1,26 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { bookingApi } from '@/api/bookingApi';
+import { useAuth } from '@/contexts/AuthContext';
 import { Booking } from '@/types/booking';
 import { CalendarClock, MapPin, Clock, CalendarCheck, CalendarX, RotateCcw } from 'lucide-react-native';
-import { venueApi } from '@/api/venueApi';
 
 export default function BookingsScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Redirect to login if user is not authenticated
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.notLoggedInContainer}>
+          <CalendarX size={48} color="#6B7280" />
+          <Text style={styles.notLoggedInTitle}>You're not logged in</Text>
+          <Text style={styles.notLoggedInText}>Please log in to view your bookings</Text>
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={styles.loginButtonText}>Go to Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await bookingApi.getBookings();
+      console.log('Fetched bookings:', response);
+      setBookings(response);
+    } catch (error: any) {
+      console.error('Error fetching bookings:', error);
+      setError(error.message || 'Failed to fetch bookings');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   useEffect(() => {
+    fetchBookings();
+  }, []);
+  
+  // Refresh bookings when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchBookings();
+    }, [])
+  );
     const fetchBookings = async () => {
       try {
         setLoading(true);
         setError(null);
         const response = await bookingApi.getBookings();
-        //  console.log('new Fetched bookings:', response);
+        console.log('Fetched bookings:', response);
         setBookings(response);
       } catch (error: any) {
         console.error('Error fetching bookings:', error);
@@ -32,6 +76,23 @@ export default function BookingsScreen() {
 
     fetchBookings();
   }, []);
+  
+  // Refresh bookings when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = router.addListener('focus', () => {
+      const fetchBookings = async () => {
+        try {
+          const response = await bookingApi.getBookings();
+          setBookings(response);
+        } catch (error: any) {
+          console.error('Error refreshing bookings:', error);
+        }
+      };
+      fetchBookings();
+    });
+
+    return unsubscribe;
+  }, [router]);
   const formattedTime = (time: string) => {
     if (!time) return 'Invalid Time';
     try {
@@ -458,6 +519,37 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   exploreButtonText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  notLoggedInContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  notLoggedInTitle: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 24,
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  notLoggedInText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  loginButton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  loginButtonText: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 16,
     color: '#FFFFFF',

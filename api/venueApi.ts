@@ -27,12 +27,35 @@ export const venueApi = {
       const data = response.data.facility;
 
       const venues: Venue[] = data.map((facility: any) => {
-        const service = facility.services?.[0];
-        const court = service?.courts?.[0];
+        // Parse images from the new format
+        let facilityImages = [];
+        try {
+          if (facility.images) {
+            const parsedImages = JSON.parse(facility.images);
+            facilityImages = parsedImages.map((img: string) => 
+              `https://admin.bookvenue.app/${img.replace(/\\/g, '/')}`
+            );
+          }
+        } catch (e) {
+          console.warn('Failed to parse facility images:', e);
+        }
+        
+        // Add featured image if available
+        if (facility.featured_image) {
+          facilityImages.unshift(`https://admin.bookvenue.app/${facility.featured_image}`);
+        }
+        
+        // Fallback image if no images available
+        if (facilityImages.length === 0) {
+          facilityImages = ['https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'];
+        }
 
-        const images = service?.images
-          ? JSON.parse(service.images).map((img: string) => `https://admin.bookvenue.app/${img.replace(/\\/g, '/')}`)
-          : [];
+        // Get the first service and court for pricing
+        const firstService = facility.services?.[0];
+        const firstCourt = firstService?.courts?.[0];
+        
+        // Calculate average rating
+        const avgRating = facility.avg_rating || 4.5;
 
         return {
           id: facility.id.toString(),
@@ -40,20 +63,29 @@ export const venueApi = {
           name: facility.official_name,
           description: facility.description || '',
           location: facility.address,
-          type: service?.name || 'Other',
-          pricePerHour: parseFloat(court?.slot_price || '100'),
-          openingTime: court?.start_time || '09:00',
-          closingTime: court?.end_time || '22:00',
-          rating: 4.5,
+          type: firstService?.name || 'Sports',
+          pricePerHour: parseFloat(firstCourt?.day_slot_price || firstCourt?.night_slot_price || '100'),
+          openingTime: firstCourt?.day_start_time || '06:00',
+          closingTime: firstCourt?.night_end_time || '23:00',
+          rating: avgRating,
           amenities: ['Parking', 'Changing Rooms', 'Lighting'],
-          images: images.length > 0 ? images : [
-            'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
-          ],
+          images: facilityImages,
           coordinates: {
             latitude: parseFloat(facility.lat || '0'),
             longitude: parseFloat(facility.lng || '0')
           },
-          services: facility.services || []
+          services: facility.services?.map((service: any) => ({
+            ...service,
+            courts: service.courts?.map((court: any) => ({
+              ...court,
+              start_time: court.day_start_time,
+              end_time: court.night_end_time,
+              slot_price: court.day_slot_price,
+              night_start_time: court.night_start_time,
+              night_end_time: court.night_end_time,
+              night_slot_price: court.night_slot_price
+            })) || []
+          })) || []
         };
       });
       
@@ -69,33 +101,62 @@ export const venueApi = {
       const response = await api.get(`/get-facility-by-slug/${slug}`);
       const facility = response.data.facility;
 
-      // Process services with proper image URLs and fix courts array
+      // Parse facility images
+      let facilityImages = [];
+      try {
+        if (facility.images) {
+          const parsedImages = JSON.parse(facility.images);
+          facilityImages = parsedImages.map((img: string) => 
+            `https://admin.bookvenue.app/${img.replace(/\\/g, '/')}`
+          );
+        }
+      } catch (e) {
+        console.warn('Failed to parse facility images:', e);
+      }
+      
+      // Add featured image if available
+      if (facility.featured_image) {
+        facilityImages.unshift(`https://admin.bookvenue.app/${facility.featured_image}`);
+      }
+      
+      // Fallback image if no images available
+      if (facilityImages.length === 0) {
+        facilityImages = ['https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'];
+      }
+
+      // Process services with proper court data
       const processedServices = facility.services?.map((service: any) => ({
         ...service,
-        courts: service.courts || service.court || [] // Handle both 'courts' and 'court' properties
+        courts: service.courts?.map((court: any) => ({
+          ...court,
+          start_time: court.day_start_time,
+          end_time: court.night_end_time,
+          slot_price: court.day_slot_price,
+          night_start_time: court.night_start_time,
+          night_end_time: court.night_end_time,
+          night_slot_price: court.night_slot_price
+        })) || []
       })) || [];
-
-      // Get images from the first service or use default
+      
       const firstService = processedServices[0];
-      const images = firstService?.images
-        ? JSON.parse(firstService.images).map((img: string) => `https://admin.bookvenue.app/${img.replace(/\\/g, '/')}`)
-        : [];
+      const firstCourt = firstService?.courts?.[0];
+      
+      // Calculate average rating
+      const avgRating = facility.avg_rating || 4.5;
 
       const venueData = {
         id: facility.id.toString(),
         slug: facility.slug,
-        name: facility.official_name,
+        name: facility.official_name || 'Unknown Venue',
         description: facility.description || 'No description available',
-        location: facility.address,
+        location: facility.address || 'Location not available',
         type: firstService?.name || 'Other',
-        pricePerHour: parseFloat(firstService?.courts?.[0]?.slot_price || '0'),
-        openingTime: firstService?.courts?.[0]?.start_time || '09:00',
-        closingTime: firstService?.courts?.[0]?.end_time || '22:00',
-        rating: 4.5,
+        pricePerHour: parseFloat(firstCourt?.day_slot_price || firstCourt?.night_slot_price || '0'),
+        openingTime: firstCourt?.day_start_time || '06:00',
+        closingTime: firstCourt?.night_end_time || '23:00',
+        rating: avgRating,
         amenities: ['Parking', 'Changing Rooms', 'Lighting'],
-        images: images.length > 0 ? images : [
-          'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
-        ],
+        images: facilityImages,
         coordinates: {
           latitude: parseFloat(facility.lat || '0'),
           longitude: parseFloat(facility.lng || '0')
@@ -103,7 +164,7 @@ export const venueApi = {
         services: processedServices
       };
 
-      // console.log('Venue fetched successfully:', venueData);
+      console.log('Venue fetched successfully:', venueData);
       return venueData;
     } catch (error) {
       console.error('Error fetching venue by slug:', error);

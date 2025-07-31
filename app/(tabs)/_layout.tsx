@@ -1,11 +1,22 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
+import { Redirect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Chrome as Home, CalendarClock, CreditCard, MapPin, User } from 'lucide-react-native';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 
 export default function TabLayout() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  // Show loading while checking auth state
+  if (loading) {
+    return null;
+  }
+  
+  // Redirect to login if user is not authenticated
+  if (!user) {
+    return <Redirect href="/login" />;
+  }
 
   return (
     <Tabs

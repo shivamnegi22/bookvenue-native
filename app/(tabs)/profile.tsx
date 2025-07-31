@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
@@ -9,6 +9,24 @@ import ProfileAvatar from '@/components/ProfileAvatar';
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState(true);
+  
+  // Redirect to login if user is not authenticated
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.notLoggedInContainer}>
+          <Text style={styles.notLoggedInTitle}>You're not logged in</Text>
+          <Text style={styles.notLoggedInText}>Please log in to view your profile</Text>
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={styles.loginButtonText}>Go to Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
   
   const handleLogout = async () => {
     try {
@@ -72,12 +90,19 @@ export default function ProfileScreen() {
         
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
-            <ProfileAvatar 
-              name={user?.name || 'User'} 
-              size={100}
-              backgroundColor="#2563EB"
-              textColor="#FFFFFF"
-            />
+            {user.profileImage ? (
+              <Image 
+                source={{ uri: user.profileImage }} 
+                style={styles.profileImage}
+              />
+            ) : (
+              <ProfileAvatar 
+                name={user?.name || 'User'} 
+                size={100}
+                backgroundColor="#2563EB"
+                textColor="#FFFFFF"
+              />
+            )}
             <TouchableOpacity 
               style={styles.editImageButton}
               onPress={() => router.push('/edit-profile')}
@@ -168,6 +193,11 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginBottom: 16,
   },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
   editImageButton: {
     position: 'absolute',
     bottom: 0,
@@ -180,6 +210,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+  notLoggedInContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  notLoggedInTitle: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 24,
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  notLoggedInText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  loginButton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  loginButtonText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#FFFFFF',
   },
   userName: {
     fontFamily: 'Inter-Bold',

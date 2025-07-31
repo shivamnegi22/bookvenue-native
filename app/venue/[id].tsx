@@ -99,18 +99,31 @@ export default function VenueDetailScreen() {
     const generateTimeSlots = () => {
       if (!selectedCourt) return;
       
-      const openingHour = parseInt(selectedCourt.start_time.split(':')[0]);
-      const closingHour = parseInt(selectedCourt.end_time.split(':')[0]);
+      // Use day and night time slots
+      const dayStartHour = parseInt(selectedCourt.day_start_time?.split(':')[0] || selectedCourt.start_time?.split(':')[0] || '6');
+      const dayEndHour = parseInt(selectedCourt.day_end_time?.split(':')[0] || '17');
+      const nightStartHour = parseInt(selectedCourt.night_start_time?.split(':')[0] || '17');
+      const nightEndHour = parseInt(selectedCourt.night_end_time?.split(':')[0] || selectedCourt.end_time?.split(':')[0] || '23');
       const duration = parseInt(selectedCourt.duration || '60');
 
-      if (isNaN(openingHour) || isNaN(closingHour) || isNaN(duration)) {
-        console.warn("Invalid time data", { openingHour, closingHour, duration });
+      if (isNaN(dayStartHour) || isNaN(nightEndHour) || isNaN(duration)) {
+        console.warn("Invalid time data", { dayStartHour, nightEndHour, duration });
         setAvailableTimeSlots([]);
         return;
       }
 
       const slots = [];
-      for (let hour = openingHour; hour < closingHour; hour += (duration / 60)) {
+      
+      // Generate day slots
+      for (let hour = dayStartHour; hour < dayEndHour; hour += (duration / 60)) {
+        const startHour = Math.floor(hour);
+        const startMinute = (hour % 1) * 60;
+        const timeString = `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
+      
+      // Generate night slots
+      for (let hour = nightStartHour; hour < nightEndHour; hour += (duration / 60)) {
         const startHour = Math.floor(hour);
         const startMinute = (hour % 1) * 60;
         const timeString = `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;

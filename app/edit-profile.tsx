@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
-import { ArrowLeft, User, Mail, Phone, MapPin, Save } from 'lucide-react-native';
+import { ArrowLeft, User, Mail, Phone, MapPin, Save, Camera } from 'lucide-react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import * as ImagePicker from 'expo-image-picker';
+import ProfileAvatar from '@/components/ProfileAvatar';
 
 const ProfileSchema = Yup.object().shape({
   name: Yup.string().required('Name is required'),
@@ -19,7 +21,49 @@ export default function EditProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<any>(null);
+  
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload a profile picture.');
+        return;
+      }
 
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        setSelectedImage(asset.uri);
+        
+        // Create file object for upload
+        if (Platform.OS === 'web') {
+          // For web, we need to fetch the blob
+          const response = await fetch(asset.uri);
+          const blob = await response.blob();
+          const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+          setImageFile(file);
+        } else {
+          // For mobile, create a file-like object
+          setImageFile({
+            uri: asset.uri,
+            type: 'image/jpeg',
+            name: 'profile.jpg',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
   const handleSubmit = async (values: any) => {
     setLoading(true);
     setError(null);
@@ -30,6 +74,7 @@ export default function EditProfileScreen() {
         email: values.email,
         contact: values.contact,
         address: values.address,
+        ...(imageFile && { image: imageFile }),
       };
 
       await updateUserProfile(payLoad);
@@ -48,13 +93,8 @@ export default function EditProfileScreen() {
   };
 
   if (!user) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>User not found</Text>
-        </View>
-      </SafeAreaView>
-    );
+    router.replace('/login');
+    return null;
   }
 
   return (
@@ -95,6 +135,31 @@ export default function EditProfileScreen() {
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={styles.formContainer}>
+              <View style={styles.imageSection}>
+                <Text style={styles.inputLabel}>Profile Picture</Text>
+                <View style={styles.imageContainer}>
+                  {selectedImage || user.profileImage ? (
+                    <Image 
+                      source={{ uri: selectedImage || user.profileImage }} 
+                      style={styles.profileImage}
+                    />
+                  ) : (
+                    <ProfileAvatar 
+                      name={user.name || 'User'} 
+                      size={100}
+                      backgroundColor="#2563EB"
+                      textColor="#FFFFFF"
+                    />
+                  )}
+                  <TouchableOpacity 
+                    style={styles.cameraButton}
+                    onPress={pickImage}
+                  >
+                    <Camera size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Full Name</Text>
                 <View style={styles.inputContainer}>
@@ -248,6 +313,32 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     gap: 20,
+  },
+  imageSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  imageContainer: {
+    position: 'relative',
+    marginTop: 8,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#2563EB',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   inputGroup: {
     marginBottom: 4,

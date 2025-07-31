@@ -168,16 +168,43 @@ export const authApi = {
   updateProfile: async (userData: any) => {
     try {
       console.log('Updating profile:', userData);
-      const response = await api.post('/profileUpdate', userData, {
+      
+      // Create FormData for file upload support
+      const formData = new FormData();
+      formData.append('name', userData.name || '');
+      formData.append('email', userData.email || '');
+      formData.append('contact', userData.contact || userData.phone || '');
+      formData.append('address', userData.address || '');
+      
+      // Add image if provided
+      if (userData.image) {
+        formData.append('image', userData.image);
+      }
+      
+      const response = await api.post('/profileUpdate', formData, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
       });
       
       console.log('Profile update response:', response.data);
       
-      if (response.statusText === 'OK' || response.status === 200) {
-        return response.data.user || userData;
+      if (response.status === 200) {
+        // Fetch updated profile data
+        const updatedProfile = await api.get('/get-user-details');
+        const updatedUserData = updatedProfile.data.user;
+        
+        return {
+          id: updatedUserData.id.toString(),
+          name: updatedUserData.name,
+          email: updatedUserData.email,
+          phone: updatedUserData.contact || updatedUserData.phone || updatedUserData.mobile,
+          address: updatedUserData.address,
+          profileImage: updatedUserData.image ? `https://admin.bookvenue.app/${updatedUserData.image}` : undefined,
+          isVenueOwner: false,
+          createdAt: updatedUserData.created_at,
+          updatedAt: updatedUserData.updated_at
+        };
       }
       
       throw new Error('Failed to update profile');

@@ -36,4 +36,10 @@ export type VenueCourt = {
   slot_price: string;
   duration: string;
   breaks: string;
+  day_start_time?: string;
+  day_end_time?: string;
+  day_slot_price?: string;
+  night_start_time?: string;
+  night_end_time?: string;
+  night_slot_price?: string;
 };
