@@ -69,7 +69,7 @@ export default function EditProfileScreen() {
     setError(null);
     
     try {
-      const payLoad = {
+      const payload = {
         name: values.name,
         email: values.email,
         contact: values.contact,
@@ -77,7 +77,8 @@ export default function EditProfileScreen() {
         ...(imageFile && { image: imageFile }),
       };
 
-      await updateUserProfile(payLoad);
+      console.log('Updating profile with payload:', payload);
+      await updateUserProfile(payload);
       setSuccess(true);
       
       // Show success message and navigate back
@@ -86,6 +87,7 @@ export default function EditProfileScreen() {
       }, 1500);
       
     } catch (error: any) {
+      console.error('Profile update error:', error);
       setError(error.message || 'Failed to update profile');
     } finally {
       setLoading(false);

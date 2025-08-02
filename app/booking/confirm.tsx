@@ -138,7 +138,7 @@ export default function BookingConfirmScreen() {
 
       // Navigate to bookings screen after 3 seconds
       setTimeout(() => {
-        router.push('/(tabs)/bookings');
+        router.replace('/(tabs)/bookings');
       }, 3000);
 
     } catch (error: any) {
