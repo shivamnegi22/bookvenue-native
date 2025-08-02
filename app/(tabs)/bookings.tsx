@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { bookingApi } from '@/api/bookingApi';
 import { Booking } from '@/types/booking';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Calendar, Clock, MapPin, Star, IndianRupee, CircleCheck as CheckCircle2, Circle as XCircle, AlertCircle } from 'lucide-react-native';
+import { Calendar, Clock, MapPin, Star, IndianRupee, CircleCheck as CheckCircle2, Circle as XCircle, CircleAlert as AlertCircle } from 'lucide-react-native';
 import { useCallback } from 'react';
 
 export default function BookingsScreen() {
