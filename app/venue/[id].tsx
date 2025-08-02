@@ -492,14 +492,30 @@ export default function VenueDetailScreen() {
                   ]}
                   onPress={() => handleTimeSlotToggle(slot)}
                 >
-                  <Text 
-                    style={[
-                      styles.timeSlotText,
-                      selectedTimeSlots.includes(slot) && styles.selectedTimeSlotText
-                    ]}
-                  >
-                    {slot}
-                  </Text>
+                  <View style={styles.timeSlotContent}>
+                    <Text 
+                      style={[
+                        styles.timeSlotText,
+                        selectedTimeSlots.includes(slot) && styles.selectedTimeSlotText
+                      ]}
+                    >
+                      {slot}
+                    </Text>
+                    <Text 
+                      style={[
+                        styles.timeSlotPrice,
+                        selectedTimeSlots.includes(slot) && styles.selectedTimeSlotPriceSelected
+                      ]}
+                    >
+                      ₹{(() => {
+                        const hour = parseInt(slot.split(':')[0]);
+                        const dayEndHour = parseInt(selectedCourt?.day_end_time?.split(':')[0] || '17');
+                        return hour >= dayEndHour 
+                          ? selectedCourt?.night_slot_price || selectedCourt?.slot_price
+                          : selectedCourt?.day_slot_price || selectedCourt?.slot_price;
+                      })()}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -519,7 +535,7 @@ export default function VenueDetailScreen() {
               {selectedTimeSlots.length > 1 ? 'Total' : 'Price'}
             </Text>
             <Text style={styles.priceValue}>
-              ₹{totalAmount || (selectedCourt ? selectedCourt.slot_price : venue.pricePerHour)}
+              ₹{totalAmount || (selectedCourt ? selectedCourt.day_slot_price : venue.pricePerHour)}
             </Text>
             {selectedTimeSlots.length <= 1 && (
               <Text style={styles.priceUnit}>/hour</Text>
@@ -870,7 +886,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   timeSlot: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     backgroundColor: '#FFFFFF',
@@ -878,17 +894,30 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     marginRight: 12,
     marginBottom: 12,
+    minWidth: 80,
   },
   selectedTimeSlot: {
     backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
+  timeSlotContent: {
+    alignItems: 'center',
+  },
   timeSlotText: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
     color: '#4B5563',
+    marginBottom: 2,
   },
   selectedTimeSlotText: {
+    color: '#FFFFFF',
+  },
+  timeSlotPrice: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  selectedTimeSlotPriceSelected: {
     color: '#FFFFFF',
   },
   noSlotsContainer: {

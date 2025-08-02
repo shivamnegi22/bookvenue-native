@@ -45,9 +45,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Checking logged-in status, token exists:', !!token);
         
         if (token) {
-          const userData = await authApi.getProfile();
-          console.log('User profile loaded:', userData);
-          setUser(userData);
+          try {
+            const userData = await authApi.getProfile();
+            console.log('User profile loaded:', userData);
+            setUser(userData);
+          } catch (profileError) {
+            console.error('Failed to load profile, clearing token:', profileError);
+            // Clear invalid token
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('user');
+          }
         }
       } catch (error) {
         console.error('Error checking logged-in status:', error);
