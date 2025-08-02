@@ -163,7 +163,21 @@ export default function VenueDetailScreen() {
 
   const calculateTotalAmount = () => {
     if (!selectedCourt || selectedTimeSlots.length === 0) return 0;
-    return parseFloat(selectedCourt.slot_price) * selectedTimeSlots.length;
+    
+    let total = 0;
+    selectedTimeSlots.forEach(slot => {
+      const hour = parseInt(slot.split(':')[0]);
+      const dayEndHour = parseInt(selectedCourt.day_end_time?.split(':')[0] || '17');
+      
+      // Use night price if slot is after day end time, otherwise use day price
+      if (hour >= dayEndHour) {
+        total += parseFloat(selectedCourt.night_slot_price || selectedCourt.slot_price);
+      } else {
+        total += parseFloat(selectedCourt.day_slot_price || selectedCourt.slot_price);
+      }
+    });
+    
+    return total;
   };
 
   const handleBooking = () => {

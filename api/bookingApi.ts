@@ -161,7 +161,7 @@ export const bookingApi = {
   getCourtAvailability: async (facilityId: string, courtId: string, date: string) => {
     try {
       console.log('Fetching court availability:', { facilityId, courtId, date });
-      const response = await api.post(`/court-availability/${facilityId}/${courtId}`, { date });
+      const response = await api.get(`/court-availability/${facilityId}/${courtId}/${date}`);
       console.log('Court availability response:', response.data);
       return response.data;
     } catch (error: any) {

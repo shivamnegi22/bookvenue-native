@@ -124,10 +124,10 @@ export const venueApi = {
         facilityImages = ['https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'];
       }
 
-      // Process services with proper court data
+      // Process services with proper court data - handle both 'courts' and 'court' arrays
       const processedServices = facility.services?.map((service: any) => ({
         ...service,
-        courts: service.courts?.map((court: any) => ({
+        courts: (service.courts || service.court || []).map((court: any) => ({
           ...court,
           start_time: court.day_start_time,
           end_time: court.night_end_time,
@@ -135,11 +135,26 @@ export const venueApi = {
           night_start_time: court.night_start_time,
           night_end_time: court.night_end_time,
           night_slot_price: court.night_slot_price
-        })) || []
+        }))
       })) || [];
       
       const firstService = processedServices[0];
       const firstCourt = firstService?.courts?.[0];
+      
+      // Process amenities - handle both array and string formats
+      let processedAmenities = [];
+      if (Array.isArray(facility.amenities)) {
+        processedAmenities = facility.amenities.map((amenity: any) => amenity.name);
+      } else if (typeof facility.amenities === 'string') {
+        try {
+          const amenityIds = JSON.parse(facility.amenities);
+          processedAmenities = ['Parking', 'Changing Rooms', 'Lighting']; // Fallback
+        } catch (e) {
+          processedAmenities = ['Parking', 'Changing Rooms', 'Lighting'];
+        }
+      } else {
+        processedAmenities = ['Parking', 'Changing Rooms', 'Lighting'];
+      }
       
       // Calculate average rating
       const avgRating = facility.avg_rating || 4.5;
@@ -155,7 +170,7 @@ export const venueApi = {
         openingTime: firstCourt?.day_start_time || '06:00',
         closingTime: firstCourt?.night_end_time || '23:00',
         rating: avgRating,
-        amenities: ['Parking', 'Changing Rooms', 'Lighting'],
+        amenities: processedAmenities,
         images: facilityImages,
         coordinates: {
           latitude: parseFloat(facility.lat || '0'),
