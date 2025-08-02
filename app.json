@@ -22,13 +22,7 @@
       "expo-font",
       "expo-web-browser",
       "expo-image-picker",
-      "expo-dev-client",
-      [
-        "react-native-maps",
-        {
-          "enableGoogleMaps": true
-        }
-      ]
+      "expo-dev-client"
     ],
     "experiments": {
       "typedRoutes": true

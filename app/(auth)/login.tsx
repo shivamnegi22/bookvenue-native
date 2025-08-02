@@ -107,7 +107,7 @@ export default function LoginScreen() {
       // Get user profile after successful login
       const userData = await authApi.getProfile();
       console.log('Login successful, user data:', userData);
-      
+      await login(identifier, otp);
       router.replace('/(tabs)');
     } catch (err: any) {
       console.error('OTP verification error:', err);
