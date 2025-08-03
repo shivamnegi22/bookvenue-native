@@ -17,7 +17,7 @@ export type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (identifier: string, otp: string) => Promise<void>;
+  login: (userData: User) => Promise<void>;
   register: (name: string, email: string, password: string, isVenueOwner: boolean) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: Partial<User>) => Promise<void>;
@@ -64,10 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (identifier: string, otp: string): Promise<void> => {
     try {
-      console.log('Login context called with:', { identifier, otp });
-      // The actual login is handled in the login screen
-      // This is just for context consistency
-      const userData = await authApi.getProfile();
+      console.log('Login context called with user data:', userData);
       setUser(userData);
     } catch (error) {
       console.error('Login context failed:', error);

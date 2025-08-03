@@ -182,21 +182,6 @@ export const bookingApi = {
     }
   },
 
-  createMultipleBookings: async (bookingsData: any[]) => {
-    try {
-      console.log('Creating multiple bookings:', bookingsData);
-      const bookingPromises = bookingsData.map(bookingData => 
-        api.post('/booking', bookingData)
-      );
-      const responses = await Promise.all(bookingPromises);
-      console.log('Multiple bookings created successfully');
-      return responses.map(response => response.data);
-    } catch (error: any) {
-      console.error('Multiple bookings creation error:', error.response?.data || error);
-      throw new Error(error.response?.data?.message || 'Failed to create bookings');
-    }
-  },
-
   cancelBooking: async (bookingId: string) => {
     try {
       console.log('Cancelling booking:', bookingId);

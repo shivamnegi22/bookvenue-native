@@ -116,6 +116,10 @@ export default function RegisterScreen() {
       const userData = await authApi.getProfile();
       console.log('Registration successful, user data:', userData);
       
+      // Update auth context with user data
+      await login(userData);
+      
+      // Navigate to home page
       router.replace('/(tabs)');
     } catch (err: any) {
       console.error('Registration verification error:', err);

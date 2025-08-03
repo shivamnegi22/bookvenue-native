@@ -160,6 +160,9 @@ export default function EditProfileScreen() {
                     <Camera size={20} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
+                <Text style={styles.imageHelpText}>
+                  Tap the camera icon to upload a profile picture
+                </Text>
               </View>
 
               <View style={styles.inputGroup}>
@@ -323,6 +326,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
     marginTop: 8,
+    marginBottom: 8,
   },
   profileImage: {
     width: 100,
@@ -341,6 +345,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+  imageHelpText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
   },
   inputGroup: {
     marginBottom: 4,

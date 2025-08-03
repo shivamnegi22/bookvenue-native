@@ -82,50 +82,29 @@ export default function BookingConfirmScreen() {
 
       console.log('Payment successful, creating bookings...', { paymentId, orderId });
 
-      // Create bookings for each slot
-      if (slots.length > 1) {
-        // Multiple bookings
-        const bookingsData = slots.map((slot: any) => ({
-          type: "sports",
-          facility_id: facility_id,
-          date: date,
-          duration: "60",
-          end_time: slot.endTime,
-          total_price: price,
-          court_id: courtId,
+      // Create booking with new payload format
+      const bookingData = {
+        facility_id: parseInt(facility_id),
+        court_id: parseInt(courtId),
+        date: date,
+        duration: 60,
+        slot_count: numberOfSlots,
+        total_price: totalAmount,
+        name: user?.name || '',
+        email: user?.email || '',
+        contact: user?.phone || '',
+        address: user?.address || '',
+        selected_slots: slots.map((slot: any) => ({
           start_time: slot.startTime,
-          name: user?.name,
-          email: user?.email,
-          contact: user?.phone,
-          address: user?.address || "Not provided",
-          payment_id: paymentId,
-          order_id: orderId,
-        }));
+          end_time: slot.endTime,
+          price: price
+        })),
+        payment_id: paymentId,
+        order_id: orderId,
+      };
 
-        console.log('Creating multiple bookings:', bookingsData);
-        await bookingApi.createMultipleBookings(bookingsData);
-      } else {
-        // Single booking
-        const bookingData = {
-          type: "sports",
-          facility_id: facility_id,
-          date: date,
-          duration: "60",
-          end_time: slots[0]?.endTime,
-          total_price: totalAmount.toString(),
-          court_id: courtId,
-          start_time: slots[0]?.startTime,
-          name: user?.name,
-          email: user?.email,
-          contact: user?.phone,
-          address: user?.address || "Not provided",
-          payment_id: paymentId,
-          order_id: orderId,
-        };
-
-        console.log('Creating single booking:', bookingData);
-        await bookingApi.createBooking(bookingData);
-      }
+      console.log('Creating booking with new format:', bookingData);
+      await bookingApi.createBooking(bookingData);
 
       // Update payment status as successful
       await bookingApi.paymentSuccess({
@@ -136,10 +115,10 @@ export default function BookingConfirmScreen() {
 
       setBookingConfirmed(true);
 
-      // Navigate to bookings screen after 3 seconds
+      // Navigate to bookings screen after 2 seconds
       setTimeout(() => {
         router.replace('/(tabs)/bookings');
-      }, 3000);
+      }, 2000);
 
     } catch (error: any) {
       console.error('Booking creation error:', error);
