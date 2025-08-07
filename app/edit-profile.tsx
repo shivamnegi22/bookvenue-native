@@ -69,16 +69,27 @@ export default function EditProfileScreen() {
     setError(null);
     
     try {
-      const payload = {
-        name: values.name,
-        email: values.email,
-        contact: values.contact,
-        address: values.address,
-        ...(imageFile && { image: imageFile }),
-      };
+      // Create FormData for multipart upload
+      const formData = new FormData();
+      formData.append('name', values.name);
+      formData.append('email', values.email);
+      formData.append('contact', values.contact);
+      formData.append('address', values.address);
+      
+      if (imageFile) {
+        if (Platform.OS === 'web') {
+          formData.append('image', imageFile);
+        } else {
+          formData.append('image', {
+            uri: imageFile.uri,
+            type: 'image/jpeg',
+            name: 'profile.jpg',
+          } as any);
+        }
+      }
 
-      console.log('Updating profile with payload:', payload);
-      await updateUserProfile(payload);
+      console.log('Updating profile with FormData');
+      await updateUserProfile(formData);
       setSuccess(true);
       
       // Show success message and navigate back

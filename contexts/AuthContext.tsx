@@ -101,12 +101,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateUserProfile = async (data: Partial<User>): Promise<void> => {
+  const updateUserProfile = async (data: FormData | Partial<User>): Promise<void> => {
     if (!user) throw new Error('User not logged in');
 
     try {
       console.log('Updating user profile:', data);
-      const updatedUser = await authApi.updateProfile({ ...user, ...data });
+      const updatedUser = await authApi.updateProfile(data);
       setUser(updatedUser);
       console.log('Profile updated successfully');
     } catch (error) {

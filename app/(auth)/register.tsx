@@ -117,7 +117,7 @@ export default function RegisterScreen() {
       console.log('Registration successful, user data:', userData);
       
       // Update auth context with user data
-      await login(userData);
+      login(userData);
       
       // Navigate to home page
       router.replace('/(tabs)');

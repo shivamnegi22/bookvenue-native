@@ -177,7 +177,7 @@ export default function BookingConfirmScreen() {
       });
 
       const paymentOptions = RazorpayService.createPaymentOptions(
-        totalAmountFromParams,
+        totalAmount,
         orderId,
         {
           name: user.name,
@@ -250,7 +250,7 @@ export default function BookingConfirmScreen() {
           <Text style={styles.successTitle}>Booking Confirmed!</Text>
           <Text style={styles.successText}>
             Your {numberOfSlots > 1 ? `${numberOfSlots} bookings have` : 'booking has'} been successfully confirmed. 
-            Payment of ₹{totalAmount} has been processed.
+            Payment of ₹{totalAmountFromParams} has been processed.
           </Text>
           <Text style={styles.successSubtext}>
             You can view your booking details in the Bookings tab.

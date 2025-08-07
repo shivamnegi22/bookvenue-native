@@ -169,19 +169,7 @@ export const authApi = {
     try {
       console.log('Updating profile:', userData);
       
-      // Create FormData for file upload support
-      const formData = new FormData();
-      formData.append('name', userData.name || '');
-      formData.append('email', userData.email || '');
-      formData.append('contact', userData.contact || userData.phone || '');
-      formData.append('address', userData.address || '');
-      
-      // Add image if provided
-      if (userData.image) {
-        formData.append('image', userData.image);
-      }
-      
-      const response = await api.post('/profileUpdate', formData, {
+      const response = await api.post('/profileUpdate', userData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
