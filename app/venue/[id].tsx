@@ -209,7 +209,7 @@ export default function VenueDetailScreen() {
         courtId: selectedCourt?.id,
         date: selectedDate,
         bookingSlots: JSON.stringify(bookingSlots),
-        price: selectedCourt?.slot_price,
+        totalAmount: totalAmount.toString(),
         courtName: selectedCourt?.court_name,
         serviceName: selectedService?.name,
         totalSlots: selectedTimeSlots.length.toString()

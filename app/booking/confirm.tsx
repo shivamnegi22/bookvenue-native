@@ -177,7 +177,7 @@ export default function BookingConfirmScreen() {
       });
 
       const paymentOptions = RazorpayService.createPaymentOptions(
-        totalAmount,
+        totalAmountFromParams,
         orderId,
         {
           name: user.name,
