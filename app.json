@@ -22,7 +22,13 @@
       "expo-font",
       "expo-web-browser",
       "expo-image-picker",
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "react-native-maps",
+        {
+          "googleMapsApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
