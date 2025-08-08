@@ -112,7 +112,7 @@ export default function LoginScreen() {
       login(userData);
       
       // Navigate to home page
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/');
     } catch (err: any) {
       console.error('OTP verification error:', err);
       setError(err.message || 'OTP verification failed');
