@@ -28,33 +28,6 @@ export default function EditProfileScreen() {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-      // Create FormData for upload
-      const formData = new FormData();
-      formData.append('name', profile.name);
-      formData.append('email', profile.email);
-      formData.append('contact', profile.contact);
-      formData.append('landline', profile.landline || '');
-      formData.append('address', profile.address || '');
-      formData.append('interest', profile.interest || '');
-      
-      // Add image to FormData if selected
-      if (selectedImage && selectedImage !== profile.image) {
-        if (Platform.OS === 'web') {
-          // For web, we need to fetch the blob
-          const response = await fetch(selectedImage);
-          const blob = await response.blob();
-          formData.append('image', blob, 'profile.jpg');
-        } else {
-          // For mobile
-          formData.append('image', {
-            uri: selectedImage,
-            type: 'image/jpeg',
-            name: 'profile.jpg',
-          } as any);
-        }
-      }
-      
-      const response = await authApi.updateProfile(formData);
         return;
       }
 
@@ -70,7 +43,26 @@ export default function EditProfileScreen() {
         setSelectedImage(asset.uri);
         
         // Just set the image, we'll upload it when the form is saved
-        setProfile(prev => ({ ...prev, image: asset.uri }));
+        setImageFile(asset);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+    }
+  };
+
+  const handleSubmit = async (values: any) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Create FormData for upload
+      const formData = new FormData();
+      formData.append('name', values.name);
+      formData.append('email', values.email);
+      formData.append('contact', values.contact);
+      formData.append('address', values.address);
+      
+      // Add image to FormData if selected
       if (imageFile) {
         if (Platform.OS === 'web') {
           formData.append('image', imageFile);
