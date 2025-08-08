@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Calendar, Clock, MapPin, IndianRupee, CreditCard, CheckCircle } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock, MapPin, IndianRupee, CreditCard, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { venueApi } from '@/api/venueApi';
 import { bookingApi } from '@/api/bookingApi';
 import { authApi } from '@/api/authApi';
