@@ -105,6 +105,14 @@ export default function ExploreScreen() {
   const sportTypes = ['Football', 'Cricket', 'Tennis', 'Basketball', 'Swimming', 'Badminton'];
   const ratingOptions = [1, 2, 3, 4, 5];
 
+  let MapView: any;
+  let Marker: any;
+  if (Platform.OS !== 'web') {
+    const MapModule = require('react-native-maps');
+    MapView = MapModule.default;
+    Marker = MapModule.Marker;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -321,13 +329,7 @@ export default function ExploreScreen() {
                 <View style={styles.noResultsContainer}>
                   <Text style={styles.noResultsText}>No venues found</Text>
                   <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
-              let MapView: any;
-              let Marker: any;
-              if (Platform.OS !== 'web') {
-                const MapModule = require('react-native-maps');
-                MapView = MapModule.default;
-                Marker = MapModule.Marker;
-              }
+                </View>
               ) : (
                 filteredVenues.map((venue) => (
                   <VenueCard key={venue.id} venue={venue} size="small" />
