@@ -28,12 +28,38 @@ export default function EditProfileScreen() {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload a profile picture.');
+      // Create FormData for upload
+      const formData = new FormData();
+      formData.append('name', profile.name);
+      formData.append('email', profile.email);
+      formData.append('contact', profile.contact);
+      formData.append('landline', profile.landline || '');
+      formData.append('address', profile.address || '');
+      formData.append('interest', profile.interest || '');
+      
+      // Add image to FormData if selected
+      if (selectedImage && selectedImage !== profile.image) {
+        if (Platform.OS === 'web') {
+          // For web, we need to fetch the blob
+          const response = await fetch(selectedImage);
+          const blob = await response.blob();
+          formData.append('image', blob, 'profile.jpg');
+        } else {
+          // For mobile
+          formData.append('image', {
+            uri: selectedImage,
+            type: 'image/jpeg',
+            name: 'profile.jpg',
+          } as any);
+        }
+      }
+      
+      const response = await authApi.updateProfile(formData);
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -43,39 +69,8 @@ export default function EditProfileScreen() {
         const asset = result.assets[0];
         setSelectedImage(asset.uri);
         
-        // Create file object for upload
-        if (Platform.OS === 'web') {
-          // For web, we need to fetch the blob
-          const response = await fetch(asset.uri);
-          const blob = await response.blob();
-          const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
-          setImageFile(file);
-        } else {
-          // For mobile, create a file-like object
-          setImageFile({
-            uri: asset.uri,
-            type: 'image/jpeg',
-            name: 'profile.jpg',
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
-  const handleSubmit = async (values: any) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Create FormData for multipart upload
-      const formData = new FormData();
-      formData.append('name', values.name);
-      formData.append('email', values.email);
-      formData.append('contact', values.contact);
-      formData.append('address', values.address);
-      
+        // Just set the image, we'll upload it when the form is saved
+        setProfile(prev => ({ ...prev, image: asset.uri }));
       if (imageFile) {
         if (Platform.OS === 'web') {
           formData.append('image', imageFile);

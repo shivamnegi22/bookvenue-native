@@ -329,7 +329,13 @@ export default function VenueDetailScreen() {
               </View>
             ) : (
               (() => {
-                const { default: MapView, Marker } = require('react-native-maps');
+                let MapView: any;
+                let Marker: any;
+                if (Platform.OS !== 'web') {
+                  const MapModule = require('react-native-maps');
+                  MapView = MapModule.default;
+                  Marker = MapModule.Marker;
+                }
                 
                 return (
                   <MapView

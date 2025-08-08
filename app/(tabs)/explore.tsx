@@ -321,7 +321,13 @@ export default function ExploreScreen() {
                 <View style={styles.noResultsContainer}>
                   <Text style={styles.noResultsText}>No venues found</Text>
                   <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
-                </View>
+              let MapView: any;
+              let Marker: any;
+              if (Platform.OS !== 'web') {
+                const MapModule = require('react-native-maps');
+                MapView = MapModule.default;
+                Marker = MapModule.Marker;
+              }
               ) : (
                 filteredVenues.map((venue) => (
                   <VenueCard key={venue.id} venue={venue} size="small" />
