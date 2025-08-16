@@ -120,7 +120,7 @@ export default function RegisterScreen() {
       login(userData);
       
       // Navigate to home page
-      router.replace('/(tabs)/');
+      router.replace('/');
     } catch (err: any) {
       console.error('Registration verification error:', err);
       setError(err.message || 'Registration failed');

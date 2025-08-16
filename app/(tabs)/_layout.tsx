@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { Redirect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Chrome as Home, CalendarClock, CreditCard, MapPin, User } from 'lucide-react-native';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
@@ -12,14 +12,17 @@ export default function TabLayout() {
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Loading...</Text>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={{ marginTop: 12, fontFamily: 'Inter-Medium', fontSize: 16, color: '#6B7280' }}>
+          Loading...
+        </Text>
       </View>
     );
   }
   
   // Redirect to login if user is not authenticated
   if (!user) {
-    return <Redirect href="/login" />;
+    return <Redirect href="/(auth)/login" />;
   }
 
   return (

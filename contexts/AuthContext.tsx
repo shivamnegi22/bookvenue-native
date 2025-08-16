@@ -45,9 +45,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Checking logged-in status, token exists:', !!token);
         
         if (token) {
-          const userData = await authApi.getProfile();
-          console.log('User profile loaded:', userData);
-          setUser(userData);
+          try {
+            const userData = await authApi.getProfile();
+            console.log('User profile loaded:', userData);
+            setUser(userData);
+          } catch (error) {
+            console.error('Failed to load profile with existing token:', error);
+            // Clear invalid token
+            await AsyncStorage.removeItem('token');
+            await AsyncStorage.removeItem('user');
+          }
         }
       } catch (error) {
         console.error('Error checking logged-in status:', error);
@@ -62,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkLoggedIn();
   }, []);
 
-  const login = async (identifier: string, otp: string): Promise<void> => {
+  const login = async (userData: User): Promise<void> => {
     try {
       console.log('Login context called with user data:', userData);
       setUser(userData);

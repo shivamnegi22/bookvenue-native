@@ -168,7 +168,11 @@ export default function ConfirmBookingScreen() {
               {
                 text: 'View Bookings',
                 onPress: () => {
-                  router.replace('/(tabs)/bookings');
+                  router.replace('/');
+                  // Small delay to ensure navigation completes, then navigate to bookings
+                  setTimeout(() => {
+                    router.push('/(tabs)/bookings');
+                  }, 100);
                 }
               }
             ]
