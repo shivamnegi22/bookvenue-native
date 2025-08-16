@@ -24,9 +24,10 @@
       "expo-image-picker",
       "expo-dev-client",
       [
-        "react-native-maps",
+        "expo-maps",
         {
-          "googleMapsApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
+          "androidApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y",
+          "iosApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
         }
       ]
     ],
@@ -46,11 +47,6 @@
     },
     "android": {
       "package": "com.shivamnegi.bookvenue",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
-        }
-      },
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",
