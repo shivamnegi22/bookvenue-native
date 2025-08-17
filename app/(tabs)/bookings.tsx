@@ -257,9 +257,9 @@ export default function BookingsScreen() {
                   
                   <View style={styles.priceRow}>
                     <View style={styles.slotsInfo}>
-                      {(booking as any).slots > 1 && (
+                      {booking.slots && booking.slots > 1 && (
                         <Text style={styles.slotsText}>
-                          {(booking as any).slots} slots booked
+                          {booking.slots} slots booked
                         </Text>
                       )}
                     </View>

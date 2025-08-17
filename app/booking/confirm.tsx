@@ -102,86 +102,89 @@ export default function ConfirmBookingScreen() {
     setBookingLoading(true);
 
     try {
-      // Initialize Razorpay
-      await initializeRazorpay();
+      // Create booking with Laravel backend (includes Razorpay order creation)
+      const bookingPayload = {
+        facility_id: parseInt(facility_id),
+        court_id: parseInt(courtId),
+        date: date,
+        duration: 60,
+        slot_count: slotCount,
+        total_price: amount,
+        name: userProfile.name || user.name || '',
+        email: userProfile.email || user.email || '',
+        contact: userProfile.contact || user.contact || '',
+        address: userProfile.address || '',
+        selected_slots: slots.map(slot => ({
+          start_time: slot.startTime,
+          end_time: slot.endTime,
+          price: slot.price
+        }))
+      };
 
-      // Create Razorpay order
-      const orderData = await createRazorpayOrder(amount, 'INR', `Booking for ${venue.name}`);
+      console.log('Creating booking with payload:', bookingPayload);
+
+      // Create booking (Laravel backend creates Razorpay order)
+      const bookingResponse = await bookingApi.createBooking(bookingPayload);
       
-      if (!orderData.success) {
-        throw new Error(orderData.error || 'Failed to create payment order');
-      }
-
-      // Handle payment
-      const paymentResult = await handlePayment({
-        orderId: orderData.order.id,
-        amount: amount,
-        currency: 'INR',
-        name: venue.name,
-        description: `Booking for ${courtName} on ${formatDate(date)}`,
-        prefill: {
-          name: userProfile.name || user.name || '',
-          email: userProfile.email || user.email || '',
-          contact: userProfile.contact || user.contact || ''
-        }
-      });
-
-      if (paymentResult.success) {
-        // Payment successful, now create booking
-        const bookingPayload = {
-          facility_id: parseInt(facility_id),
-          court_id: parseInt(courtId),
-          date: date,
-          duration: 60,
-          slot_count: slotCount,
-          total_price: amount,
-          name: userProfile.name || user.name || '',
-          email: userProfile.email || user.email || '',
-          contact: userProfile.contact || user.contact || '',
-          address: userProfile.address || '',
-          payment_id: paymentResult.paymentId,
-          order_id: orderData.order.id,
-          selected_slots: slots.map(slot => ({
-            start_time: slot.startTime,
-            end_time: slot.endTime,
-            price: slot.price
-          }))
+      if (bookingResponse.success && bookingResponse.order) {
+        // Initialize Razorpay with order from backend
+        const razorpayOptions = {
+          key: 'rzp_live_qyWsOEPEllNahd',
+          amount: bookingResponse.order.amount,
+          currency: bookingResponse.order.currency,
+          name: 'BookVenue',
+          description: `Booking for ${courtName} on ${formatDate(date)}`,
+          order_id: bookingResponse.order.id,
+          prefill: {
+            name: userProfile.name || user.name || '',
+            email: userProfile.email || user.email || '',
+            contact: userProfile.contact || user.contact || ''
+          },
+          theme: {
+            color: '#2563EB'
+          }
         };
 
-        console.log('Creating booking with payload:', bookingPayload);
-
-        // Create booking
-        const bookingResponse = await bookingApi.createBooking(bookingPayload);
-        
-        if (bookingResponse.success) {
-          // Call payment success API
-          await bookingApi.paymentSuccess({
-            payment_id: paymentResult.paymentId,
-            order_id: orderData.order.id,
-            booking_id: bookingResponse.booking_id
-          });
-
-          Alert.alert(
-            'Booking Confirmed!', 
-            'Your booking has been confirmed successfully.',
-            [
-              {
-                text: 'View Bookings',
-                onPress: () => {
-                  router.replace('/');
-                  // Small delay to ensure navigation completes, then navigate to bookings
-                  setTimeout(() => {
-                    router.push('/(tabs)/bookings');
-                  }, 100);
+        // Handle payment with Razorpay
+        if (Platform.OS === 'web') {
+          // Web payment handling
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.async = true;
+          script.onload = () => {
+            const rzp = new (window as any).Razorpay({
+              ...razorpayOptions,
+              handler: async function (response: any) {
+                console.log('Payment successful:', response);
+                await handlePaymentSuccess(response.razorpay_order_id, response.razorpay_payment_id);
+              },
+              modal: {
+                ondismiss: function () {
+                  console.log('Payment dismissed');
+                  setBookingLoading(false);
                 }
               }
-            ]
-          );
+            });
+            rzp.open();
+          };
+          document.body.appendChild(script);
         } else {
-          throw new Error(bookingResponse.message || 'Failed to create booking');
+          // Native payment handling
+          const RazorpayCheckout = require('react-native-razorpay').default;
+          try {
+            const data = await RazorpayCheckout.open(razorpayOptions);
+            console.log('Payment successful:', data);
+            await handlePaymentSuccess(bookingResponse.order.id, data.razorpay_payment_id);
+          } catch (error: any) {
+            console.log('Payment error:', error);
+            if (error.code !== 'Cancelled') {
+              await handlePaymentFailure(bookingResponse.order.id);
+            }
+            setBookingLoading(false);
+          }
         }
       } else {
-        throw new Error(paymentResult.error || 'Payment failed');
+        throw new Error(bookingResponse.message || 'Failed to create booking');
       }
     } catch (error) {
       console.error('Booking error:', error);
@@ -195,8 +198,43 @@ export default function ConfirmBookingScreen() {
           }
         ]
       );
+      setBookingLoading(false);
+  };
+
+  const handlePaymentSuccess = async (orderId: string, paymentId: string) => {
+    try {
+      await bookingApi.paymentSuccess({
+        order_id: orderId,
+        payment_id: paymentId
+      });
+
+      Alert.alert(
+        'Booking Confirmed!', 
+        'Your booking has been confirmed successfully.',
+        [
+          {
+            text: 'View Bookings',
+            onPress: () => {
+              router.replace('/(tabs)/bookings');
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Payment success update error:', error);
+      Alert.alert('Error', 'Payment successful but failed to update booking status');
     } finally {
       setBookingLoading(false);
+    }
+  };
+
+  const handlePaymentFailure = async (orderId: string) => {
+    try {
+      await bookingApi.paymentFailure({
+        order_id: orderId
+      });
+    } catch (error) {
+      console.error('Payment failure update error:', error);
     }
   };
 

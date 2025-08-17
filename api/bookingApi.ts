@@ -33,67 +33,46 @@ export const bookingApi = {
         return [];
       }
 
-      // Handle different possible response structures
-      let bookingsData = [];
-      if (response.data.bookings) {
-        bookingsData = Array.isArray(response.data.bookings) ? response.data.bookings : [];
-      } else if (response.data.data) {
-        bookingsData = Array.isArray(response.data.data) ? response.data.data : [];
-      } else if (Array.isArray(response.data)) {
-        bookingsData = response.data;
-      }
+      // Handle Laravel backend response structure
+      const bookingsData = response.data.bookings || [];
 
       console.log('Processing bookings data:', bookingsData);
       
       return bookingsData.map((booking: any, index: number) => {
-        // Handle different possible data structures
-        const facilityName = booking.facility_name || booking.facility?.official_name || booking.venue_name || 'Unknown Venue';
-        const courtName = booking.court_name || booking.court?.court_name || booking.court_type || 'Court';
-        const bookingDate = booking.date || booking.booking_date;
-        const totalPrice = parseFloat(booking.total_price || booking.price || booking.amount || '0');
+        // Handle Laravel backend data structure
+        const facilityName = booking.facility || 'Unknown Venue';
+        const courtName = booking.court || 'Court';
+        const bookingDate = booking.date;
+        const totalPrice = parseFloat(booking.price || '0');
         const bookingStatus = (booking.status || 'pending').toLowerCase();
 
-        // Handle time slots - improved logic
+        // Handle time slots from Laravel backend
         let startTime = '';
         let endTime = '';
-        let slotsCount = 1;
+        let slotsCount = booking.slots ? booking.slots.length : 1;
 
-        if (booking.slots && Array.isArray(booking.slots) && booking.slots.length > 0) {
-          slotsCount = booking.slots.length;
+        if (booking.slots && booking.slots.length > 0) {
           const startTimes = booking.slots.map((slot: any) => slot.start_time || slot.startTime).filter(Boolean);
           const endTimes = booking.slots.map((slot: any) => slot.end_time || slot.endTime).filter(Boolean);
-          startTime = startTimes.join(', ');
-          endTime = endTimes.join(', ');
-        } else if (booking.start_time && booking.end_time) {
-          startTime = booking.start_time;
-          endTime = booking.end_time;
-          slotsCount = 1;
-        } else if (booking.time_slot) {
-          startTime = booking.time_slot;
-          endTime = booking.time_slot;
-          slotsCount = 1;
+          startTime = startTimes.length > 0 ? startTimes[0] : '';
+          endTime = endTimes.length > 0 ? endTimes[endTimes.length - 1] : '';
         }
 
-        // Handle venue image
+        // Default venue image
         let venueImage = 'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
-        if (booking.venue_image) {
-          venueImage = booking.venue_image;
-        } else if (booking.facility?.featured_image) {
-          venueImage = `https://admin.bookvenue.app/${booking.facility.featured_image.replace(/\\/g, '/')}`;
-        }
 
         const processedBooking = {
-          id: booking.id?.toString() || index.toString(),
+          id: booking.bookingId?.toString() || index.toString(),
           venue: {
-            id: booking.facility_id?.toString() || 'venue-1',
+            id: 'venue-1',
             name: facilityName,
-            location: booking.venue_location || booking.facility?.address || booking.address || 'Location not available',
+            location: 'Location not available',
             type: courtName,
-            slug: booking.facility_slug || booking.facility?.slug || 'venue-1',
+            slug: 'venue-1',
             images: [venueImage],
             coordinates: {
-              latitude: parseFloat(booking.venue_lat || booking.facility?.lat || '28.6139'),
-              longitude: parseFloat(booking.venue_lng || booking.facility?.lng || '77.2090')
+              latitude: 28.6139,
+              longitude: 77.2090
             }
           },
           date: bookingDate,
@@ -101,7 +80,7 @@ export const bookingApi = {
           endTime: endTime,
           totalAmount: totalPrice,
           status: bookingStatus as 'pending' | 'confirmed' | 'cancelled',
-          slots: slotsCount
+          slots: slotsCount,
         };
 
         console.log('Processed booking:', processedBooking);
@@ -175,7 +154,11 @@ export const bookingApi = {
       console.log('Creating booking with data:', bookingData);
       const response = await api.post('/booking', bookingData);
       console.log('Booking creation response:', response.data);
-      return response.data;
+      return {
+        success: true,
+        order: response.data.order,
+        message: response.data.message
+      };
     } catch (error: any) {
       console.error('Booking creation error:', error.response?.data || error);
       throw new Error(error.response?.data?.message || 'Failed to create booking');
@@ -185,7 +168,7 @@ export const bookingApi = {
   cancelBooking: async (bookingId: string) => {
     try {
       console.log('Cancelling booking:', bookingId);
-      const response = await api.post(`/cancel-booking/${bookingId}`);
+      const response = await api.get(`/cancel-booking/${bookingId}`);
       console.log('Booking cancelled successfully');
       return response.data;
     } catch (error: any) {
@@ -209,7 +192,7 @@ export const bookingApi = {
   paymentFailure: async (paymentData: any) => {
     try {
       console.log('Updating payment failure:', paymentData);
-      const response = await api.get('/payment-failure', { params: paymentData });
+      const response = await api.post('/payment-failure', paymentData);
       console.log('Payment failure updated');
       return response.data;
     } catch (error: any) {
