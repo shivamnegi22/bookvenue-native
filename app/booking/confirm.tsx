@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Calendar, Clock, MapPin, User, CreditCard, CheckCircle } from 'lucide-react-native';
+import { Calendar, Clock, MapPin, User, CreditCard, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { createBooking, updatePaymentStatus } from '@/api/bookingApi';
 import RazorpayCheckout from 'react-native-razorpay';
