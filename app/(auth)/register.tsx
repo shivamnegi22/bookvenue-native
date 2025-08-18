@@ -57,8 +57,8 @@ export default function RegisterScreen() {
   };
 
   const handleSendOTP = async () => {
-    if (!validateInput()) {
-      setError(`Invalid ${showInput === 'email' ? 'email address' : 'phone number'}`);
+    if (showInput !== 'phone' || !validateInput()) {
+      setError('Invalid phone number');
       return;
     }
 
@@ -71,7 +71,7 @@ export default function RegisterScreen() {
     setError(null);
 
     try {
-      await authApi.register(identifier);
+      await authApi.register(identifier, name);
       setShowOTP(true);
       setResendTimer(60);
     } catch (err: any) {
@@ -83,15 +83,11 @@ export default function RegisterScreen() {
   };
 
   const handleVerifyOTP = async () => {
-    const isEmail = showInput === 'email';
-    const isMobile = showInput === 'phone';
-
-    const isMobileValid = isMobile && /^[0-9]{10}$/.test(identifier);
-    const isEmailValid = isEmail && /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(identifier);
+    const isMobileValid = showInput === 'phone' && /^[0-9]{10}$/.test(identifier);
     const isOtpValid = otp !== '' && /^[0-9]{6}$/.test(otp);
 
-    if (!isMobileValid && !isEmailValid) {
-      setError('Invalid Mobile No. or Email.');
+    if (!isMobileValid) {
+      setError('Invalid Mobile No.');
       return;
     }
 
@@ -100,17 +96,12 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (!validateName()) {
-      setError('Please enter a valid name');
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
       console.log('Verifying registration OTP:', { identifier, otp, name });
-      await authApi.verifyRegisterOTP(identifier, otp, name);
+      await authApi.verifyRegisterOTP(identifier, otp);
       
       // Get user profile after successful registration
       const userData = await authApi.getProfile();
@@ -156,14 +147,6 @@ export default function RegisterScreen() {
             <View style={styles.methodContainer}>
               <TouchableOpacity
                 style={styles.methodButton}
-                onPress={() => handleMethodSelect('email')}
-              >
-                <Mail size={24} color="#2563EB" />
-                <Text style={styles.methodButtonText}>Register with Email</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.methodButton}
                 onPress={() => handleMethodSelect('phone')}
               >
                 <Phone size={24} color="#2563EB" />
@@ -187,18 +170,18 @@ export default function RegisterScreen() {
               </View>
 
               <Text style={styles.inputLabel}>
-                Enter your {showInput === 'email' ? 'email address' : 'phone number'}
+                Enter your phone number
               </Text>
               <View style={styles.inputWrapper}>
-                {showInput === 'phone' && <Text style={styles.countryCode}>+91</Text>}
+                <Text style={styles.countryCode}>+91</Text>
                 <TextInput
-                  style={[styles.input, showInput === 'phone' && styles.phoneInput]}
-                  placeholder={showInput === 'email' ? 'Email address' : 'Phone number'}
+                  style={[styles.input, styles.phoneInput]}
+                  placeholder="Phone number"
                   value={identifier}
                   onChangeText={setIdentifier}
-                  keyboardType={showInput === 'email' ? 'email-address' : 'phone-pad'}
+                  keyboardType="phone-pad"
                   autoCapitalize="none"
-                  maxLength={showInput === 'phone' ? 10 : undefined}
+                  maxLength={10}
                 />
               </View>
               <TouchableOpacity
@@ -222,7 +205,7 @@ export default function RegisterScreen() {
             <View style={styles.otpContainer}>
               <Text style={styles.otpTitle}>Enter Verification Code</Text>
               <Text style={styles.otpSubtitle}>
-                We've sent a 6-digit code to your {showInput === 'email' ? 'email' : 'phone'}
+                We've sent a 6-digit code to your phone
               </Text>
               <TextInput
                 style={styles.otpInput}

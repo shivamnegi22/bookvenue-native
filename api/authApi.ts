@@ -59,10 +59,9 @@ export const authApi = {
   },
 
   // Send OTP for registration
-  register: async (identifier: string) => {
+  register: async (mobile: string, name?: string) => {
     try {
-      const isEmail = identifier.includes('@');
-      const payload = isEmail ? { email: identifier } : { mobile: identifier };
+      const payload = { mobile, name };
       console.log('Sending registration OTP:', payload);
       
       const response = await api.post('/register', payload);
@@ -115,24 +114,19 @@ export const authApi = {
   },
 
   // Verify OTP for registration
-  verifyRegisterOTP: async (identifier: string, otp: string, name?: string) => {
+  verifyRegisterOTP: async (mobile: string, otp: string) => {
     try {
-      const isEmail = identifier.includes('@');
       const payload = {
-        [isEmail ? 'email' : 'mobile']: identifier,
-        otp,
-        ...(name && { name })
+        mobile,
+        otp
       };
       
       console.log('Verifying registration OTP:', payload);
-      const response = await api.post('/verify-register-user', payload);
+      const response = await api.post('/verifyuser', payload);
       console.log('Registration OTP verification response:', response.data);
       
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
-        if (response.data.user) {
-          await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-        }
       }
       return response.data;
     } catch (error: any) {
