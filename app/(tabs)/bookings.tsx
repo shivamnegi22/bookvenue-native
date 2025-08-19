@@ -130,7 +130,7 @@ export default function BookingsScreen() {
           </Text>
           <TouchableOpacity 
             style={styles.loginButton}
-            onPress={() => router.push('/login')}
+            onPress={() => router.push('/(auth)/login')}
           >
             <Text style={styles.loginButtonText}>Go to Login</Text>
           </TouchableOpacity>

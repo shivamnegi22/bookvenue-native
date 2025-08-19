@@ -7,98 +7,137 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Calendar, Clock, MapPin, User, CreditCard, CircleCheck as CheckCircle } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Calendar, Clock, MapPin, User, CreditCard, CircleCheck as CheckCircle, ArrowLeft, IndianRupee } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { createBooking, updatePaymentStatus } from '@/api/bookingApi';
-import RazorpayCheckout from 'react-native-razorpay';
-
-interface BookingData {
-  venueId: string;
-  venueName: string;
-  courtId: string;
-  courtName: string;
-  date: string;
-  selectedSlots: Array<{
-    start_time: string;
-    end_time: string;
-    price: string;
-  }>;
-  totalAmount: string;
-  duration: string;
-  slotCount: string;
-}
+import { bookingApi } from '@/api/bookingApi';
+import { RazorpayService } from '@/utils/razorpay';
 
 export default function ConfirmBooking() {
   const params = useLocalSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [bookingData, setBookingData] = useState<BookingData | null>(null);
+  const [bookingData, setBookingData] = useState<any>(null);
 
-  useEffect(() => {
-    if (params.bookingData) {
-      try {
-        const data = JSON.parse(params.bookingData as string);
-        setBookingData(data);
-      } catch (error) {
-        console.error('Error parsing booking data:', error);
-        Alert.alert('Error', 'Invalid booking data');
-        router.back();
-      }
-    }
-  }, [params.bookingData]);
+  // useEffect(() => {
+  //   console.log('Confirm booking params:', params);
+    
+  //   // Parse booking data from params
+  //   const data = {
+  //     venueId: params.venueId as string,
+  //     venueName: params.venueName as string || 'Unknown Venue',
+  //     facility_id: params.facility_id as string,
+  //     serviceId: params.serviceId as string,
+  //     courtId: params.courtId as string,
+  //     courtName: params.courtName as string || 'Court',
+  //     serviceName: params.serviceName as string || 'Service',
+  //     date: params.date as string,
+  //     totalAmount: parseFloat(params.totalAmount as string || '0'),
+  //     totalSlots: parseInt(params.totalSlots as string || '1'),
+  //     bookingSlots: params.bookingSlots ? JSON.parse(params.bookingSlots as string) : []
+  //   };
+    
+  //   console.log('Parsed booking data:', data);
+  //   setBookingData(data);
+  // }, [params]);
+useEffect(() => {
+  if (!params) return;
+
+  const data = {
+    venueId: params.venueId as string,
+    venueName: (params.venueName as string) || 'Unknown Venue',
+    facility_id: params.facility_id as string,
+    serviceId: params.serviceId as string,
+    courtId: params.courtId as string,
+    courtName: (params.courtName as string) || 'Court',
+    serviceName: (params.serviceName as string) || 'Service',
+    date: params.date as string,
+    totalAmount: parseFloat((params.totalAmount as string) || '0'),
+    totalSlots: parseInt((params.totalSlots as string) || '1'),
+    bookingSlots: params.bookingSlots ? JSON.parse(params.bookingSlots as string) : []
+  };
+
+  setBookingData(data);
+}, [
+  params.venueId,
+  params.venueName,
+  params.facility_id,
+  params.serviceId,
+  params.courtId,
+  params.courtName,
+  params.serviceName,
+  params.date,
+  params.totalAmount,
+  params.totalSlots,
+  params.bookingSlots,
+]);
 
   const handlePayment = async () => {
-    if (!bookingData || !user) return;
+    if (!bookingData || !user) {
+      Alert.alert('Error', 'Please login to complete booking');
+      router.push('/(auth)/login');
+      return;
+    }
 
     setLoading(true);
     try {
-      // Create booking and get Razorpay order
+      // Prepare booking payload for API
+      const selectedSlots = bookingData.bookingSlots.map((slot: any) => ({
+        start_time: slot.startTime,
+        end_time: slot.endTime,
+        price: Math.round(bookingData.totalAmount / bookingData.totalSlots).toString()
+      }));
+
       const bookingPayload = {
-        facility_id: parseInt(bookingData.venueId),
+        facility_id: parseInt(bookingData.facility_id),
         court_id: parseInt(bookingData.courtId),
         date: bookingData.date,
-        duration: parseInt(bookingData.duration),
-        slot_count: parseInt(bookingData.slotCount),
-        total_price: parseInt(bookingData.totalAmount),
+        duration: 60, // Default duration
+        slot_count: bookingData.totalSlots,
+        total_price: Math.round(bookingData.totalAmount),
         name: user.name || '',
         email: user.email || '',
-        contact: user.contact || '',
+        contact: user.phone || '',
         address: user.address || '',
-        selected_slots: bookingData.selectedSlots,
+        selected_slots: selectedSlots,
       };
 
-      const orderResponse = await createBooking(bookingPayload);
+      console.log('Creating booking with payload:', bookingPayload);
+      const orderResponse = await bookingApi.createBooking(bookingPayload);
       
       if (!orderResponse.order) {
         throw new Error('Failed to create order');
       }
 
-      const options = {
-        description: `Booking for ${bookingData.venueName}`,
-        image: 'https://your-logo-url.com/logo.png',
-        currency: 'INR',
-        key: 'rzp_live_qyWsOEPEllNahd',
-        amount: orderResponse.order.amount,
-        order_id: orderResponse.order.id,
-        name: 'BookVenue',
-        prefill: {
-          email: user.email,
-          contact: user.contact,
+      // Create Razorpay payment options
+      const paymentOptions = RazorpayService.createPaymentOptions(
+        bookingData.totalAmount,
+        orderResponse.order.id,
+        {
           name: user.name,
+          email: user.email,
+          contact: user.phone
         },
-        theme: { color: '#3B82F6' },
-      };
+        {
+          venueName: bookingData.venueName,
+          courtName: bookingData.courtName,
+          date: bookingData.date,
+          slots: bookingData.totalSlots
+        }
+      );
 
-      const paymentResult = await RazorpayCheckout.open(options);
+      console.log('Opening Razorpay with options:', paymentOptions);
+      const paymentResult = await RazorpayService.openCheckout(paymentOptions);
       
-      // Payment successful
-      await updatePaymentStatus({
+      // Payment successful - update status
+      await bookingApi.paymentSuccess({
         order_id: orderResponse.order.id,
         payment_id: paymentResult.razorpay_payment_id,
         signature: paymentResult.razorpay_signature,
-      }, 'success');
+      });
 
       Alert.alert(
         'Success!',
@@ -107,9 +146,7 @@ export default function ConfirmBooking() {
           {
             text: 'View Bookings',
             onPress: () => {
-              setTimeout(() => {
-                router.replace('/(tabs)/bookings');
-              }, 100);
+              router.replace('/(tabs)/bookings');
             },
           },
         ]
@@ -117,22 +154,10 @@ export default function ConfirmBooking() {
     } catch (error: any) {
       console.error('Payment error:', error);
       
-      if (error.code === 'payment_cancelled') {
+      if (error.message.includes('cancelled')) {
         Alert.alert('Payment Cancelled', 'You cancelled the payment.');
       } else {
-        Alert.alert('Payment Failed', 'Something went wrong. Please try again.');
-        
-        // Update payment status as failed if order was created
-        try {
-          const orderResponse = await createBooking(bookingPayload);
-          if (orderResponse.order) {
-            await updatePaymentStatus({
-              order_id: orderResponse.order.id,
-            }, 'failure');
-          }
-        } catch (updateError) {
-          console.error('Error updating payment status:', updateError);
-        }
+        Alert.alert('Payment Failed', error.message || 'Something went wrong. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -141,10 +166,12 @@ export default function ConfirmBooking() {
 
   if (!bookingData) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text style={styles.loadingText}>Loading booking details...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2563EB" />
+          <Text style={styles.loadingText}>Loading booking details...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -167,101 +194,121 @@ export default function ConfirmBooking() {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <CheckCircle size={48} color="#10B981" />
-        <Text style={styles.headerTitle}>Confirm Your Booking</Text>
-        <Text style={styles.headerSubtitle}>Review your booking details</Text>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft size={24} color="#1F2937" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Confirm Booking</Text>
+        <View style={styles.placeholder} />
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <MapPin size={20} color="#3B82F6" />
-          <Text style={styles.cardTitle}>Venue Details</Text>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.confirmHeader}>
+          <CheckCircle size={48} color="#10B981" />
+          <Text style={styles.confirmTitle}>Confirm Your Booking</Text>
+          <Text style={styles.confirmSubtitle}>Review your booking details</Text>
         </View>
-        <Text style={styles.venueName}>{bookingData.venueName}</Text>
-        <Text style={styles.courtName}>{bookingData.courtName}</Text>
-      </View>
 
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Calendar size={20} color="#3B82F6" />
-          <Text style={styles.cardTitle}>Date & Time</Text>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <MapPin size={20} color="#2563EB" />
+            <Text style={styles.cardTitle}>Venue Details</Text>
+          </View>
+          <Text style={styles.venueName}>{bookingData.venueName}</Text>
+          <Text style={styles.courtName}>{bookingData.serviceName} - {bookingData.courtName}</Text>
         </View>
-        <Text style={styles.dateText}>{formatDate(bookingData.date)}</Text>
-        <View style={styles.slotsContainer}>
-          {bookingData.selectedSlots.map((slot, index) => (
-            <View key={index} style={styles.slotItem}>
-              <View style={styles.slotTime}>
-                <Clock size={16} color="#6B7280" />
-                <Text style={styles.slotTimeText}>
-                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Calendar size={20} color="#2563EB" />
+            <Text style={styles.cardTitle}>Date & Time</Text>
+          </View>
+          <Text style={styles.dateText}>{formatDate(bookingData.date)}</Text>
+          <View style={styles.slotsContainer}>
+            {bookingData.bookingSlots.map((slot: any, index: number) => (
+              <View key={index} style={styles.slotItem}>
+                <View style={styles.slotTime}>
+                  <Clock size={16} color="#6B7280" />
+                  <Text style={styles.slotTimeText}>
+                    {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                  </Text>
+                </View>
+                <Text style={styles.slotPrice}>
+                  ₹{Math.round(bookingData.totalAmount / bookingData.totalSlots)}
                 </Text>
               </View>
-              <Text style={styles.slotPrice}>₹{slot.price}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <User size={20} color="#3B82F6" />
-          <Text style={styles.cardTitle}>Booking Details</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Duration:</Text>
-          <Text style={styles.detailValue}>{bookingData.duration} minutes</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Number of Slots:</Text>
-          <Text style={styles.detailValue}>{bookingData.slotCount}</Text>
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <CreditCard size={20} color="#3B82F6" />
-          <Text style={styles.cardTitle}>Payment Summary</Text>
-        </View>
-        <View style={styles.priceBreakdown}>
-          {bookingData.selectedSlots.map((slot, index) => (
-            <View key={index} style={styles.priceRow}>
-              <Text style={styles.priceLabel}>
-                {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-              </Text>
-              <Text style={styles.priceValue}>₹{slot.price}</Text>
-            </View>
-          ))}
-          <View style={styles.divider} />
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalValue}>₹{bookingData.totalAmount}</Text>
+            ))}
           </View>
         </View>
-      </View>
 
-      <TouchableOpacity
-        style={[styles.payButton, loading && styles.payButtonDisabled]}
-        onPress={handlePayment}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <>
-            <CreditCard size={20} color="#FFFFFF" />
-            <Text style={styles.payButtonText}>Pay ₹{bookingData.totalAmount}</Text>
-          </>
-        )}
-      </TouchableOpacity>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <User size={20} color="#2563EB" />
+            <Text style={styles.cardTitle}>Booking Details</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Duration per slot:</Text>
+            <Text style={styles.detailValue}>60 minutes</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Number of Slots:</Text>
+            <Text style={styles.detailValue}>{bookingData.totalSlots}</Text>
+          </View>
+        </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          By proceeding, you agree to our terms and conditions
-        </Text>
-      </View>
-    </ScrollView>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <CreditCard size={20} color="#2563EB" />
+            <Text style={styles.cardTitle}>Payment Summary</Text>
+          </View>
+          <View style={styles.priceBreakdown}>
+            {bookingData.bookingSlots.map((slot: any, index: number) => (
+              <View key={index} style={styles.priceRow}>
+                <Text style={styles.priceLabel}>
+                  {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                </Text>
+                <Text style={styles.priceValue}>
+                  ₹{Math.round(bookingData.totalAmount / bookingData.totalSlots)}
+                </Text>
+              </View>
+            ))}
+            <View style={styles.divider} />
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total Amount</Text>
+              <View style={styles.totalValueContainer}>
+                <IndianRupee size={18} color="#059669" />
+                <Text style={styles.totalValue}>₹{bookingData.totalAmount}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.payButton, loading && styles.payButtonDisabled]}
+          onPress={handlePayment}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <CreditCard size={20} color="#FFFFFF" />
+              <Text style={styles.payButtonText}>Pay ₹{bookingData.totalAmount}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            By proceeding, you agree to our terms and conditions
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -269,6 +316,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 18,
+    color: '#1F2937',
+  },
+  placeholder: {
+    width: 32,
   },
   loadingContainer: {
     flex: 1,
@@ -280,20 +347,25 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#6B7280',
+    fontFamily: 'Inter-Medium',
   },
-  header: {
+  scrollContainer: {
+    flex: 1,
+  },
+  confirmHeader: {
     alignItems: 'center',
     paddingVertical: 32,
     paddingHorizontal: 20,
   },
-  headerTitle: {
+  confirmTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Inter-Bold',
     color: '#111827',
     marginTop: 16,
   },
-  headerSubtitle: {
+  confirmSubtitle: {
     fontSize: 16,
+    fontFamily: 'Inter-Regular',
     color: '#6B7280',
     marginTop: 8,
   },
@@ -319,23 +391,24 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: '#111827',
     marginLeft: 8,
   },
   venueName: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'Inter-Bold',
     color: '#111827',
     marginBottom: 4,
   },
   courtName: {
     fontSize: 16,
+    fontFamily: 'Inter-Medium',
     color: '#6B7280',
   },
   dateText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: '#111827',
     marginBottom: 16,
   },
@@ -357,12 +430,13 @@ const styles = StyleSheet.create({
   },
   slotTimeText: {
     fontSize: 16,
+    fontFamily: 'Inter-Medium',
     color: '#374151',
     marginLeft: 8,
   },
   slotPrice: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: '#059669',
   },
   detailRow: {
@@ -373,11 +447,12 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 16,
+    fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
   detailValue: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
     color: '#111827',
   },
   priceBreakdown: {
@@ -391,10 +466,12 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: 14,
+    fontFamily: 'Inter-Regular',
     color: '#6B7280',
   },
   priceValue: {
     fontSize: 14,
+    fontFamily: 'Inter-Medium',
     color: '#111827',
   },
   divider: {
@@ -410,19 +487,24 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter-Bold',
     color: '#111827',
+  },
+  totalValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   totalValue: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter-Bold',
     color: '#059669',
+    marginLeft: 4,
   },
   payButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#2563EB',
     marginHorizontal: 20,
     marginVertical: 24,
     paddingVertical: 16,
@@ -434,7 +516,7 @@ const styles = StyleSheet.create({
   },
   payButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
   },
   footer: {
@@ -443,6 +525,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
+    fontFamily: 'Inter-Regular',
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 18,

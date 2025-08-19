@@ -15,11 +15,12 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.notLoggedInContainer}>
+          <User size={64} color="#6B7280" />
           <Text style={styles.notLoggedInTitle}>You're not logged in</Text>
           <Text style={styles.notLoggedInText}>Please log in to view your profile</Text>
           <TouchableOpacity 
             style={styles.loginButton}
-            onPress={() => router.push('/login')}
+            onPress={() => router.push('/(auth)/login')}
           >
             <Text style={styles.loginButtonText}>Go to Login</Text>
           </TouchableOpacity>
@@ -41,7 +42,7 @@ export default function ProfileScreen() {
     {
       icon: <CreditCard size={20} color="#2563EB" />,
       title: 'Payment Methods',
-      onPress: () => router.push('/payment-methods'),
+      onPress: () => Alert.alert('Coming Soon', 'Payment methods feature will be available soon'),
     },
     {
       icon: <MapPin size={20} color="#2563EB" />,
@@ -64,12 +65,12 @@ export default function ProfileScreen() {
     {
       icon: <Shield size={20} color="#2563EB" />,
       title: 'Privacy & Security',
-      onPress: () => router.push('/privacy-security'),
+      onPress: () => Alert.alert('Coming Soon', 'Privacy & security settings will be available soon'),
     },
     {
       icon: <HelpCircle size={20} color="#2563EB" />,
       title: 'Help & Support',
-      onPress: () => router.push('/help'),
+      onPress: () => Alert.alert('Help & Support', 'For support, please contact us at support@bookvenue.app'),
     },
   ];
   
@@ -77,16 +78,15 @@ export default function ProfileScreen() {
     menuItems.unshift({
       icon: <User size={20} color="#2563EB" />,
       title: 'My Venues',
-      onPress: () => router.push('/my-venues'),
+      onPress: () => Alert.alert('Coming Soon', 'Venue management will be available soon'),
     });
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        <View style={styles.header}>
+      router.replace('/(tabs)/');
           <Text style={styles.headerTitle}>Profile</Text>
-        </View>
         
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>

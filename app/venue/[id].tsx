@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Alert } from 'react-native';
 import { venueApi } from '@/api/venueApi';
 import { bookingApi } from '@/api/bookingApi';
 import { Venue, VenueService, VenueCourt } from '@/types/venue';
+import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Star, MapPin, Clock, IndianRupee, Calendar, ArrowRight, ChevronRight } from 'lucide-react-native';
 
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const { width } = useWindowDimensions();
   
   const [venue, setVenue] = useState<Venue | null>(null);
@@ -181,17 +184,34 @@ export default function VenueDetailScreen() {
   };
 
   const handleBooking = () => {
-    if (selectedTimeSlots.length === 0 || !selectedCourt) {
+    // Check if user is logged in
+    if (!user) {
+      Alert.alert(
+        'Login Required',
+        'Please log in to book this venue',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Login', 
+            onPress: () => router.push('/(auth)/login')
+          }
+        ]
+      );
       return;
     }
     
-    // For multiple slots, we'll pass all selected slots
+    if (selectedTimeSlots.length === 0 || !selectedCourt || !venue) {
+      Alert.alert('Error', 'Please select time slots to continue');
+      return;
+    }
+    
+    // Calculate booking slots
     const duration = parseInt(selectedCourt.duration || '60');
     const bookingSlots = selectedTimeSlots.map(slot => {
-      const startHour = parseInt(slot.split(':')[0]);
-      const startMinute = parseInt(slot.split(':')[1]);
-      const endHour = startHour + Math.floor(duration / 60);
-      const endMinute = startMinute + (duration % 60);
+      const [startHour, startMinute] = slot.split(':').map(Number);
+      const totalMinutes = startHour * 60 + startMinute + duration;
+      const endHour = Math.floor(totalMinutes / 60);
+      const endMinute = totalMinutes % 60;
       const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
       
       return {
@@ -203,15 +223,16 @@ export default function VenueDetailScreen() {
     router.push({
       pathname: '/booking/confirm',
       params: {
-        venueId: venue?.slug,
-        facility_id: venue?.id,
-        serviceId: selectedService?.id,
-        courtId: selectedCourt?.id,
+        venueId: venue.slug,
+        venueName: venue.name,
+        facility_id: venue.id,
+        serviceId: selectedService?.id.toString(),
+        courtId: selectedCourt.id.toString(),
         date: selectedDate,
         bookingSlots: JSON.stringify(bookingSlots),
         totalAmount: totalAmount.toString(),
-        courtName: selectedCourt?.court_name,
-        serviceName: selectedService?.name,
+        courtName: selectedCourt.court_name,
+        serviceName: selectedService?.name || 'Service',
         totalSlots: selectedTimeSlots.length.toString()
       }
     });

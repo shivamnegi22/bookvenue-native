@@ -15,12 +15,8 @@ export default function IndexScreen() {
     );
   }
 
-  // Redirect based on auth state
-  if (user) {
-    return <Redirect href="/(tabs)/" />;
-  } else {
-    return <Redirect href="/(auth)/login" />;
-  }
+  // Always redirect to home tab - users can browse without login
+  return <Redirect href="/(tabs)/" />;
 }
 
 const styles = StyleSheet.create({

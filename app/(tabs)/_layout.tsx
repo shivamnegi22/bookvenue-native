@@ -1,6 +1,5 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Redirect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Chrome as Home, CalendarClock, CreditCard, MapPin, User } from 'lucide-react-native';
 import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
@@ -8,23 +7,6 @@ import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-nativ
 export default function TabLayout() {
   const { user, loading } = useAuth();
   
-  // Show loading while checking auth state
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={{ marginTop: 12, fontFamily: 'Inter-Medium', fontSize: 16, color: '#6B7280' }}>
-          Loading...
-        </Text>
-      </View>
-    );
-  }
-  
-  // Redirect to login if user is not authenticated
-  if (!user) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
   return (
     <Tabs
       screenOptions={{
@@ -54,15 +36,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* <Tabs.Screen
-        name="payments"
-        options={{
-          title: 'Payments',
-          tabBarIcon: ({ color, size }) => (
-            <CreditCard size={size} color={color} />
-          ),
-        }}
-      /> */}
       <Tabs.Screen
         name="bookings"
         options={{

@@ -24,6 +24,27 @@ export default function EditProfileScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<any>(null);
   
+  // Redirect to login if user is not authenticated
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.notLoggedInContainer}>
+          <User size={64} color="#6B7280" />
+          <Text style={styles.notLoggedInTitle}>Login Required</Text>
+          <Text style={styles.notLoggedInText}>
+            Please log in to edit your profile
+          </Text>
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={() => router.push('/(auth)/login')}
+          >
+            <Text style={styles.loginButtonText}>Go to Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
   const pickImage = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -91,11 +112,6 @@ export default function EditProfileScreen() {
       setLoading(false);
     }
   };
-
-  if (!user) {
-    router.replace('/login');
-    return null;
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -388,6 +404,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#EF4444',
     marginTop: 4,
+  },
+  notLoggedInContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  notLoggedInTitle: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 24,
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  notLoggedInText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  loginButton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  loginButtonText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#FFFFFF',
   },
   saveButton: {
     flexDirection: 'row',

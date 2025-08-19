@@ -47,15 +47,19 @@ export default function HomeScreen() {
   }, []);
 
   const handleSearch = () => {
-    router.push({
-      pathname: '/explore',
-      params: { query: searchQuery }
-    });
+    if (searchQuery.trim()) {
+      router.push({
+        pathname: '/(tabs)/explore',
+        params: { query: searchQuery }
+      });
+    } else {
+      router.push('/(tabs)/explore');
+    }
   };
 
   const handleShowAll = (type: string) => {
     router.push({
-      pathname: '/explore',
+      pathname: '/(tabs)/explore',
       params: { filter: type }
     });
   };
@@ -66,24 +70,35 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.welcomeText}>
-              Hello, {user?.name?.split(' ')[0] || 'Guest'}
+              Hello, {user?.name?.split(' ')[0] || 'Welcome'}
             </Text>
             <View style={styles.locationContainer}>
               <MapPin size={16} color="#6B7280" />
-              <Text style={styles.locationText}>{user?.address}</Text>
+              <Text style={styles.locationText}>
+                {user?.address || 'Explore venues near you'}
+              </Text>
             </View>
           </View>
-          <TouchableOpacity 
-            style={styles.profileImageContainer}
-            onPress={() => router.push('/profile')}
-          >
-            <ProfileAvatar 
-              name={user?.name || 'User'} 
-              size={40}
-              backgroundColor="#2563EB"
-              textColor="#FFFFFF"
-            />
-          </TouchableOpacity>
+          {user ? (
+            <TouchableOpacity 
+              style={styles.profileImageContainer}
+              onPress={() => router.push('/(tabs)/profile')}
+            >
+              <ProfileAvatar 
+                name={user.name || 'User'} 
+                size={40}
+                backgroundColor="#2563EB"
+                textColor="#FFFFFF"
+              />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={styles.loginButton}
+              onPress={() => router.push('/(auth)/login')}
+            >
+              <Text style={styles.loginButtonText}>Login</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.searchContainer}>
@@ -98,7 +113,7 @@ export default function HomeScreen() {
               onSubmitEditing={handleSearch}
             />
           </View>
-          <TouchableOpacity style={styles.filterButton} onPress={() => router.push('/explore')}>
+          <TouchableOpacity style={styles.filterButton} onPress={() => router.push('/(tabs)/explore')}>
             <Filter size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -112,7 +127,7 @@ export default function HomeScreen() {
               <Text style={styles.bannerTitle}>Book Your Perfect Venue</Text>
               <Text style={styles.bannerSubtitle}>Get 15% off your first booking</Text>
             </View>
-            <TouchableOpacity style={styles.bannerButton} onPress={() => router.push('/explore')}>
+            <TouchableOpacity style={styles.bannerButton} onPress={() => router.push('/(tabs)/explore')}>
               <Text style={styles.bannerButtonText}>Explore</Text>
             </TouchableOpacity>
           </LinearGradient>
@@ -231,6 +246,17 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     overflow: 'hidden',
+  },
+  loginButton: {
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  loginButtonText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#FFFFFF',
   },
   searchContainer: {
     flexDirection: 'row',
