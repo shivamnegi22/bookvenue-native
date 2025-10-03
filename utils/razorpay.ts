@@ -7,6 +7,7 @@ export interface RazorpayOptions {
   currency: string;
   name: string;
   description: string;
+  order_id: string;
   image?: string;
   prefill: {
     name: string;
@@ -144,6 +145,7 @@ export class RazorpayService {
       currency: 'INR',
       name: 'BookVenue',
       description: description,
+      order_id: orderId,
       image: 'https://images.pexels.com/photos/3775042/pexels-photo-3775042.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
       prefill: {
         name: userDetails.name,
