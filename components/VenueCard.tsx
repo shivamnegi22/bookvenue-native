@@ -49,8 +49,13 @@ export default function VenueCard({ venue, size }: VenueCardProps) {
             <MapPin size={14} color="#6B7280" />
             <Text style={styles.locationText} numberOfLines={1}>{venue.location}</Text>
           </View>
-          <View style={styles.priceContainer}>
-            <Text style={styles.priceText}>₹{getCurrentPrice()}/hour</Text>
+          <View style={styles.bottomRow}>
+            {venue.totalReviews && venue.totalReviews > 0 && (
+              <Text style={styles.reviewCount}>({venue.totalReviews} reviews)</Text>
+            )}
+            <View style={styles.priceContainer}>
+              <Text style={styles.priceText}>₹{getCurrentPrice()}/hour</Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -148,6 +153,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
     fontSize: 12,
     color: '#4B5563',
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reviewCount: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#6B7280',
   },
   priceContainer: {
     flexDirection: 'row',

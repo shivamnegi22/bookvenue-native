@@ -9,13 +9,24 @@ export type Venue = {
   openingTime: string;
   closingTime: string;
   rating: number;
-  amenities: string[];
+  totalReviews?: number;
+  amenities: VenueAmenity[];
   images: string[];
   coordinates: {
     latitude: number;
     longitude: number;
   };
   services?: VenueService[];
+  category?: string[];
+  minimumAmount?: number;
+  duration?: string;
+};
+
+export type VenueAmenity = {
+  id: number;
+  name: string;
+  icon: string;
+  description?: string;
 };
 
 export type VenueService = {
@@ -23,7 +34,7 @@ export type VenueService = {
   facility_id: number;
   service_id: number;
   name: string;
-  images: string;
+  icon?: string;
   courts: VenueCourt[];
 };
 

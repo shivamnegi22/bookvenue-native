@@ -335,7 +335,7 @@ export default function VenueDetailScreen() {
             {venue.amenities.map((amenity, index) => (
               <View key={index} style={styles.amenityItem}>
                 <View style={styles.amenityDot} />
-                <Text style={styles.amenityText}>{amenity}</Text>
+                <Text style={styles.amenityText}>{amenity.name}</Text>
               </View>
             ))}
           </View>
