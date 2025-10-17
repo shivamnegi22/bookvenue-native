@@ -20,7 +20,7 @@ export default function VenueDetailScreen() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedService, setSelectedService] = useState<VenueService | null>(null);
   const [selectedCourt, setSelectedCourt] = useState<VenueCourt | null>(null);
-  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<{ time: string; price: number }[]>([]);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   
@@ -64,82 +64,47 @@ export default function VenueDetailScreen() {
   // Fetch available time slots when date or court changes
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (selectedDate && selectedCourt && venue) {
+      if (selectedDate && selectedService && venue) {
         setAvailabilityLoading(true);
         try {
-          console.log('Fetching availability for:', { venue: venue.id, court: selectedCourt.id, date: selectedDate });
-          const availability = await bookingApi.getCourtAvailability(
-            venue.id,
-            selectedCourt.id.toString(),
-            selectedDate
-          );
-          
-          console.log('Availability response:', availability);
-          
-          // Process availability data to get available slots
-          if (availability && availability.available_slots) {
-            setAvailableTimeSlots(availability.available_slots);
-          } else if (availability && availability.slots) {
-            // Handle different response structure
-            const availableSlots = availability.slots
-              .filter((slot: any) => slot.available || !slot.booked)
-              .map((slot: any) => slot.time || slot.start_time);
-            setAvailableTimeSlots(availableSlots);
+          console.log('Fetching slots for:', { date: selectedDate, slug: venue.slug });
+          const slotsData = await venueApi.getSlotsByDate(selectedDate, venue.slug);
+
+          console.log('Slots response:', slotsData);
+
+          if (slotsData && slotsData.services) {
+            const currentService = slotsData.services.find(
+              (s: any) => s.id === selectedService.id
+            );
+
+            if (currentService && currentService.court && currentService.court.length > 0) {
+              const currentCourt = currentService.court.find(
+                (c: any) => c.id === selectedCourt?.id
+              ) || currentService.court[0];
+
+              if (currentCourt && currentCourt.slots) {
+                setAvailableTimeSlots(currentCourt.slots);
+              } else {
+                setAvailableTimeSlots([]);
+              }
+            } else {
+              setAvailableTimeSlots([]);
+            }
           } else {
-            // Fallback to generating slots if API doesn't return them
-            generateTimeSlots();
+            setAvailableTimeSlots([]);
           }
         } catch (error) {
-          console.error('Error fetching availability:', error);
-          // Fallback to generating slots
-          generateTimeSlots();
+          console.error('Error fetching slots:', error);
+          setAvailableTimeSlots([]);
         } finally {
           setAvailabilityLoading(false);
         }
       }
     };
 
-    const generateTimeSlots = () => {
-      if (!selectedCourt) return;
-      
-      // Use day and night time slots
-      const dayStartHour = parseInt(selectedCourt.day_start_time?.split(':')[0] || selectedCourt.start_time?.split(':')[0] || '6');
-      const dayEndHour = parseInt(selectedCourt.day_end_time?.split(':')[0] || '17');
-      const nightStartHour = parseInt(selectedCourt.night_start_time?.split(':')[0] || '17');
-      const nightEndHour = parseInt(selectedCourt.night_end_time?.split(':')[0] || selectedCourt.end_time?.split(':')[0] || '23');
-      const duration = parseInt(selectedCourt.duration || '60');
-
-      if (isNaN(dayStartHour) || isNaN(nightEndHour) || isNaN(duration)) {
-        console.warn("Invalid time data", { dayStartHour, nightEndHour, duration });
-        setAvailableTimeSlots([]);
-        return;
-      }
-
-      const slots = [];
-      
-      // Generate day slots
-      for (let hour = dayStartHour; hour < dayEndHour; hour += (duration / 60)) {
-        const startHour = Math.floor(hour);
-        const startMinute = (hour % 1) * 60;
-        const timeString = `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
-        slots.push(timeString);
-      }
-      
-      // Generate night slots
-      for (let hour = nightStartHour; hour < nightEndHour; hour += (duration / 60)) {
-        const startHour = Math.floor(hour);
-        const startMinute = (hour % 1) * 60;
-        const timeString = `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
-        slots.push(timeString);
-      }
-
-      console.log('Generated time slots:', slots);
-      setAvailableTimeSlots(slots);
-    };
-
     fetchAvailability();
     setSelectedTimeSlots([]);
-  }, [selectedDate, selectedCourt, venue]);
+  }, [selectedDate, selectedCourt, selectedService, venue]);
 
   const handleServiceChange = (service: VenueService) => {
     setSelectedService(service);
@@ -165,21 +130,16 @@ export default function VenueDetailScreen() {
   };
 
   const calculateTotalAmount = () => {
-    if (!selectedCourt || selectedTimeSlots.length === 0) return 0;
-    
+    if (selectedTimeSlots.length === 0) return 0;
+
     let total = 0;
-    selectedTimeSlots.forEach(slot => {
-      const hour = parseInt(slot.split(':')[0]);
-      const dayEndHour = parseInt(selectedCourt.day_end_time?.split(':')[0] || '17');
-      
-      // Use night price if slot is after day end time, otherwise use day price
-      if (hour >= dayEndHour) {
-        total += parseFloat(selectedCourt.night_slot_price || selectedCourt.slot_price);
-      } else {
-        total += parseFloat(selectedCourt.day_slot_price || selectedCourt.slot_price);
+    selectedTimeSlots.forEach(slotTime => {
+      const slotData = availableTimeSlots.find(s => s.time === slotTime);
+      if (slotData) {
+        total += slotData.price;
       }
     });
-    
+
     return total;
   };
 
@@ -205,17 +165,11 @@ export default function VenueDetailScreen() {
       return;
     }
     
-    // Calculate booking slots
-    const duration = parseInt(selectedCourt.duration || '60');
-    const bookingSlots = selectedTimeSlots.map(slot => {
-      const [startHour, startMinute] = slot.split(':').map(Number);
-      const totalMinutes = startHour * 60 + startMinute + duration;
-      const endHour = Math.floor(totalMinutes / 60);
-      const endMinute = totalMinutes % 60;
-      const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
-      
+    // Calculate booking slots from the time ranges
+    const bookingSlots = selectedTimeSlots.map(slotTime => {
+      const [startTime, endTime] = slotTime.split(' - ');
       return {
-        startTime: slot,
+        startTime: startTime,
         endTime: endTime
       };
     });
@@ -511,36 +465,30 @@ export default function VenueDetailScreen() {
           ) : availableTimeSlots.length > 0 ? (
             <View style={styles.timeSlotContainer}>
               {availableTimeSlots.map((slot, index) => (
-                <TouchableOpacity 
+                <TouchableOpacity
                   key={index}
                   style={[
                     styles.timeSlot,
-                    selectedTimeSlots.includes(slot) && styles.selectedTimeSlot
+                    selectedTimeSlots.includes(slot.time) && styles.selectedTimeSlot
                   ]}
-                  onPress={() => handleTimeSlotToggle(slot)}
+                  onPress={() => handleTimeSlotToggle(slot.time)}
                 >
                   <View style={styles.timeSlotContent}>
-                    <Text 
+                    <Text
                       style={[
                         styles.timeSlotText,
-                        selectedTimeSlots.includes(slot) && styles.selectedTimeSlotText
+                        selectedTimeSlots.includes(slot.time) && styles.selectedTimeSlotText
                       ]}
                     >
-                      {slot}
+                      {slot.time}
                     </Text>
-                    <Text 
+                    <Text
                       style={[
                         styles.timeSlotPrice,
-                        selectedTimeSlots.includes(slot) && styles.selectedTimeSlotPriceSelected
+                        selectedTimeSlots.includes(slot.time) && styles.selectedTimeSlotPriceSelected
                       ]}
                     >
-                      ₹{(() => {
-                        const hour = parseInt(slot.split(':')[0]);
-                        const dayEndHour = parseInt(selectedCourt?.day_end_time?.split(':')[0] || '17');
-                        return hour >= dayEndHour 
-                          ? selectedCourt?.night_slot_price || selectedCourt?.slot_price
-                          : selectedCourt?.day_slot_price || selectedCourt?.slot_price;
-                      })()}
+                      ₹{slot.price}
                     </Text>
                   </View>
                 </TouchableOpacity>

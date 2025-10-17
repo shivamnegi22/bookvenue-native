@@ -255,6 +255,18 @@ export const venueApi = {
       console.error('Error creating venue:', error);
       throw new Error('Failed to create venue');
     }
+  },
+
+  getSlotsByDate: async (date: string, slug: string) => {
+    try {
+      console.log('Fetching slots for:', { date, slug });
+      const response = await api.get(`/get-slot-by-selected-date/${date}/${slug}`);
+      console.log('Slots response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching slots:', error);
+      throw new Error('Failed to fetch slots');
+    }
   }
 
 };

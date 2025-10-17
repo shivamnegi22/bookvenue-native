@@ -53,4 +53,10 @@ export type VenueCourt = {
   slot_price?: string;
   duration: string;
   breaks: string;
+  slots?: VenueTimeSlot[];
+};
+
+export type VenueTimeSlot = {
+  time: string;
+  price: number;
 };
