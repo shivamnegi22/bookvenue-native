@@ -64,33 +64,47 @@ export default function VenueDetailScreen() {
   // Fetch available time slots when date or court changes
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (selectedDate && selectedService && venue) {
+      if (selectedDate && selectedService && selectedCourt && venue) {
         setAvailabilityLoading(true);
         try {
-          console.log('Fetching slots for:', { date: selectedDate, slug: venue.slug });
+          console.log('Fetching slots for:', {
+            date: selectedDate,
+            slug: venue.slug,
+            serviceId: selectedService.id,
+            courtId: selectedCourt.id
+          });
+
           const slotsData = await venueApi.getSlotsByDate(selectedDate, venue.slug);
 
-          console.log('Slots response:', slotsData);
+          console.log('Slots API response:', JSON.stringify(slotsData, null, 2));
 
           if (slotsData && slotsData.services) {
             const currentService = slotsData.services.find(
               (s: any) => s.id === selectedService.id
             );
 
+            console.log('Found service:', currentService?.name, 'with courts:', currentService?.court?.length);
+
             if (currentService && currentService.court && currentService.court.length > 0) {
               const currentCourt = currentService.court.find(
-                (c: any) => c.id === selectedCourt?.id
+                (c: any) => c.id === selectedCourt.id
               ) || currentService.court[0];
 
-              if (currentCourt && currentCourt.slots) {
+              console.log('Selected court:', currentCourt?.court_name, 'has slots:', currentCourt?.slots?.length);
+
+              if (currentCourt && currentCourt.slots && Array.isArray(currentCourt.slots)) {
+                console.log('Setting available time slots:', currentCourt.slots.length, 'slots');
                 setAvailableTimeSlots(currentCourt.slots);
               } else {
+                console.log('No slots found for court');
                 setAvailableTimeSlots([]);
               }
             } else {
+              console.log('No courts found in service');
               setAvailableTimeSlots([]);
             }
           } else {
+            console.log('No services in slots data');
             setAvailableTimeSlots([]);
           }
         } catch (error) {
@@ -445,7 +459,7 @@ export default function VenueDetailScreen() {
                           selectedCourt?.id === court.id && styles.selectedCourtPrice
                         ]}
                       >
-                        ₹{court.slot_price}/hr
+                        ₹{court.day_slot_price}/hr
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -457,8 +471,12 @@ export default function VenueDetailScreen() {
           <Text style={styles.timeSelectionTitle}>
             Select Time Slots {selectedTimeSlots.length > 0 && `(${selectedTimeSlots.length} selected)`}
           </Text>
-          
-          {availabilityLoading ? (
+
+          {!selectedCourt ? (
+            <View style={styles.noSlotsContainer}>
+              <Text style={styles.noSlotsText}>Please select a court to view available time slots</Text>
+            </View>
+          ) : availabilityLoading ? (
             <View style={styles.loadingSlots}>
               <ActivityIndicator size="small" color="#2563EB" />
               <Text style={styles.loadingSlotsText}>Loading available slots...</Text>
@@ -497,7 +515,7 @@ export default function VenueDetailScreen() {
             </View>
           ) : (
             <View style={styles.noSlotsContainer}>
-              <Text style={styles.noSlotsText}>No time slots available for selected date</Text>
+              <Text style={styles.noSlotsText}>No time slots available for selected date and court</Text>
             </View>
           )}
         </View>
