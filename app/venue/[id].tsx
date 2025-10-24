@@ -374,14 +374,56 @@ export default function VenueDetailScreen() {
             </>
           )}
 
-          {/* Court Selection */}
-          {selectedService && selectedService.courts && selectedService.courts.length > 1 && (
+          {/* Date Selection */}
+          <Text style={styles.dateSelectionTitle}>Select Date</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.dateContainer}>
+              {nextDays.map((day, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.dateItem,
+                    selectedDate === day.fullDate && styles.selectedDateItem
+                  ]}
+                  onPress={() => setSelectedDate(day.fullDate)}
+                >
+                  <Text
+                    style={[
+                      styles.dayText,
+                      selectedDate === day.fullDate && styles.selectedDayText
+                    ]}
+                  >
+                    {day.day}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.dateText,
+                      selectedDate === day.fullDate && styles.selectedDateText
+                    ]}
+                  >
+                    {day.date}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.monthText,
+                      selectedDate === day.fullDate && styles.selectedMonthText
+                    ]}
+                  >
+                    {day.month}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Court Selection - Always show after date selection */}
+          {selectedService && selectedService.courts && selectedService.courts.length > 0 && (
             <>
               <Text style={styles.selectionTitle}>Select Court</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.courtContainer}>
                   {selectedService.courts.map((court) => (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       key={court.id}
                       style={[
                         styles.courtItem,
@@ -389,7 +431,7 @@ export default function VenueDetailScreen() {
                       ]}
                       onPress={() => handleCourtChange(court)}
                     >
-                      <Text 
+                      <Text
                         style={[
                           styles.courtText,
                           selectedCourt?.id === court.id && styles.selectedCourtText
@@ -397,7 +439,7 @@ export default function VenueDetailScreen() {
                       >
                         {court.court_name}
                       </Text>
-                      <Text 
+                      <Text
                         style={[
                           styles.courtPrice,
                           selectedCourt?.id === court.id && styles.selectedCourtPrice
@@ -411,48 +453,7 @@ export default function VenueDetailScreen() {
               </ScrollView>
             </>
           )}
-          
-          <Text style={styles.dateSelectionTitle}>Select Date</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.dateContainer}>
-              {nextDays.map((day, index) => (
-                <TouchableOpacity 
-                  key={index}
-                  style={[
-                    styles.dateItem,
-                    selectedDate === day.fullDate && styles.selectedDateItem
-                  ]}
-                  onPress={() => setSelectedDate(day.fullDate)}
-                >
-                  <Text 
-                    style={[
-                      styles.dayText,
-                      selectedDate === day.fullDate && styles.selectedDayText
-                    ]}
-                  >
-                    {day.day}
-                  </Text>
-                  <Text 
-                    style={[
-                      styles.dateText,
-                      selectedDate === day.fullDate && styles.selectedDateText
-                    ]}
-                  >
-                    {day.date}
-                  </Text>
-                  <Text 
-                    style={[
-                      styles.monthText,
-                      selectedDate === day.fullDate && styles.selectedMonthText
-                    ]}
-                  >
-                    {day.month}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-          
+
           <Text style={styles.timeSelectionTitle}>
             Select Time Slots {selectedTimeSlots.length > 0 && `(${selectedTimeSlots.length} selected)`}
           </Text>
