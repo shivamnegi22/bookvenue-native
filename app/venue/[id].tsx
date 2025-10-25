@@ -25,6 +25,7 @@ export default function VenueDetailScreen() {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [selectedCourtDetails, setSelectedCourtDetails] = useState<any>(null);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   
   const today = new Date();
   const nextDays = Array.from({ length: 15 }, (_, i) => {
@@ -80,7 +81,8 @@ export default function VenueDetailScreen() {
               setSelectedCourtDetails(courtData);
 
               if (courtData.slots && Array.isArray(courtData.slots)) {
-                setAvailableTimeSlots(courtData.slots);
+                const filteredSlots = filterPastSlots(courtData.slots, selectedDate);
+                setAvailableTimeSlots(filteredSlots);
               } else {
                 setAvailableTimeSlots([]);
               }
@@ -105,6 +107,37 @@ export default function VenueDetailScreen() {
     fetchAvailability();
     setSelectedTimeSlots([]);
   }, [selectedDate, selectedCourtName, venue]);
+
+  const filterPastSlots = (slots: { time: string; price: number }[], date: string) => {
+    const selectedDateObj = new Date(date);
+    const todayDateObj = new Date();
+
+    todayDateObj.setHours(0, 0, 0, 0);
+    selectedDateObj.setHours(0, 0, 0, 0);
+
+    const isToday = selectedDateObj.getTime() === todayDateObj.getTime();
+
+    if (!isToday) {
+      return slots;
+    }
+
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
+    const currentMinute = currentTime.getMinutes();
+
+    return slots.filter(slot => {
+      const [startTime] = slot.time.split(' - ');
+      const [hours, minutes] = startTime.split(':').map(Number);
+
+      if (hours > currentHour) {
+        return true;
+      }
+      if (hours === currentHour && minutes > currentMinute) {
+        return true;
+      }
+      return false;
+    });
+  };
 
   const handleCourtChange = (courtName: string) => {
     setSelectedCourtName(courtName);
@@ -272,9 +305,24 @@ export default function VenueDetailScreen() {
           </View>
           
           <View style={styles.separator} />
-          
+
           <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.descriptionText}>{venue.description}</Text>
+          <Text
+            style={styles.descriptionText}
+            numberOfLines={showFullDescription ? undefined : 4}
+          >
+            {venue.description}
+          </Text>
+          {venue.description && venue.description.length > 200 && (
+            <TouchableOpacity
+              onPress={() => setShowFullDescription(!showFullDescription)}
+              style={styles.showMoreButton}
+            >
+              <Text style={styles.showMoreText}>
+                {showFullDescription ? 'Show Less' : 'Show More'}
+              </Text>
+            </TouchableOpacity>
+          )}
           
           <View style={styles.separator} />
           
@@ -647,6 +695,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     color: '#4B5563',
+  },
+  showMoreButton: {
+    paddingVertical: 8,
+    alignItems: 'flex-start',
+  },
+  showMoreText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#2563EB',
   },
   amenitiesContainer: {
     flexDirection: 'row',
