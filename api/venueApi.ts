@@ -237,7 +237,8 @@ export const venueApi = {
         category: facility.category,
         minimumAmount: facility.minimum_amount ? parseFloat(facility.minimum_amount) : undefined,
         duration: facility.duration,
-        services: processedServices
+        services: processedServices,
+        court_names: facility.court_names || []
       };
 
       console.log('Venue fetched successfully:', venueData);

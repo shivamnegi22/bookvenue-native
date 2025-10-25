@@ -18,11 +18,13 @@ export default function VenueDetailScreen() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedService, setSelectedService] = useState<VenueService | null>(null);
-  const [selectedCourt, setSelectedCourt] = useState<VenueCourt | null>(null);
+  const [courtNames, setCourtNames] = useState<string[]>([]);
+  const [selectedCourtName, setSelectedCourtName] = useState<string>('');
+  const [slotsData, setSlotsData] = useState<any>(null);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<{ time: string; price: number }[]>([]);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [selectedCourtDetails, setSelectedCourtDetails] = useState<any>(null);
   
   const today = new Date();
   const nextDays = Array.from({ length: 15 }, (_, i) => {
@@ -42,14 +44,13 @@ export default function VenueDetailScreen() {
         if (!id) return;
         const response = await venueApi.getVenueBySlug(id);
         setVenue(response);
-        
-        // Set initial selections
+
+        const courtNamesArray = response.court_names || [];
+        setCourtNames(courtNamesArray);
+
         setSelectedDate(nextDays[0].fullDate);
-        if (response.services && response.services.length > 0) {
-          setSelectedService(response.services[0]);
-          if (response.services[0].courts && response.services[0].courts.length > 0) {
-            setSelectedCourt(response.services[0].courts[0]);
-          }
+        if (courtNamesArray.length > 0) {
+          setSelectedCourtName(courtNamesArray[0]);
         }
       } catch (error) {
         console.error('Error fetching venue:', error);
@@ -61,55 +62,40 @@ export default function VenueDetailScreen() {
     fetchVenue();
   }, [id]);
   
-  // Fetch available time slots when date or court changes
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (selectedDate && selectedService && selectedCourt && venue) {
+      if (selectedDate && selectedCourtName && venue) {
         setAvailabilityLoading(true);
         try {
-          console.log('Fetching slots for:', {
-            date: selectedDate,
-            slug: venue.slug,
-            serviceId: selectedService.id,
-            courtId: selectedCourt.id
-          });
+          const fetchedSlotsData = await venueApi.getSlotsByDate(selectedDate, venue.slug);
+          setSlotsData(fetchedSlotsData);
 
-          const slotsData = await venueApi.getSlotsByDate(selectedDate, venue.slug);
-
-          console.log('Slots API response:', JSON.stringify(slotsData, null, 2));
-
-          if (slotsData && slotsData.services) {
-            const currentService = slotsData.services.find(
-              (s: any) => s.id === selectedService.id
+          if (fetchedSlotsData && fetchedSlotsData.services) {
+            const matchingService = fetchedSlotsData.services.find(
+              (s: any) => s.name === selectedCourtName
             );
 
-            console.log('Found service:', currentService?.name, 'with courts:', currentService?.court?.length);
+            if (matchingService && matchingService.court && matchingService.court.length > 0) {
+              const courtData = matchingService.court[0];
+              setSelectedCourtDetails(courtData);
 
-            if (currentService && currentService.court && currentService.court.length > 0) {
-              const currentCourt = currentService.court.find(
-                (c: any) => c.id === selectedCourt.id
-              ) || currentService.court[0];
-
-              console.log('Selected court:', currentCourt?.court_name, 'has slots:', currentCourt?.slots?.length);
-
-              if (currentCourt && currentCourt.slots && Array.isArray(currentCourt.slots)) {
-                console.log('Setting available time slots:', currentCourt.slots.length, 'slots');
-                setAvailableTimeSlots(currentCourt.slots);
+              if (courtData.slots && Array.isArray(courtData.slots)) {
+                setAvailableTimeSlots(courtData.slots);
               } else {
-                console.log('No slots found for court');
                 setAvailableTimeSlots([]);
               }
             } else {
-              console.log('No courts found in service');
               setAvailableTimeSlots([]);
+              setSelectedCourtDetails(null);
             }
           } else {
-            console.log('No services in slots data');
             setAvailableTimeSlots([]);
+            setSelectedCourtDetails(null);
           }
         } catch (error) {
           console.error('Error fetching slots:', error);
           setAvailableTimeSlots([]);
+          setSelectedCourtDetails(null);
         } finally {
           setAvailabilityLoading(false);
         }
@@ -118,18 +104,10 @@ export default function VenueDetailScreen() {
 
     fetchAvailability();
     setSelectedTimeSlots([]);
-  }, [selectedDate, selectedCourt, selectedService, venue]);
+  }, [selectedDate, selectedCourtName, venue]);
 
-  const handleServiceChange = (service: VenueService) => {
-    setSelectedService(service);
-    if (service.courts && service.courts.length > 0) {
-      setSelectedCourt(service.courts[0]);
-    }
-    setSelectedTimeSlots([]);
-  };
-
-  const handleCourtChange = (court: VenueCourt) => {
-    setSelectedCourt(court);
+  const handleCourtChange = (courtName: string) => {
+    setSelectedCourtName(courtName);
     setSelectedTimeSlots([]);
   };
 
@@ -158,28 +136,26 @@ export default function VenueDetailScreen() {
   };
 
   const handleBooking = () => {
-    // Check if user is logged in
     if (!user) {
       Alert.alert(
         'Login Required',
         'Please log in to book this venue',
         [
           { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Login', 
+          {
+            text: 'Login',
             onPress: () => router.push('/(auth)/login')
           }
         ]
       );
       return;
     }
-    
-    if (selectedTimeSlots.length === 0 || !selectedCourt || !venue) {
+
+    if (selectedTimeSlots.length === 0 || !selectedCourtDetails || !venue) {
       Alert.alert('Error', 'Please select time slots to continue');
       return;
     }
-    
-    // Calculate booking slots from the time ranges
+
     const bookingSlots = selectedTimeSlots.map(slotTime => {
       const [startTime, endTime] = slotTime.split(' - ');
       return {
@@ -188,19 +164,23 @@ export default function VenueDetailScreen() {
       };
     });
 
+    const matchingService = slotsData?.services?.find(
+      (s: any) => s.name === selectedCourtName
+    );
+
     router.push({
       pathname: '/booking/confirm',
       params: {
         venueId: venue.slug,
         venueName: venue.name,
         facility_id: venue.id,
-        serviceId: selectedService?.id.toString(),
-        courtId: selectedCourt.id.toString(),
+        serviceId: matchingService?.id.toString() || '',
+        courtId: selectedCourtDetails.id.toString(),
         date: selectedDate,
         bookingSlots: JSON.stringify(bookingSlots),
         totalAmount: totalAmount.toString(),
-        courtName: selectedCourt.court_name,
-        serviceName: selectedService?.name || 'Service',
+        courtName: selectedCourtDetails.court_name,
+        serviceName: selectedCourtName,
         totalSlots: selectedTimeSlots.length.toString()
       }
     });
@@ -279,14 +259,14 @@ export default function VenueDetailScreen() {
             <View style={styles.infoItem}>
               <Clock size={16} color="#2563EB" />
               <Text style={styles.infoText}>
-                {selectedCourt ? `${selectedCourt.start_time} - ${selectedCourt.end_time}` : `${venue.openingTime} - ${venue.closingTime}`}
+                {selectedCourtDetails ? `${selectedCourtDetails.day_start_time} - ${selectedCourtDetails.night_end_time}` : `${venue.openingTime} - ${venue.closingTime}`}
               </Text>
             </View>
-            
+
             <View style={styles.infoItem}>
               <IndianRupee size={16} color="#2563EB" />
               <Text style={styles.infoText}>
-                ₹{selectedCourt ? selectedCourt.slot_price : venue.pricePerHour}/hour
+                ₹{selectedCourtDetails ? selectedCourtDetails.day_slot_price : venue.pricePerHour}/hour
               </Text>
             </View>
           </View>
@@ -357,29 +337,28 @@ export default function VenueDetailScreen() {
           <View style={styles.separator} />
           
           <Text style={styles.sectionTitle}>Booking</Text>
-          
-          {/* Service Selection */}
-          {venue.services && venue.services.length > 1 && (
+
+          {courtNames.length > 1 && (
             <>
               <Text style={styles.selectionTitle}>Select Sport</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.serviceContainer}>
-                  {venue.services.map((service) => (
-                    <TouchableOpacity 
-                      key={service.id}
+                  {courtNames.map((courtName) => (
+                    <TouchableOpacity
+                      key={courtName}
                       style={[
                         styles.serviceItem,
-                        selectedService?.id === service.id && styles.selectedServiceItem
+                        selectedCourtName === courtName && styles.selectedServiceItem
                       ]}
-                      onPress={() => handleServiceChange(service)}
+                      onPress={() => handleCourtChange(courtName)}
                     >
-                      <Text 
+                      <Text
                         style={[
                           styles.serviceText,
-                          selectedService?.id === service.id && styles.selectedServiceText
+                          selectedCourtName === courtName && styles.selectedServiceText
                         ]}
                       >
-                        {service.name}
+                        {courtName}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -430,51 +409,30 @@ export default function VenueDetailScreen() {
             </View>
           </ScrollView>
 
-          {/* Court Selection - Always show after date selection */}
-          {selectedService && selectedService.courts && selectedService.courts.length > 0 && (
-            <>
-              <Text style={styles.selectionTitle}>Select Court</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.courtContainer}>
-                  {selectedService.courts.map((court) => (
-                    <TouchableOpacity
-                      key={court.id}
-                      style={[
-                        styles.courtItem,
-                        selectedCourt?.id === court.id && styles.selectedCourtItem
-                      ]}
-                      onPress={() => handleCourtChange(court)}
-                    >
-                      <Text
-                        style={[
-                          styles.courtText,
-                          selectedCourt?.id === court.id && styles.selectedCourtText
-                        ]}
-                      >
-                        {court.court_name}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.courtPrice,
-                          selectedCourt?.id === court.id && styles.selectedCourtPrice
-                        ]}
-                      >
-                        ₹{court.day_slot_price}/hr
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
-            </>
+          {selectedCourtDetails && (
+            <View style={styles.courtInfoCard}>
+              <View style={styles.courtInfoRow}>
+                <Text style={styles.courtInfoLabel}>Day Slots:</Text>
+                <Text style={styles.courtInfoValue}>₹{selectedCourtDetails.day_slot_price}/hr</Text>
+              </View>
+              <View style={styles.courtInfoRow}>
+                <Text style={styles.courtInfoLabel}>Night Slots:</Text>
+                <Text style={styles.courtInfoValue}>₹{selectedCourtDetails.night_slot_price}/hr</Text>
+              </View>
+              <View style={styles.courtInfoRow}>
+                <Text style={styles.courtInfoLabel}>Duration:</Text>
+                <Text style={styles.courtInfoValue}>{selectedCourtDetails.duration} minutes</Text>
+              </View>
+            </View>
           )}
 
           <Text style={styles.timeSelectionTitle}>
             Select Time Slots {selectedTimeSlots.length > 0 && `(${selectedTimeSlots.length} selected)`}
           </Text>
 
-          {!selectedCourt ? (
+          {!selectedCourtName ? (
             <View style={styles.noSlotsContainer}>
-              <Text style={styles.noSlotsText}>Please select a court to view available time slots</Text>
+              <Text style={styles.noSlotsText}>Please select a sport to view available time slots</Text>
             </View>
           ) : availabilityLoading ? (
             <View style={styles.loadingSlots}>
@@ -529,7 +487,7 @@ export default function VenueDetailScreen() {
               {selectedTimeSlots.length > 1 ? 'Total' : 'Price'}
             </Text>
             <Text style={styles.priceValue}>
-              ₹{totalAmount || (selectedCourt ? selectedCourt.day_slot_price : venue.pricePerHour)}
+              ₹{totalAmount || (selectedCourtDetails ? selectedCourtDetails.day_slot_price : venue.pricePerHour)}
             </Text>
             {selectedTimeSlots.length <= 1 && (
               <Text style={styles.priceUnit}>/hour</Text>
@@ -804,6 +762,28 @@ const styles = StyleSheet.create({
   },
   selectedCourtPrice: {
     color: '#FFFFFF',
+  },
+  courtInfoCard: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  courtInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  courtInfoLabel: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  courtInfoValue: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#1F2937',
   },
   dateSelectionTitle: {
     fontFamily: 'Inter-Medium',

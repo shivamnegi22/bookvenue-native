@@ -20,6 +20,7 @@ export type Venue = {
   category?: string[];
   minimumAmount?: number;
   duration?: string;
+  court_names?: string[];
 };
 
 export type VenueAmenity = {
