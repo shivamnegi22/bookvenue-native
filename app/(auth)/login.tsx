@@ -107,12 +107,12 @@ export default function LoginScreen() {
       // Get user profile after successful login
       const userData = await authApi.getProfile();
       console.log('Login successful, user data:', userData);
-      
+
       // Update auth context with user data
-      login(userData);
-      
+      await login(userData);
+
       // Navigate to home page
-      router.replace('/');
+      router.replace('/(tabs)/');
     } catch (err: any) {
       console.error('OTP verification error:', err);
       setError(err.message || 'OTP verification failed');

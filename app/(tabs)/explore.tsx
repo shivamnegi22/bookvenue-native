@@ -208,23 +208,23 @@ export default function ExploreScreen() {
                   ${priceRange[0]} - ${priceRange[1]}
                 </Text>
                 <View style={styles.priceButtons}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.priceButton}
-                    onPress={() => setPriceRange([0, 50])}
+                    onPress={() => setPriceRange([0, 500])}
                   >
-                    <Text style={styles.priceButtonText}>$0-$50</Text>
+                    <Text style={styles.priceButtonText}>₹0-₹500</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.priceButton}
-                    onPress={() => setPriceRange([50, 100])}
+                    onPress={() => setPriceRange([500, 1000])}
                   >
-                    <Text style={styles.priceButtonText}>$50-$100</Text>
+                    <Text style={styles.priceButtonText}>₹500-₹1000</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.priceButton}
-                    onPress={() => setPriceRange([100, 1000])}
+                    onPress={() => setPriceRange([1000, 10000])}
                   >
-                    <Text style={styles.priceButtonText}>$100+</Text>
+                    <Text style={styles.priceButtonText}>₹1000+</Text>
                   </TouchableOpacity>
                 </View>
               </View>

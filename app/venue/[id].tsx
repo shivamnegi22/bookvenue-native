@@ -7,7 +7,7 @@ import { venueApi } from '@/api/venueApi';
 import { bookingApi } from '@/api/bookingApi';
 import { Venue, VenueService, VenueCourt } from '@/types/venue';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Star, MapPin, Clock, IndianRupee, Calendar, ArrowRight, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, Star, MapPin, Clock, IndianRupee, Calendar, ArrowRight, ChevronRight, ChevronLeft } from 'lucide-react-native';
 
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,6 +26,8 @@ export default function VenueDetailScreen() {
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [selectedCourtDetails, setSelectedCourtDetails] = useState<any>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const flatListRef = React.useRef<FlatList>(null);
   
   const today = new Date();
   const nextDays = Array.from({ length: 15 }, (_, i) => {
@@ -253,25 +255,72 @@ export default function VenueDetailScreen() {
       >
         <View style={styles.imageContainer}>
           <FlatList
+            ref={flatListRef}
             data={venue.images}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(event) => {
+              const index = Math.round(event.nativeEvent.contentOffset.x / width);
+              setCurrentImageIndex(index);
+            }}
             renderItem={({ item }) => (
-              <Image 
-                source={{ uri: item }} 
-                style={[styles.venueImage, { width }]} 
+              <Image
+                source={{ uri: item }}
+                style={[styles.venueImage, { width }]}
               />
             )}
             keyExtractor={(item, index) => index.toString()}
           />
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.backButtonContainer}
             onPress={() => router.back()}
           >
             <ArrowLeft size={24} color="#FFFFFF" />
           </TouchableOpacity>
+
+          {venue.images.length > 1 && (
+            <>
+              {currentImageIndex > 0 && (
+                <TouchableOpacity
+                  style={styles.prevButton}
+                  onPress={() => {
+                    const newIndex = currentImageIndex - 1;
+                    setCurrentImageIndex(newIndex);
+                    flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
+                  }}
+                >
+                  <ChevronLeft size={28} color="#FFFFFF" strokeWidth={3} />
+                </TouchableOpacity>
+              )}
+
+              {currentImageIndex < venue.images.length - 1 && (
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={() => {
+                    const newIndex = currentImageIndex + 1;
+                    setCurrentImageIndex(newIndex);
+                    flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
+                  }}
+                >
+                  <ChevronRight size={28} color="#FFFFFF" strokeWidth={3} />
+                </TouchableOpacity>
+              )}
+
+              <View style={styles.imageIndicatorContainer}>
+                {venue.images.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.imageIndicator,
+                      index === currentImageIndex && styles.imageIndicatorActive
+                    ]}
+                  />
+                ))}
+              </View>
+            </>
+          )}
         </View>
         
         <View style={styles.venueInfoContainer}>
@@ -616,6 +665,53 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
+  },
+  prevButton: {
+    position: 'absolute',
+    left: 16,
+    top: '50%',
+    marginTop: -24,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  nextButton: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    marginTop: -24,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  imageIndicatorContainer: {
+    position: 'absolute',
+    bottom: 16,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  imageIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  imageIndicatorActive: {
+    backgroundColor: '#FFFFFF',
+    width: 24,
   },
   venueInfoContainer: {
     padding: 16,

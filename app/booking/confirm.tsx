@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar, Clock, MapPin, User, CreditCard, CircleCheck as CheckCircle, ArrowLeft, IndianRupee } from 'lucide-react-native';
+import { Calendar, Clock, MapPin, User, CreditCard, ArrowLeft, IndianRupee } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { bookingApi } from '@/api/bookingApi';
 import { RazorpayService } from '@/utils/razorpay';
@@ -139,18 +139,7 @@ useEffect(() => {
         signature: paymentResult.razorpay_signature,
       });
 
-      Alert.alert(
-        'Success!',
-        'Your booking has been confirmed successfully.',
-        [
-          {
-            text: 'View Bookings',
-            onPress: () => {
-              router.replace('/(tabs)/bookings');
-            },
-          },
-        ]
-      );
+      router.replace('/(tabs)/bookings');
     } catch (error: any) {
       console.error('Payment error:', error);
       
@@ -208,7 +197,6 @@ useEffect(() => {
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.confirmHeader}>
-          <CheckCircle size={48} color="#10B981" />
           <Text style={styles.confirmTitle}>Confirm Your Booking</Text>
           <Text style={styles.confirmSubtitle}>Review your booking details</Text>
         </View>
