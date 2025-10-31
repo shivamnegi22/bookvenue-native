@@ -141,7 +141,7 @@ export class RazorpayService {
 
     return {
       key: this.apiKey,
-      amount: Math.round(amount * 100), // Convert to paise and ensure integer
+      amount: Math.round(amount), // Convert to paise and ensure integer
       currency: 'INR',
       name: 'BookVenue',
       description: description,
