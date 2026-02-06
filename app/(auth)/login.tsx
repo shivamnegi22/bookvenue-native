@@ -35,6 +35,7 @@ export default function LoginScreen() {
     };
   }, [resendTimer]);
 
+
   const handleMethodSelect = (method: 'email' | 'phone') => {
     setShowInput(method);
     setIdentifier('');
@@ -110,9 +111,12 @@ export default function LoginScreen() {
 
       // Update auth context with user data
       await login(userData);
+      // Small delay to ensure state updates propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+
 
       // Navigate to home page
-      router.replace('/(tabs)/');
+      router.replace('/');
     } catch (err: any) {
       console.error('OTP verification error:', err);
       setError(err.message || 'OTP verification failed');

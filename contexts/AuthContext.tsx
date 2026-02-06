@@ -42,25 +42,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkLoggedIn = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        console.log('Checking logged-in status, token exists:', !!token);
-        
-        if (token) {
+        const savedUser = await AsyncStorage.getItem('user');
+
+        if (token && savedUser) {
+          // Set local data immediately for instant UI rendering
+          setUser(JSON.parse(savedUser));
+
+          // Optionally refresh profile from API in background
           try {
-            const userData = await authApi.getProfile();
-            console.log('User profile loaded:', userData);
-            setUser(userData);
-          } catch (error) {
-            console.error('Failed to load profile with existing token:', error);
-            // Clear invalid token
-            await AsyncStorage.removeItem('token');
-            await AsyncStorage.removeItem('user');
+            const freshData = await authApi.getProfile();
+            setUser(freshData);
+            await AsyncStorage.setItem('user', JSON.stringify(freshData));
+          } catch (e) {
+            console.log("Background profile refresh failed, using cached data.");
           }
         }
       } catch (error) {
         console.error('Error checking logged-in status:', error);
-        // Clear invalid token
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('user');
       } finally {
         setLoading(false);
       }
@@ -72,7 +70,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (userData: User): Promise<void> => {
     try {
       console.log('Login context called with user data:', userData);
+
+      // Update state AND save to AsyncStorage
       setUser(userData);
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+
+      console.log('User set in context and storage:', userData);
     } catch (error) {
       console.error('Login context failed:', error);
       throw error;

@@ -29,6 +29,24 @@
           "androidApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y",
           "iosApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
         }
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.bookvenue",
+          "enableGooglePay": true
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true,
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false
+          }
+        }
       ]
     ],
     "experiments": {
@@ -46,14 +64,22 @@
       }
     },
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/BookVenue_Logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "usesCleartextTraffic": true,
       "package": "com.shivamnegi.bookvenue",
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
-      ]
+      ],
+      "allowBackup": true
     },
     "updates": {
       "fallbackToCacheTimeout": 0

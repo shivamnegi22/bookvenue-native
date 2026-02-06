@@ -1,20 +1,32 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'https://admin.bookvenue.app/api';
+const API_URL = 'https://admin.bookvenue.app/api/';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
+    'Content-Type': 'application/json',
   },
 });
 
 // Add token to requests
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('token');
-  if (token) {
+
+  // Define routes that do NOT need a token
+  const publicEndpoints = [
+    '/login',
+    '/register',
+    '/login-via-email',
+    '/verify-otp',
+  ];
+  const isPublic = publicEndpoints.some((endpoint) =>
+    config.url?.endsWith(endpoint),
+  );
+
+  if (token && !isPublic) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -30,19 +42,35 @@ api.interceptors.response.use(
       await AsyncStorage.removeItem('user');
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export const authApi = {
   // Send OTP for login via mobile
   login: async (mobile: string) => {
     try {
-      const response = await api.post('/login', { mobile });
-      console.log('Login OTP sent successfully:', response.data);
+      console.log('Sending login OTP to mobile:', mobile);
+      const response = await api.post('/login', { mobile: mobile.toString() });
       return response.data;
     } catch (error: any) {
-      console.error('Login Error:', error.response?.data || error);
-      throw new Error(error.response?.data?.message || 'Failed to send OTP');
+      // CHANGE: Log more detail to see what's actually happening
+      console.log('Full Error Object:', JSON.stringify(error, null, 2));
+
+      if (error.response) {
+        // The server responded with a status code outside the 2xx range
+        console.error('Data:', error.response.data);
+        console.error('Status:', error.response.status);
+        throw new Error(
+          error.response.data.message || 'Server rejected OTP request',
+        );
+      } else if (error.request) {
+        // The request was made but no response was received
+        throw new Error(
+          'No response from server. Check your internet connection.',
+        );
+      } else {
+        throw new Error(error.message);
+      }
     }
   },
 
@@ -54,7 +82,9 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.error('Email Login Error:', error.response?.data || error);
-      throw new Error(error.response?.data?.message || 'Failed to send OTP to email');
+      throw new Error(
+        error.response?.data?.message || 'Failed to send OTP to email',
+      );
     }
   },
 
@@ -63,13 +93,15 @@ export const authApi = {
     try {
       const payload = { mobile, name };
       console.log('Sending registration OTP:', payload);
-      
+
       const response = await api.post('/register', payload);
       console.log('Registration OTP sent successfully:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Register Error:', error.response?.data || error);
-      throw new Error(error.response?.data?.message || 'Failed to send registration OTP');
+      throw new Error(
+        error.response?.data?.message || 'Failed to send registration OTP',
+      );
     }
   },
 
@@ -79,16 +111,20 @@ export const authApi = {
       console.log('Verifying mobile OTP:', { mobile, otp });
       const response = await api.post('/verify-otp', { mobile, otp });
       console.log('Mobile OTP verification response:', response.data);
-      
+
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
-        if (response.data.user) {
-          await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-        }
+        // REMOVE THIS - don't save user here, let getProfile + login handle it
+        // if (response.data.user) {
+        //   await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+        // }
       }
       return response.data;
     } catch (error: any) {
-      console.error('Mobile OTP Verification Error:', error.response?.data || error);
+      console.error(
+        'Mobile OTP Verification Error:',
+        error.response?.data || error,
+      );
       throw new Error(error.response?.data?.message || 'Failed to verify OTP');
     }
   },
@@ -99,17 +135,23 @@ export const authApi = {
       console.log('Verifying email OTP:', { email, otp });
       const response = await api.post('/verify-otp-via-email', { email, otp });
       console.log('Email OTP verification response:', response.data);
-      
+
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
-        if (response.data.user) {
-          await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-        }
+        // REMOVE THIS - don't save user here, let getProfile + login handle it
+        // if (response.data.user) {
+        //   await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+        // }
       }
       return response.data;
     } catch (error: any) {
-      console.error('Email OTP Verification Error:', error.response?.data || error);
-      throw new Error(error.response?.data?.message || 'Failed to verify email OTP');
+      console.error(
+        'Email OTP Verification Error:',
+        error.response?.data || error,
+      );
+      throw new Error(
+        error.response?.data?.message || 'Failed to verify email OTP',
+      );
     }
   },
 
@@ -118,20 +160,25 @@ export const authApi = {
     try {
       const payload = {
         mobile,
-        otp
+        otp,
       };
-      
+
       console.log('Verifying registration OTP:', payload);
       const response = await api.post('/verifyuser', payload);
       console.log('Registration OTP verification response:', response.data);
-      
+
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
       }
       return response.data;
     } catch (error: any) {
-      console.error('Register OTP Verification Error:', error.response?.data || error);
-      throw new Error(error.response?.data?.message || 'Failed to verify registration OTP');
+      console.error(
+        'Register OTP Verification Error:',
+        error.response?.data || error,
+      );
+      throw new Error(
+        error.response?.data?.message || 'Failed to verify registration OTP',
+      );
     }
   },
 
@@ -139,7 +186,7 @@ export const authApi = {
     try {
       const response = await api.get('/get-user-details');
       const userData = response.data.user;
-      
+
       const profileData = {
         id: userData.id.toString(),
         name: userData.name,
@@ -148,9 +195,9 @@ export const authApi = {
         address: userData.address,
         isVenueOwner: false,
         createdAt: userData.created_at,
-        updatedAt: userData.updated_at
+        updatedAt: userData.updated_at,
       };
-      
+
       console.log('Profile fetched successfully:', profileData);
       return profileData;
     } catch (error: any) {
@@ -162,37 +209,44 @@ export const authApi = {
   updateProfile: async (userData: any) => {
     try {
       console.log('Updating profile:', userData);
-      
+
       const response = await api.post('/profileUpdate', userData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      
+
       console.log('Profile update response:', response.data);
-      
+
       if (response.status === 200) {
         // Fetch updated profile data
         const updatedProfile = await api.get('/get-user-details');
         const updatedUserData = updatedProfile.data.user;
-        
+
         return {
           id: updatedUserData.id.toString(),
           name: updatedUserData.name,
           email: updatedUserData.email,
-          phone: updatedUserData.contact || updatedUserData.phone || updatedUserData.mobile,
+          phone:
+            updatedUserData.contact ||
+            updatedUserData.phone ||
+            updatedUserData.mobile,
           address: updatedUserData.address,
-          profileImage: updatedUserData.image ? `https://admin.bookvenue.app/${updatedUserData.image}` : undefined,
+          profileImage: updatedUserData.image
+            ? `https://admin.bookvenue.app/${updatedUserData.image}`
+            : undefined,
           isVenueOwner: false,
           createdAt: updatedUserData.created_at,
-          updatedAt: updatedUserData.updated_at
+          updatedAt: updatedUserData.updated_at,
         };
       }
-      
+
       throw new Error('Failed to update profile');
     } catch (error: any) {
       console.error('Profile update error:', error.response?.data || error);
-      throw new Error(error.response?.data?.message || 'Failed to update profile');
+      throw new Error(
+        error.response?.data?.message || 'Failed to update profile',
+      );
     }
   },
 
@@ -205,5 +259,5 @@ export const authApi = {
       console.error('Logout error:', error);
       throw new Error('Logout failed');
     }
-  }
+  },
 };
