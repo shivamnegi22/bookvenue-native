@@ -11,14 +11,14 @@ type VenueCardProps = {
 
 export default function VenueCard({ venue, size }: VenueCardProps) {
   const router = useRouter();
-  
+
   const handlePress = () => {
     router.push({
       pathname: '/venue/[id]',
       params: { id: venue.slug }
     });
   };
-  
+
   // Get the current price based on selected service/court or default
   const getCurrentPrice = () => {
     if (venue.services && venue.services.length > 0) {
@@ -29,10 +29,10 @@ export default function VenueCard({ venue, size }: VenueCardProps) {
     }
     return venue.pricePerHour;
   };
-  
+
   if (size === 'large') {
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.largeCardContainer}
         onPress={handlePress}
       >
@@ -50,7 +50,7 @@ export default function VenueCard({ venue, size }: VenueCardProps) {
             <Text style={styles.locationText} numberOfLines={1}>{venue.location}</Text>
           </View>
           <View style={styles.bottomRow}>
-            {venue.totalReviews && venue.totalReviews > 0 && (
+            {!!venue.totalReviews && (
               <Text style={styles.reviewCount}>({venue.totalReviews} reviews)</Text>
             )}
             <View style={styles.priceContainer}>
@@ -61,9 +61,9 @@ export default function VenueCard({ venue, size }: VenueCardProps) {
       </TouchableOpacity>
     );
   }
-  
+
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.cardContainer}
       onPress={handlePress}
     >
