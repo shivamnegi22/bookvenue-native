@@ -26,7 +26,7 @@ export default function ProfileScreen() {
       } else {
         console.log('No user found on focus');
       }
-    }, [user])
+    }, [])
   );
 
   // Show loading only on initial mount when there's no user data
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
     );
   }
 
-  console.log('ProfileScreen: Rendering user profile for:', user.name || user.phone);
+  console.log('ProfileScreen: Rendering user profile for:', user);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               key={index}
               style={styles.menuItem}
-              onPress={item.onPress}
+              // onPress={item.onPress}
               disabled={!item.onPress}
             >
               <View style={styles.menuItemLeft}>
