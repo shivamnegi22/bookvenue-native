@@ -205,7 +205,7 @@ export default function ExploreScreen() {
               </View>
               <View style={styles.priceRangeContainer}>
                 <Text style={styles.priceRangeText}>
-                  ${priceRange[0]} - ${priceRange[1]}
+                  ₹{priceRange[0]} - ₹{priceRange[1]}
                 </Text>
                 <View style={styles.priceButtons}>
                   <TouchableOpacity

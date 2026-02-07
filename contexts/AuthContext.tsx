@@ -48,8 +48,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const parsedUser = JSON.parse(savedUser);
           console.log('Loaded user from storage:', parsedUser);
           setUser(parsedUser);
-          
-          // Background sync to get fresh data
           try {
             const userData = await authApi.getProfile();
             console.log('Background sync fetched:', userData);
@@ -58,7 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('Background profile sync successful');
           } catch (error) {
             console.error('Background profile sync failed:', error);
-            // Keep the cached user data if sync fails
           }
         } else {
           console.log('No token or saved user found');
@@ -120,17 +117,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Starting logout process...');
       setLoading(true);
-      
-      // Clear state first
       setUser(null);
-      
-      // Then clear storage
       await authApi.logout();
-      
       console.log('User logged out successfully');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Always clear user even if API call fails
       setUser(null);
       throw error;
     } finally {

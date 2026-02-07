@@ -14,7 +14,6 @@ const api = axios.create({
 // Add token to requests
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('token');
-
   // Define routes that do NOT need a token
   const publicEndpoints = [
     '/login',
