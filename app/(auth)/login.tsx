@@ -10,7 +10,7 @@ import { Mail, Phone, CircleAlert as AlertCircle, ArrowRight } from 'lucide-reac
 import { authApi } from '@/api/authApi';
 
 export default function LoginScreen() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [showOTP, setShowOTP] = useState(false);
   const [identifier, setIdentifier] = useState('');
@@ -19,7 +19,12 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
-  // Timer logic for resend OTP
+  useEffect(() => {
+    if (user) {
+      console.log('User already logged in, redirecting to tabs');
+      router.replace('/(tabs)');
+    }
+  }, [user]);
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (resendTimer > 0) {
@@ -34,7 +39,6 @@ export default function LoginScreen() {
       if (interval) clearInterval(interval);
     };
   }, [resendTimer]);
-
 
   const handleMethodSelect = (method: 'email' | 'phone') => {
     setShowInput(method);
@@ -69,6 +73,7 @@ export default function LoginScreen() {
       }
       setShowOTP(true);
       setResendTimer(60);
+      console.log('OTP sent successfully');
     } catch (err: any) {
       console.error('Send OTP error:', err);
       setError(err.message || 'Failed to send OTP');
@@ -89,36 +94,25 @@ export default function LoginScreen() {
       setError('Invalid Mobile No. or Email.');
       return;
     }
-
     if (!isOtpValid) {
       setError('Please enter a valid 6-digit OTP');
       return;
     }
-
-    setLoading(true);
     setError(null);
-
+    setLoading(true);
     try {
+      console.log('Starting OTP verification...');
       if (isEmailValid) {
         await authApi.verifyOTPEmail(identifier, otp);
       } else {
         await authApi.verifyOTP(identifier, otp);
       }
-
-      // Get user profile after successful login
-      const userData = await authApi.getProfile();
-      console.log('Login successful, user data:', userData);
-
-      // Update auth context with user data
-      await login(userData);
-      // Small delay to ensure state updates propagate
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-
-      // Navigate to home page
-      router.replace('/');
+      console.log('OTP verified successfully, token saved');
+      await login();     
+      console.log('Login completed, navigating to tabs');
+      router.replace('/(tabs)');    
     } catch (err: any) {
-      console.error('OTP verification error:', err);
+      console.error('Verification error:', err);
       setError(err.message || 'OTP verification failed');
     } finally {
       setLoading(false);

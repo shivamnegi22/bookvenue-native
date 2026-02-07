@@ -1,25 +1,47 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Platform, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
-import { router } from 'expo-router';
-import { User, ChevronRight, CreditCard, MapPin, Bell, CircleHelp as HelpCircle, LogOut, CreditCard as Edit2, Shield } from 'lucide-react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { User, ChevronRight, CreditCard, MapPin, Bell, CircleHelp as HelpCircle, LogOut, Edit2, Shield } from 'lucide-react-native';
 import ProfileAvatar from '@/components/ProfileAvatar';
 
 export default function ProfileScreen() {
-  const { user, logout, loading } = useAuth();
-   const [notifications, setNotifications] = useState(true);
+  const { user, logout, loading, refreshUser } = useAuth();
+  const [notifications, setNotifications] = useState(true);
 
-   if (loading) {
+  // Log whenever user state changes
+  useEffect(() => {
+    console.log('ProfileScreen: user state changed:', user ? 'User exists' : 'No user');
+    console.log('ProfileScreen: loading state:', loading);
+  }, [user, loading]);
+
+  // Refresh user data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('ProfileScreen focused');
+      if (user) {
+        console.log('User exists, refreshing profile');
+        refreshUser();
+      } else {
+        console.log('No user found on focus');
+      }
+    }, [user])
+  );
+
+  // Show loading only on initial mount when there's no user data
+  if (loading && !user) {
+    console.log('ProfileScreen: Showing loading indicator');
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={styles.centered}>
         <ActivityIndicator size="large" color="#2563EB" />
       </View>
     );
   }
 
-  // Redirect to login if user is not authenticated
+  // Show login prompt if not authenticated
   if (!user) {
+    console.log('ProfileScreen: Showing not logged in view');
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.notLoggedInContainer}>
@@ -37,13 +59,32 @@ export default function ProfileScreen() {
     );
   }
 
+  console.log('ProfileScreen: Rendering user profile for:', user.name || user.phone);
+
   const handleLogout = async () => {
-    try {
-      await logout();
-      router.replace('/login');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/(auth)/login');
+            } catch (error) {
+              console.error('Error logging out:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          },
+        },
+      ],
+    );
   };
 
   const menuItems = [
@@ -92,10 +133,11 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        router.replace('/(tabs)/');
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
+      </View>
 
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             {user.profileImage ? (
@@ -105,7 +147,7 @@ export default function ProfileScreen() {
               />
             ) : (
               <ProfileAvatar
-                name={user?.name || 'User'}
+                name={user.name || user.phone || 'User'}
                 size={100}
                 backgroundColor="#2563EB"
                 textColor="#FFFFFF"
@@ -119,10 +161,14 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.userName}>{user?.name}</Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
+          <Text style={styles.userName}>
+            {user.name || 'BookVenue User'}
+          </Text>
+          <Text style={styles.userEmail}>
+            {user.email || user.phone || 'No contact info'}
+          </Text>
 
-          {user?.isVenueOwner && (
+          {user.isVenueOwner && (
             <View style={styles.ownerBadge}>
               <Text style={styles.ownerBadgeText}>Venue Owner</Text>
             </View>
@@ -174,38 +220,26 @@ export default function ProfileScreen() {
   );
 }
 
+// ... styles remain the same
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     backgroundColor: '#FFFFFF',
   },
-  headerTitle: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 18,
-    color: '#1F2937',
-  },
+  headerTitle: { fontFamily: 'Inter-SemiBold', fontSize: 18, color: '#1F2937' },
   profileSection: {
     alignItems: 'center',
     padding: 24,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#E5E7EB'
   },
-  profileImageContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
+  profileImageContainer: { position: 'relative', marginBottom: 16 },
+  profileImage: { width: 100, height: 100, borderRadius: 50 },
   editImageButton: {
     position: 'absolute',
     bottom: 0,
@@ -217,80 +251,80 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: '#FFFFFF'
   },
   notLoggedInContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 20
   },
   notLoggedInTitle: {
     fontFamily: 'Inter-Bold',
     fontSize: 24,
     color: '#1F2937',
-    marginBottom: 8,
+    marginBottom: 8
   },
   notLoggedInText: {
     fontFamily: 'Inter-Regular',
     fontSize: 16,
     color: '#6B7280',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 24
   },
   loginButton: {
     backgroundColor: '#2563EB',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 8
   },
   loginButtonText: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#FFFFFF'
   },
   userName: {
     fontFamily: 'Inter-Bold',
     fontSize: 20,
     color: '#1F2937',
-    marginBottom: 4,
+    marginBottom: 4
   },
   userEmail: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: '#6B7280',
-    marginBottom: 12,
+    marginBottom: 12
   },
   ownerBadge: {
     backgroundColor: '#DBEAFE',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 16
   },
   ownerBadgeText: {
     fontFamily: 'Inter-Medium',
     fontSize: 12,
-    color: '#2563EB',
+    color: '#2563EB'
   },
   editProfileButton: {
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: '#D1D5DB',
-    borderRadius: 8,
+    borderRadius: 8
   },
   editProfileButtonText: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
-    color: '#4B5563',
+    color: '#4B5563'
   },
   menuSection: {
     backgroundColor: '#FFFFFF',
     marginTop: 16,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E5E7EB'
   },
   menuItem: {
     flexDirection: 'row',
@@ -299,22 +333,16 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F3F4F6'
   },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  menuItemLeft: { flexDirection: 'row', alignItems: 'center' },
   menuItemTitle: {
     fontFamily: 'Inter-Medium',
     fontSize: 16,
     color: '#1F2937',
-    marginLeft: 12,
+    marginLeft: 12
   },
-  menuItemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  menuItemRight: { flexDirection: 'row', alignItems: 'center' },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -323,22 +351,22 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#FEF2F2',
-    borderRadius: 8,
+    borderRadius: 8
   },
   logoutButtonText: {
     fontFamily: 'Inter-Medium',
     fontSize: 16,
     color: '#EF4444',
-    marginLeft: 8,
+    marginLeft: 8
   },
   versionContainer: {
     alignItems: 'center',
     marginTop: 24,
-    marginBottom: 40,
+    marginBottom: 40
   },
   versionText: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#9CA3AF'
   },
 });

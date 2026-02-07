@@ -17,7 +17,7 @@ export type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (userData: User) => Promise<void>;
+  login: () => Promise<void>;
   register: (name: string, email: string, password: string, isVenueOwner: boolean) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: Partial<User>) => Promise<void>;
@@ -43,42 +43,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const token = await AsyncStorage.getItem('token');
         const savedUser = await AsyncStorage.getItem('user');
-
+        
         if (token && savedUser) {
-          // Set local data immediately for instant UI rendering
-          setUser(JSON.parse(savedUser));
-
-          // Optionally refresh profile from API in background
+          const parsedUser = JSON.parse(savedUser);
+          console.log('Loaded user from storage:', parsedUser);
+          setUser(parsedUser);
+          
+          // Background sync to get fresh data
           try {
-            const freshData = await authApi.getProfile();
-            setUser(freshData);
-            await AsyncStorage.setItem('user', JSON.stringify(freshData));
-          } catch (e) {
-            console.log("Background profile refresh failed, using cached data.");
+            const userData = await authApi.getProfile();
+            console.log('Background sync fetched:', userData);
+            setUser(userData);
+            await AsyncStorage.setItem('user', JSON.stringify(userData));
+            console.log('Background profile sync successful');
+          } catch (error) {
+            console.error('Background profile sync failed:', error);
+            // Keep the cached user data if sync fails
           }
+        } else {
+          console.log('No token or saved user found');
         }
-      } catch (error) {
-        console.error('Error checking logged-in status:', error);
+      } catch (e) {
+        console.error('Startup check failed', e);
       } finally {
         setLoading(false);
       }
     };
-
     checkLoggedIn();
   }, []);
 
-  const login = async (userData: User): Promise<void> => {
+  const login = async (): Promise<void> => {
     try {
-      console.log('Login context called with user data:', userData);
-
-      // Update state AND save to AsyncStorage
-      setUser(userData);
+      console.log('Starting login process...');
+      setLoading(true);
+      
+      const userData = await authApi.getProfile();
+      console.log('User data fetched from API:', userData);
+      
+      // Force state update with new object reference
+      setUser({ ...userData });
       await AsyncStorage.setItem('user', JSON.stringify(userData));
-
-      console.log('User set in context and storage:', userData);
+      
+      console.log('Login successful, user state and storage updated');
+      console.log('Current user state:', userData);
     } catch (error) {
-      console.error('Login context failed:', error);
+      console.error('Login failed:', error);
       throw error;
+    } finally {
+      setLoading(false);
+      console.log('Login loading set to false');
     }
   };
 
@@ -89,25 +102,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isVenueOwner: boolean
   ): Promise<void> => {
     try {
-      // This is handled in the register screen
+      console.log('Starting registration process...');
+      setLoading(true);
       const userData = await authApi.getProfile();
-      setUser(userData);
+      setUser({ ...userData });
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      console.log('Registration successful');
     } catch (error) {
       console.error('Registration context failed:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async (): Promise<void> => {
     try {
-      await authApi.logout();
+      console.log('Starting logout process...');
+      setLoading(true);
+      
+      // Clear state first
       setUser(null);
+      
+      // Then clear storage
+      await authApi.logout();
+      
       console.log('User logged out successfully');
     } catch (error) {
       console.error('Logout failed:', error);
-      // Clear user anyway
+      // Always clear user even if API call fails
       setUser(null);
       throw error;
+    } finally {
+      setLoading(false);
+      console.log('Logout complete, loading set to false');
     }
   };
 
@@ -115,9 +143,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) throw new Error('User not logged in');
 
     try {
-      console.log('Updating user profile:', data);
+      console.log('Updating user profile...');
       const updatedUser = await authApi.updateProfile(data);
-      setUser(updatedUser);
+      setUser({ ...updatedUser });
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
       console.log('Profile updated successfully');
     } catch (error) {
       console.error('Profile update failed:', error);
@@ -127,9 +156,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUser = async (): Promise<void> => {
     try {
+      console.log('Refreshing user profile...');
       const userData = await authApi.getProfile();
-      setUser(userData);
-      console.log('User profile refreshed');
+      setUser({ ...userData });
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      console.log('User profile refreshed successfully');
     } catch (error) {
       console.error('Failed to refresh user:', error);
     }
