@@ -91,10 +91,10 @@ export const authApi = {
   // Send OTP for registration
   register: async (mobile: string, name?: string) => {
     try {
-      const payload = { mobile, name };
+      const payload = { mobile };
       console.log('Sending registration OTP:', payload);
 
-      const response = await api.post('/register', payload);
+      const response = await api.post('/login', payload);
       console.log('Registration OTP sent successfully');
       return response.data;
     } catch (error: any) {
@@ -151,7 +151,7 @@ export const authApi = {
       const payload = { mobile, otp };
       console.log('Verifying registration OTP');
       
-      const response = await api.post('/verifyuser', payload);
+      const response = await api.post('/verify-otp', payload);
       console.log('Registration OTP verified successfully');
 
       if (response.data.token) {

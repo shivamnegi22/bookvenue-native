@@ -8,17 +8,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Phone, CircleAlert as AlertCircle, ArrowRight, User } from 'lucide-react-native';
 import { authApi } from '@/api/authApi';
+import login from './login';
 
 export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [showOTP, setShowOTP] = useState(false);
   const [identifier, setIdentifier] = useState('');
-  const [name, setName] = useState('');
   const [otp, setOTP] = useState('');
   const [showInput, setShowInput] = useState<'email' | 'phone' | null>(null);
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-
+  const { login, user } = useAuth();
+  
   // Timer logic for resend OTP
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -38,7 +39,6 @@ export default function RegisterScreen() {
   const handleMethodSelect = (method: 'email' | 'phone') => {
     setShowInput(method);
     setIdentifier('');
-    setName('');
     setShowOTP(false);
     setOTP('');
     setError(null);
@@ -52,26 +52,17 @@ export default function RegisterScreen() {
     }
   };
 
-  const validateName = () => {
-    return name.trim().length >= 2;
-  };
 
   const handleSendOTP = async () => {
     if (showInput !== 'phone' || !validateInput()) {
       setError('Invalid phone number');
       return;
     }
-
-    if (!validateName()) {
-      setError('Please enter a valid name (at least 2 characters)');
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
-      await authApi.register(identifier, name);
+      await authApi.register(identifier);
       setShowOTP(true);
       setResendTimer(60);
     } catch (err: any) {
@@ -100,16 +91,14 @@ export default function RegisterScreen() {
     setError(null);
 
     try {
-      console.log('Verifying registration OTP:', { identifier, otp, name });
+      console.log('Verifying registration OTP:', { identifier, otp });
       await authApi.verifyRegisterOTP(identifier, otp);
-      
+
       // Get user profile after successful registration
       const userData = await authApi.getProfile();
       console.log('Registration successful, user data:', userData);
-      
       // Update auth context with user data
-      login(userData);
-      
+      await login();
       // Navigate to home page
       router.replace('/');
     } catch (err: any) {
@@ -157,18 +146,6 @@ export default function RegisterScreen() {
 
           {showInput && !showOTP && (
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Enter your name</Text>
-              <View style={styles.inputWrapper}>
-                <User size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Full name"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                />
-              </View>
-
               <Text style={styles.inputLabel}>
                 Enter your phone number
               </Text>
@@ -185,9 +162,9 @@ export default function RegisterScreen() {
                 />
               </View>
               <TouchableOpacity
-                style={[styles.actionButton, (!validateInput() || !validateName()) && styles.actionButtonDisabled]}
+                style={[styles.actionButton, (!validateInput()) && styles.actionButtonDisabled]}
                 onPress={handleSendOTP}
-                disabled={!validateInput() || !validateName() || loading}
+                disabled={!validateInput() || loading}
               >
                 {loading ? (
                   <ActivityIndicator color="#FFFFFF" />
