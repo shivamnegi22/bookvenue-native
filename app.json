@@ -52,7 +52,6 @@
       "expo-image-picker",
       "expo-dev-client",
 
-      "react-native-razorpay",
 
       [
         "expo-maps",
