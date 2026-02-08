@@ -1,72 +1,24 @@
 {
   "expo": {
-    "name": "book-venue",
+    "name": "BookVenue",
     "slug": "book-venue",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/BookVenue_Logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
+
     "newArchEnabled": true,
+
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shivamnegi.bookvenue",
+      "useFrameworks": "static",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-    "web": {
-      "bundler": "metro",
-      "output": "single",
-      "favicon": "./assets/images/BookVenue_Logo.png"
-    },
-    "plugins": [
-      "expo-router",
-      "expo-font",
-      "expo-web-browser",
-      "expo-image-picker",
-      "expo-dev-client",
-      [
-        "expo-maps",
-        {
-          "androidApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y",
-          "iosApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
-        }
-      ],
-      "@react-native-community/datetimepicker",
-      [
-        "@stripe/stripe-react-native",
-        {
-          "merchantIdentifier": "merchant.com.bookvenue",
-          "enableGooglePay": true
-        }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true,
-            "enableProguardInReleaseBuilds": false,
-            "enableShrinkResourcesInReleaseBuilds": false,
-            "enableMinifyInReleaseBuilds": false
-          }
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "splash": {
-      "image": "./assets/images/Splash-screen.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "c9d390b2-108a-4a38-a4e1-eeb066b0a9c5"
-      }
-    },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/BookVenue_Logo.png",
@@ -86,11 +38,76 @@
       ],
       "allowBackup": true
     },
+
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/BookVenue_Logo.png"
+    },
+
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser",
+      "expo-image-picker",
+      "expo-dev-client",
+
+      "react-native-razorpay",
+
+      [
+        "expo-maps",
+        {
+          "androidApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y",
+          "iosApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
+        }
+      ],
+
+      "@react-native-community/datetimepicker",
+
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.bookvenue",
+          "enableGooglePay": true
+        }
+      ],
+
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true,
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false,
+            "enableMinifyInReleaseBuilds": false
+          }
+        }
+      ]
+    ],
+
+    "experiments": {
+      "typedRoutes": true
+    },
+
+    "splash": {
+      "image": "./assets/images/Splash-screen.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+
     "updates": {
       "fallbackToCacheTimeout": 0
     },
+
     "runtimeVersion": {
       "policy": "sdkVersion"
+    },
+
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c9d390b2-108a-4a38-a4e1-eeb066b0a9c5"
+      }
     }
   }
 }
