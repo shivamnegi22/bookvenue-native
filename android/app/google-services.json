@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "337130202621",
+    "project_id": "bookvenue-4f905",
+    "storage_bucket": "bookvenue-4f905.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:337130202621:android:35ff04c24eb303fa8ae594",
+        "android_client_info": {
+          "package_name": "com.shivamnegi.bookvenue"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSIoDDH-k9WfHWZEGdWQBGuuI5Mkg5rC8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
