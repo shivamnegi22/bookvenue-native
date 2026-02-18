@@ -7,6 +7,7 @@ import {
   requestPermission,
   AuthorizationStatus,
   subscribeToTopic,
+  setBackgroundMessageHandler
 } from '@react-native-firebase/messaging';
 
 // Initialize messaging instance
@@ -59,3 +60,9 @@ export const listenToForegroundMessages = () => {
   });
   return unsubscribe;
 };
+
+// This handles notifications when the app is background or killed
+setBackgroundMessageHandler(messaging, async (remoteMessage) => {
+  console.log('Message handled in the background!', remoteMessage);
+  // Optional: If you use a library like notifee , you can trigger a local notification here.
+});
