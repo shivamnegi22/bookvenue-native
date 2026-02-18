@@ -1,25 +1,61 @@
-import messaging from '@react-native-firebase/messaging';
-import { Alert, Platform } from 'react-native';
+import { getApp } from '@react-native-firebase/app';
+import { Alert } from 'react-native';
+import {
+  getMessaging,
+  onMessage,
+  getToken,
+  requestPermission,
+  AuthorizationStatus,
+  subscribeToTopic,
+} from '@react-native-firebase/messaging';
+
+// Initialize messaging instance
+const app = getApp(); // Optional: getMessaging() works without this for the default app
+const messaging = getMessaging(app);
 
 export const requestUserPermission = async () => {
-  const authStatus = await messaging().requestPermission();
+  // Use the standalone requestPermission function
+  const authStatus = await requestPermission(messaging);
+
   const enabled =
-    authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-    authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+    authStatus === AuthorizationStatus.AUTHORIZED ||
+    authStatus === AuthorizationStatus.PROVISIONAL;
 
   if (enabled) {
     console.log('Authorization status:', authStatus);
-    getFcmToken();
+    await getFcmToken();
+    await subscribeToAllUsers();
   }
 };
 
-const getFcmToken = async () => {
+export const getFcmToken = async () => {
   try {
-    const token = await messaging().getToken();
+    // Use the standalone getToken function
+    const token = await getToken(messaging);
     console.log('FCM Token:', token);
-    // TODO: Send this token to your backend (Shivam-Sir's API)
+    return token;
   } catch (error) {
-    console.error('Error getting FCM token:', error);
+    console.log('Error getting token:', error);
   }
 };
 
+export const subscribeToAllUsers = async () => {
+  try {
+    const messaging = getMessaging();
+    // Every user will now listen to this "all_users" channel
+    await subscribeToTopic(messaging, 'all_users');
+    console.log('Successfully subscribed to all_users topic');
+  } catch (error) {
+    console.error('Topic subscription failed:', error);
+  }
+};
+
+export const listenToForegroundMessages = () => {
+  const unsubscribe = onMessage(getMessaging(), async (remoteMessage) => {
+    Alert.alert(
+      remoteMessage.notification.title,
+      remoteMessage.notification.body,
+    );
+  });
+  return unsubscribe;
+};

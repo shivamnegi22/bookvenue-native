@@ -20,7 +20,8 @@
     },
 
     "android": {
-      "adaptiveIcon": {
+    "googleServicesFile": "./google-services.json",    
+    "adaptiveIcon": {
         "foregroundImage": "./assets/images/BookVenue_Logo.png",
         "backgroundColor": "#ffffff"
       },
@@ -51,7 +52,8 @@
       "expo-web-browser",
       "expo-image-picker",
       "expo-dev-client",
-
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
 
       [
         "expo-maps",

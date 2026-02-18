@@ -15,7 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import Constants from 'expo-constants';
 
-import { requestUserPermission } from '../services/NotificationService';
+import { requestUserPermission,listenToForegroundMessages } from '../services/NotificationService';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -38,7 +38,14 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   useEffect(() => {
-    requestUserPermission();
+    const setupNotifications = async () => {
+      await requestUserPermission();
+    };
+    setupNotifications();
+    // Listen for messages while the app is open
+    const unsubscribe = listenToForegroundMessages();
+
+    return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
   // Return null to keep splash screen visible while fonts load
