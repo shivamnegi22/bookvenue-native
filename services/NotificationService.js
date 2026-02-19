@@ -8,7 +8,6 @@ import {
   AuthorizationStatus,
   subscribeToTopic,
   setBackgroundMessageHandler,
-  setBackgroundMessageHandler
 } from '@react-native-firebase/messaging';
 
 // Initialize messaging instance
