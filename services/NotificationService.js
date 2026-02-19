@@ -7,6 +7,7 @@ import {
   requestPermission,
   AuthorizationStatus,
   subscribeToTopic,
+  setBackgroundMessageHandler,
   setBackgroundMessageHandler
 } from '@react-native-firebase/messaging';
 
