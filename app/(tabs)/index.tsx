@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, MapPin, Filter, Star, Clock } from 'lucide-react-native';
@@ -18,19 +18,37 @@ export default function HomeScreen() {
   const [nearbyVenues, setNearbyVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const filterByCategory = (venueList: Venue[]) => {
+    if (!selectedCategory) return venueList;
+    const cat = selectedCategory.toLowerCase();
+    return venueList.filter(venue =>
+      venue.type.toLowerCase().includes(cat) ||
+      venue.services?.some(s => s.name.toLowerCase().includes(cat)) ||
+      venue.category?.some(c => c.toLowerCase().includes(cat))
+    );
+  };
+
+  const displayedFeatured = useMemo(() => filterByCategory(featuredVenues), [featuredVenues, selectedCategory]);
+  const displayedNearby = useMemo(() => filterByCategory(nearbyVenues), [nearbyVenues, selectedCategory]);
+
+  const handleCategoryPress = (category: string) => {
+    setSelectedCategory(prev => prev === category ? null : category);
+  };
 
   useEffect(() => {
     const fetchVenues = async () => {
       try {
         const response = await venueApi.getVenues();
         setVenues(response);
-        
+
         // Set featured venues (for demo, using top rated venues)
         const featured = [...response]
           .sort((a, b) => b.rating - a.rating)
           .slice(0, 5);
         setFeaturedVenues(featured);
-        
+
         // Set nearby venues (for demo, using random venues)
         const nearby = [...response]
           .sort(() => 0.5 - Math.random())
@@ -80,19 +98,19 @@ export default function HomeScreen() {
             </View>
           </View>
           {user ? (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.profileImageContainer}
               onPress={() => router.push('/(tabs)/profile')}
             >
-              <ProfileAvatar 
-                name={user.name || 'User'} 
+              <ProfileAvatar
+                name={user.name || 'User'}
                 size={40}
                 backgroundColor="#2563EB"
                 textColor="#FFFFFF"
               />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.loginButton}
               onPress={() => router.push('/(auth)/login')}
             >
@@ -140,59 +158,59 @@ export default function HomeScreen() {
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          
-          <ScrollView 
-            horizontal 
+
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScrollContent}
           >
-            {featuredVenues.map((venue) => (
-              <VenueCard key={venue.id} venue={venue} size="large" />
-            ))}
+            {displayedFeatured.length === 0 ? (
+              <View style={styles.emptyCategory}>
+                <Text style={styles.emptyCategoryText}>No {selectedCategory} venues found</Text>
+              </View>
+            ) : (
+              displayedFeatured.map((venue) => (
+                <VenueCard key={venue.id} venue={venue} size="large" />
+              ))
+            )}
           </ScrollView>
         </View>
 
         <View style={styles.categoriesContainer}>
           <Text style={styles.sectionTitle}>Categories</Text>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesScrollContent}
           >
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#EFF6FF' }]}>
-                <Text style={styles.categoryEmoji}>⚽</Text>
-              </View>
-              <Text style={styles.categoryName}>Football</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#ECFDF5' }]}>
-                <Text style={styles.categoryEmoji}>🎾</Text>
-              </View>
-              <Text style={styles.categoryName}>Tennis</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#FEF3F2' }]}>
-                <Text style={styles.categoryEmoji}>🏏</Text>
-              </View>
-              <Text style={styles.categoryName}>Cricket</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#F5F3FF' }]}>
-                <Text style={styles.categoryEmoji}>🏀</Text>
-              </View>
-              <Text style={styles.categoryName}>Basketball</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.categoryItem}>
-              <View style={[styles.categoryIcon, { backgroundColor: '#FFEDD5' }]}>
-                <Text style={styles.categoryEmoji}>🏊</Text>
-              </View>
-              <Text style={styles.categoryName}>Swimming</Text>
-            </TouchableOpacity>
+            {[
+              { name: 'Football', emoji: '⚽', bg: '#EFF6FF' },
+              { name: 'Tennis', emoji: '🎾', bg: '#ECFDF5' },
+              { name: 'Cricket', emoji: '🏏', bg: '#FEF3F2' },
+              { name: 'Basketball', emoji: '🏀', bg: '#F5F3FF' },
+              { name: 'Swimming', emoji: '🏊', bg: '#FFEDD5' },
+            ].map((cat) => (
+              <TouchableOpacity
+                key={cat.name}
+                style={[
+                  styles.categoryItem,
+                  selectedCategory && selectedCategory !== cat.name && styles.categoryItemInactive,
+                ]}
+                onPress={() => handleCategoryPress(cat.name)}
+              >
+                <View style={[
+                  styles.categoryIcon,
+                  { backgroundColor: cat.bg },
+                  selectedCategory === cat.name && styles.categoryIconActive,
+                ]}>
+                  <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                </View>
+                <Text style={[
+                  styles.categoryName,
+                  selectedCategory === cat.name && styles.categoryNameActive,
+                ]}>{cat.name}</Text>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
 
@@ -203,10 +221,16 @@ export default function HomeScreen() {
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          
-          {nearbyVenues.map((venue) => (
-            <VenueCard key={venue.id} venue={venue} size="small" />
-          ))}
+
+          {displayedNearby.length === 0 ? (
+            <View style={styles.emptyCategory}>
+              <Text style={styles.emptyCategoryText}>No {selectedCategory} venues nearby</Text>
+            </View>
+          ) : (
+            displayedNearby.map((venue) => (
+              <VenueCard key={venue.id} venue={venue} size="small" />
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -375,5 +399,26 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Medium',
     fontSize: 14,
     color: '#1F2937',
+  },
+  categoryNameActive: {
+    color: '#2563EB',
+    fontFamily: 'Inter-SemiBold',
+  },
+  categoryItemInactive: {
+    opacity: 0.4,
+  },
+  categoryIconActive: {
+    borderWidth: 2,
+    borderColor: '#2563EB',
+  },
+  emptyCategory: {
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  emptyCategoryText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#9CA3AF',
   },
 });
