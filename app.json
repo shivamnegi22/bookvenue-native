@@ -7,9 +7,7 @@
     "icon": "./assets/images/BookVenue_Logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shivamnegi.bookvenue",
@@ -18,10 +16,9 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-
     "android": {
-    "googleServicesFile": "./google-services.json",    
-    "adaptiveIcon": {
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
         "foregroundImage": "./assets/images/BookVenue_Logo.png",
         "backgroundColor": "#ffffff"
       },
@@ -39,13 +36,11 @@
       ],
       "allowBackup": true
     },
-
     "web": {
       "bundler": "metro",
       "output": "single",
       "favicon": "./assets/images/BookVenue_Logo.png"
     },
-
     "plugins": [
       "expo-router",
       "expo-font",
@@ -54,17 +49,7 @@
       "expo-dev-client",
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
-
-      [
-        "expo-maps",
-        {
-          "androidApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y",
-          "iosApiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
-        }
-      ],
-
       "@react-native-community/datetimepicker",
-
       [
         "@stripe/stripe-react-native",
         {
@@ -72,7 +57,6 @@
           "enableGooglePay": true
         }
       ],
-
       [
         "expo-build-properties",
         {
@@ -85,25 +69,20 @@
         }
       ]
     ],
-
     "experiments": {
       "typedRoutes": true
     },
-
     "splash": {
       "image": "./assets/images/Splash-screen.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-
     "runtimeVersion": {
       "policy": "sdkVersion"
     },
-
     "extra": {
       "router": {},
       "eas": {

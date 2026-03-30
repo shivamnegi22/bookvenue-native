@@ -14,7 +14,7 @@ export default function VenueDetailScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { width } = useWindowDimensions();
-  
+
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -28,7 +28,7 @@ export default function VenueDetailScreen() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const flatListRef = React.useRef<FlatList>(null);
-  
+
   const today = new Date();
   const nextDays = Array.from({ length: 15 }, (_, i) => {
     const date = new Date();
@@ -64,7 +64,7 @@ export default function VenueDetailScreen() {
 
     fetchVenue();
   }, [id]);
-  
+
   useEffect(() => {
     const fetchAvailability = async () => {
       if (selectedDate && selectedCourtName && venue) {
@@ -234,7 +234,7 @@ export default function VenueDetailScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Venue not found</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -249,8 +249,8 @@ export default function VenueDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]} 
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.imageContainer}>
@@ -322,7 +322,7 @@ export default function VenueDetailScreen() {
             </>
           )}
         </View>
-        
+
         <View style={styles.venueInfoContainer}>
           <View style={styles.headerRow}>
             <Text style={styles.venueName}>{venue.name}</Text>
@@ -331,12 +331,12 @@ export default function VenueDetailScreen() {
               <Text style={styles.ratingText}>{venue.rating.toFixed(1)}</Text>
             </View>
           </View>
-          
+
           <View style={styles.locationContainer}>
             <MapPin size={16} color="#6B7280" />
             <Text style={styles.locationText}>{venue.location}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
               <Clock size={16} color="#2563EB" />
@@ -352,7 +352,7 @@ export default function VenueDetailScreen() {
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.separator} />
 
           <Text style={styles.sectionTitle}>About</Text>
@@ -372,9 +372,9 @@ export default function VenueDetailScreen() {
               </Text>
             </TouchableOpacity>
           )}
-          
+
           <View style={styles.separator} />
-          
+
           <Text style={styles.sectionTitle}>Amenities</Text>
           <View style={styles.amenitiesContainer}>
             {venue.amenities.map((amenity, index) => (
@@ -384,9 +384,9 @@ export default function VenueDetailScreen() {
               </View>
             ))}
           </View>
-          
+
           <View style={styles.separator} />
-          
+
           <Text style={styles.sectionTitle}>Location</Text>
           <View style={styles.mapContainer}>
             {Platform.OS === 'web' ? (
@@ -402,9 +402,10 @@ export default function VenueDetailScreen() {
                   MapView = MapModule.default;
                   Marker = MapModule.Marker;
                 }
-                
+
                 return (
                   <MapView
+                    provider="google"
                     style={styles.map}
                     initialRegion={{
                       latitude: venue.coordinates.latitude,
@@ -424,15 +425,15 @@ export default function VenueDetailScreen() {
                 );
               })()
             )}
-            
+
             <TouchableOpacity style={styles.viewOnMapButton}>
               <Text style={styles.viewOnMapText}>View on Map</Text>
               <ChevronRight size={16} color="#2563EB" />
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.separator} />
-          
+
           <Text style={styles.sectionTitle}>Booking</Text>
 
           {courtNames.length > 1 && (
@@ -593,8 +594,8 @@ export default function VenueDetailScreen() {
               <Text style={styles.priceUnit}>({selectedTimeSlots.length} slots)</Text>
             )}
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[
               styles.bookButton,
               selectedTimeSlots.length === 0 && styles.bookButtonDisabled
