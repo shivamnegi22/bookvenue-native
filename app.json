@@ -24,6 +24,11 @@
       },
       "usesCleartextTraffic": true,
       "package": "com.shivamnegi.bookvenue",
+      "config": {
+        "googleMaps": {
+              "apiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
+            }
+      },
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",

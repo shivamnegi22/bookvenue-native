@@ -1,5 +1,9 @@
 node_modules
+android/build
+android/.gradle
+android/.cxx
 .expo
+.git
 .vscode
-.DS_Store
 *.log
+*.keystore
