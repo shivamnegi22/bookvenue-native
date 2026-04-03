@@ -23,7 +23,7 @@ api.interceptors.request.use(async (config) => {
     '/verify-otp-via-email',
     '/verifyuser',
   ];
-  
+
   const isPublic = publicEndpoints.some((endpoint) =>
     config.url?.endsWith(endpoint),
   );
@@ -31,7 +31,7 @@ api.interceptors.request.use(async (config) => {
   if (token && !isPublic) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   return config;
 });
 
@@ -58,7 +58,7 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.error('Mobile Login Error:', error.response?.data || error);
-      
+
       if (error.response) {
         throw new Error(
           error.response.data.message || 'Server rejected OTP request',
@@ -116,7 +116,7 @@ export const authApi = {
         await AsyncStorage.setItem('token', response.data.token);
         console.log('Token saved to AsyncStorage');
       }
-      
+
       return response.data;
     } catch (error: any) {
       console.error('Mobile OTP Verification Error:', error.response?.data || error);
@@ -135,7 +135,7 @@ export const authApi = {
         await AsyncStorage.setItem('token', response.data.token);
         console.log('Token saved to AsyncStorage');
       }
-      
+
       return response.data;
     } catch (error: any) {
       console.error('Email OTP Verification Error:', error.response?.data || error);
@@ -150,7 +150,7 @@ export const authApi = {
     try {
       const payload = { mobile, otp };
       console.log('Verifying registration OTP');
-      
+
       const response = await api.post('/verify-otp', payload);
       console.log('Registration OTP verified successfully');
 
@@ -158,7 +158,7 @@ export const authApi = {
         await AsyncStorage.setItem('token', response.data.token);
         console.log('Token saved to AsyncStorage');
       }
-      
+
       return response.data;
     } catch (error: any) {
       console.error('Register OTP Verification Error:', error.response?.data || error);
@@ -251,6 +251,21 @@ export const authApi = {
     } catch (error: any) {
       console.error('Logout error:', error);
       throw new Error('Logout failed');
+    }
+  },
+
+  // delete user
+  deleteUser: async (userId: string) => {
+    try {
+      console.log('Deleting user...');
+      const response = await api.delete(`/delete-user-account/${userId}`);
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      console.log('User deleted successfully');
+      return response.data;
+    } catch (error: any) {
+      console.error('Delete user error:', error.response?.data || error);
+      throw new Error(error.response?.data?.message || 'Failed to delete user');
     }
   },
 };

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Image, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { router, useFocusEffect } from 'expo-router';
@@ -101,7 +101,7 @@ export default function ProfileScreen() {
     {
       icon: <Bell size={20} color="#2563EB" />,
       title: 'Notifications',
-      onPress: null,
+      onPress: undefined,
       rightComponent: (
         <Switch
           value={notifications}
@@ -114,12 +114,12 @@ export default function ProfileScreen() {
     {
       icon: <Shield size={20} color="#2563EB" />,
       title: 'Privacy & Security',
-      onPress: () => Alert.alert('Coming Soon', 'Privacy & security settings will be available soon'),
+      onPress: () => router.push('/privacy-security' as any),
     },
     {
       icon: <HelpCircle size={20} color="#2563EB" />,
       title: 'Help & Support',
-      onPress: () => Alert.alert('Help & Support', 'For support, please contact us at support@bookvenue.app'),
+      onPress: () => Linking.openURL('https://bookvenue.app/contact').catch((err) => Alert.alert('Error', 'Could not open the link at this time.')),
     },
   ];
 
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               key={index}
               style={styles.menuItem}
-              // onPress={item.onPress}
+              onPress={item.onPress}
               disabled={!item.onPress}
             >
               <View style={styles.menuItemLeft}>
