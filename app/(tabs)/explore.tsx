@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Filter, MapPin, X, FileSliders as Sliders, Calendar,  Star } from 'lucide-react-native';
+import { Search, Filter, MapPin, X, FileSliders as Sliders, Calendar, Star } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { venueApi } from '@/api/venueApi';
 import { Venue } from '@/types/venue';
@@ -11,41 +11,35 @@ export default function ExploreScreen() {
   const { query, filter } = useLocalSearchParams<{ query?: string; filter?: string }>();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  
+
   const [venues, setVenues] = useState<Venue[]>([]);
   const [filteredVenues, setFilteredVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(query || '');
   const [showFilters, setShowFilters] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  
+
   const [selectedSportType, setSelectedSportType] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [minRating, setMinRating] = useState(0);
-  
+
   useEffect(() => {
     const fetchVenues = async () => {
       try {
         const response = await venueApi.getVenues();
         setVenues(response);
-        
+
         let filtered = [...response];
-        
-        if (filter === 'featured') {
-          filtered = filtered.sort((a, b) => b.rating - a.rating).slice(0, 10);
-        } else if (filter === 'nearby') {
-          filtered = filtered.slice(0, 10);
-        }
-        
+
         if (query) {
           const lowercaseQuery = query.toLowerCase();
-          filtered = filtered.filter(venue => 
-            venue.name.toLowerCase().includes(lowercaseQuery) || 
+          filtered = filtered.filter(venue =>
+            venue.name.toLowerCase().includes(lowercaseQuery) ||
             venue.location.toLowerCase().includes(lowercaseQuery) ||
             venue.type.toLowerCase().includes(lowercaseQuery)
           );
         }
-        
+
         setFilteredVenues(filtered);
       } catch (error) {
         console.error('Error fetching venues:', error);
@@ -62,30 +56,30 @@ export default function ExploreScreen() {
       setFilteredVenues(venues);
       return;
     }
-    
+
     const lowercaseQuery = searchQuery.toLowerCase();
-    const filtered = venues.filter(venue => 
-      venue.name.toLowerCase().includes(lowercaseQuery) || 
+    const filtered = venues.filter(venue =>
+      venue.name.toLowerCase().includes(lowercaseQuery) ||
       venue.location.toLowerCase().includes(lowercaseQuery) ||
       venue.type.toLowerCase().includes(lowercaseQuery)
     );
-    
+
     setFilteredVenues(filtered);
   };
 
   const applyFilters = () => {
     let filtered = [...venues];
-    
+
     if (selectedSportType) {
       filtered = filtered.filter(venue => venue.type === selectedSportType);
     }
-    
-    filtered = filtered.filter(venue => 
-      venue.pricePerHour >= priceRange[0] && 
+
+    filtered = filtered.filter(venue =>
+      venue.pricePerHour >= priceRange[0] &&
       venue.pricePerHour <= priceRange[1] &&
       venue.rating >= minRating
     );
-    
+
     setFilteredVenues(filtered);
     setShowFilters(false);
   };
@@ -127,7 +121,7 @@ export default function ExploreScreen() {
             onSubmitEditing={handleSearch}
           />
           {searchQuery ? (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => {
                 setSearchQuery('');
                 setFilteredVenues(venues);
@@ -137,30 +131,30 @@ export default function ExploreScreen() {
             </TouchableOpacity>
           ) : null}
         </View>
-        
-        <TouchableOpacity 
-          style={styles.filterButton} 
+
+        <TouchableOpacity
+          style={styles.filterButton}
           onPress={() => setShowFilters(!showFilters)}
         >
           <Filter size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.toggleContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.toggleButton, !showMap ? styles.toggleButtonActive : null]}
           onPress={() => setShowMap(false)}
         >
           <Text style={[styles.toggleText, !showMap ? styles.toggleTextActive : null]}>List</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.toggleButton, showMap ? styles.toggleButtonActive : null]}
           onPress={() => setShowMap(true)}
         >
           <Text style={[styles.toggleText, showMap ? styles.toggleTextActive : null]}>Map</Text>
         </TouchableOpacity>
       </View>
-      
+
       {showFilters && (
         <View style={styles.filtersContainer}>
           <View style={styles.filterHeader}>
@@ -169,7 +163,7 @@ export default function ExploreScreen() {
               <X size={20} color="#1F2937" />
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.filterSection}>
               <View style={styles.filterSectionHeader}>
@@ -178,7 +172,7 @@ export default function ExploreScreen() {
               </View>
               <View style={styles.sportTypeContainer}>
                 {sportTypes.map((sport) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     key={sport}
                     style={[
                       styles.sportTypeButton,
@@ -186,7 +180,7 @@ export default function ExploreScreen() {
                     ]}
                     onPress={() => setSelectedSportType(selectedSportType === sport ? null : sport)}
                   >
-                    <Text 
+                    <Text
                       style={[
                         styles.sportTypeText,
                         selectedSportType === sport ? styles.sportTypeTextActive : null
@@ -198,7 +192,7 @@ export default function ExploreScreen() {
                 ))}
               </View>
             </View>
-            
+
             <View style={styles.filterSection}>
               <View style={styles.filterSectionHeader}>
                 <Text style={styles.filterSectionTitle}>Price Range</Text>
@@ -229,7 +223,7 @@ export default function ExploreScreen() {
                 </View>
               </View>
             </View>
-            
+
             <View style={styles.filterSection}>
               <View style={styles.filterSectionHeader}>
                 <Star size={20} color="#2563EB" />
@@ -237,7 +231,7 @@ export default function ExploreScreen() {
               </View>
               <View style={styles.ratingContainer}>
                 {ratingOptions.map((rating) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     key={rating}
                     style={[
                       styles.ratingButton,
@@ -245,7 +239,7 @@ export default function ExploreScreen() {
                     ]}
                     onPress={() => setMinRating(minRating === rating ? 0 : rating)}
                   >
-                    <Text 
+                    <Text
                       style={[
                         styles.ratingText,
                         minRating === rating ? styles.ratingTextActive : null
@@ -257,7 +251,7 @@ export default function ExploreScreen() {
                 ))}
               </View>
             </View>
-            
+
             <View style={styles.filterActions}>
               <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
                 <Text style={styles.resetButtonText}>Reset</Text>
@@ -269,7 +263,7 @@ export default function ExploreScreen() {
           </ScrollView>
         </View>
       )}
-      
+
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
@@ -280,7 +274,7 @@ export default function ExploreScreen() {
             Platform.OS === 'web' ? (
               <View style={styles.webMapFallback}>
                 <Text style={styles.webMapText}>Map view is not available on web</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.webMapButton}
                   onPress={() => setShowMap(false)}
                 >
@@ -293,9 +287,9 @@ export default function ExploreScreen() {
                   if (Platform.OS === 'web') {
                     return null;
                   }
-                  
+
                   const { default: MapView, Marker } = require('react-native-maps');
-                  
+
                   return (
                     <MapView
                       style={styles.map}
