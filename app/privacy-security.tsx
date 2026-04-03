@@ -11,7 +11,7 @@ export default function PrivacySecurityScreen() {
   const [loading, setLoading] = useState(false);
 
   const handlePrivacyPolicy = () => {
-    Linking.openURL('https://bookvenue.app/privacy').catch(() => {
+    Linking.openURL('https://bookvenue.app/privacy-policy').catch(() => {
       Alert.alert('Error', 'Could not open the privacy policy link.');
     });
   };
