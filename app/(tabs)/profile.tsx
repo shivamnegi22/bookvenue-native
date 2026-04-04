@@ -89,11 +89,6 @@ export default function ProfileScreen() {
 
   const menuItems = [
     {
-      icon: <CreditCard size={20} color="#2563EB" />,
-      title: 'Payment Methods',
-      onPress: () => Alert.alert('Coming Soon', 'Payment methods feature will be available soon'),
-    },
-    {
       icon: <MapPin size={20} color="#2563EB" />,
       title: 'Saved Addresses',
       onPress: () => router.push('/saved-addresses'),
