@@ -52,8 +52,8 @@
       "expo-web-browser",
       "expo-image-picker",
       "expo-dev-client",
-      "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
+      // "@react-native-firebase/app",
+      // "@react-native-firebase/messaging",
       "@react-native-community/datetimepicker",
       [
         "@stripe/stripe-react-native",
