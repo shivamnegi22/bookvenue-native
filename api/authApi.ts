@@ -177,6 +177,7 @@ export const authApi = {
 
       const profileData = {
         id: userData.id.toString(),
+        user_id: userData.user_id.toString(),
         name: userData.name || '',
         email: userData.email || '',
         phone: userData.contact || userData.phone || userData.mobile || '',

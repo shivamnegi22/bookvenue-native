@@ -1,21 +1,32 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Chrome as Home, CalendarClock, CreditCard, MapPin, User } from 'lucide-react-native';
-import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-native';
+import { Chrome as Home, CalendarClock, MapPin, User } from 'lucide-react-native';
+import { StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
-  
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarStyle: styles.tabBar,
+        headerShown: false,
+        tabBarHideOnKeyboard: true,
+
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: 60 + insets.bottom,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
+          },
+        ],
+
         tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#6B7280',
+
         tabBarLabelStyle: styles.tabBarLabel,
-        headerShown: false,
-        tabBarHideOnKeyboard: true, // Hide tab bar when keyboard is open
       }}
     >
       <Tabs.Screen
@@ -27,6 +38,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="explore"
         options={{
@@ -36,6 +48,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="bookings"
         options={{
@@ -45,6 +58,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
@@ -63,22 +77,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    height: Platform.OS === 'ios' ? 88 : 64, // Account for home indicator on iOS
-    paddingBottom: Platform.OS === 'ios' ? 34 : 10, // Safe area for iOS
-    paddingTop: 8,
-    position: 'absolute', // Make tab bar float above content
-    bottom: 0,
-    left: 0,
-    right: 0,
+
     elevation: 8, // Android shadow
     shadowColor: '#000', // iOS shadow
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
+
   tabBarLabel: {
     fontFamily: 'Inter-Medium',
     fontSize: 12,
-    marginBottom: Platform.OS === 'ios' ? 0 : 4,
+    marginBottom: Platform.OS === 'android' ? 4 : 0,
   },
 });

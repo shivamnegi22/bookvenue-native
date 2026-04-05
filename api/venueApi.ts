@@ -126,14 +126,14 @@ export const venueApi = {
           })) || []
         };
       });
-      
+
       return venues;
     } catch (error) {
       console.error('Failed to fetch venues:', error);
       return [];
     }
   },
-  
+
   getVenueBySlug: async (slug: string) => {
     try {
       const response = await api.get(`/get-facility-by-slug/${slug}`);
@@ -144,19 +144,19 @@ export const venueApi = {
       try {
         if (facility.images) {
           const parsedImages = JSON.parse(facility.images);
-          facilityImages = parsedImages.map((img: string) => 
+          facilityImages = parsedImages.map((img: string) =>
             `https://admin.bookvenue.app/${img.replace(/\\/g, '/')}`
           );
         }
       } catch (e) {
         console.warn('Failed to parse facility images:', e);
       }
-      
+
       // Add featured image if available
       if (facility.featured_image) {
         facilityImages.unshift(`https://admin.bookvenue.app/${facility.featured_image}`);
       }
-      
+
       // Fallback image if no images available
       if (facilityImages.length === 0) {
         facilityImages = ['https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'];

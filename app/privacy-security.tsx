@@ -9,6 +9,7 @@ import { authApi } from '@/api/authApi';
 export default function PrivacySecurityScreen() {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
+  console.log("user :", user)
 
   const handlePrivacyPolicy = () => {
     Linking.openURL('https://bookvenue.app/privacy-policy').catch(() => {
@@ -31,8 +32,9 @@ export default function PrivacySecurityScreen() {
           onPress: async () => {
             if (!user) return;
             try {
+              console.log(user)
               setLoading(true);
-              await authApi.deleteUser(user.id);
+              await authApi.deleteUser(user.user_id);
               await logout();
               router.replace('/(auth)/login' as any);
             } catch (error) {

@@ -11,9 +11,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shivamnegi.bookvenue",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "useFrameworks": "static",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "aps-environment": "production"
       }
     },
     "android": {
@@ -26,8 +30,8 @@
       "package": "com.shivamnegi.bookvenue",
       "config": {
         "googleMaps": {
-              "apiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
-            }
+          "apiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"
+        }
       },
       "permissions": [
         "android.permission.INTERNET",
