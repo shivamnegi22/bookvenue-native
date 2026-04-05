@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.shivamnegi.bookvenue",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "useFrameworks": "static",
+      "useFrameworks": "dynamic",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
