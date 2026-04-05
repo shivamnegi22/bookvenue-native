@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shivamnegi.bookvenue",
-      // "googleServicesFile": "./GoogleService-Info.plist",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "useFrameworks": "static",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -56,8 +56,8 @@
       "expo-web-browser",
       "expo-image-picker",
       "expo-dev-client",
-      // "@react-native-firebase/app",
-      // "@react-native-firebase/messaging",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       "@react-native-community/datetimepicker",
       [
         "@stripe/stripe-react-native",
