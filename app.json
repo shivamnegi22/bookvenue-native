@@ -7,12 +7,10 @@
     "icon": "./assets/images/BookVenue_Logo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shivamnegi.bookvenue",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "useFrameworks": "dynamic",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -66,17 +64,21 @@
           "enableGooglePay": true
         }
       ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true,
-            "enableProguardInReleaseBuilds": false,
-            "enableShrinkResourcesInReleaseBuilds": false,
-            "enableMinifyInReleaseBuilds": false
-          }
-        }
-      ]
+[
+  "expo-build-properties",
+  {
+    "ios": {
+      "useFrameworks": "static",
+      "modularHeaders": true
+    },
+    "android": {
+      "usesCleartextTraffic": true,
+      "enableProguardInReleaseBuilds": false,
+      "enableShrinkResourcesInReleaseBuilds": false,
+      "enableMinifyInReleaseBuilds": false
+    }
+  }
+]
     ],
     "experiments": {
       "typedRoutes": true
