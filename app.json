@@ -58,7 +58,14 @@
   "expo-web-browser",
   "expo-image-picker",
 
-  "@react-native-firebase/app",
+  [
+    "@react-native-firebase/app",
+    {
+      "ios": {
+        "useFrameworks": "static"
+      }
+    }
+  ],
   "@react-native-firebase/messaging",
 
   "@react-native-community/datetimepicker",
@@ -74,10 +81,7 @@
   [
     "expo-build-properties",
     {
-      "ios": {
-        "useFrameworks": "static",
-        "modularHeaders": true
-      },
+
       "android": {
         "usesCleartextTraffic": true,
         "enableProguardInReleaseBuilds": false,
