@@ -15,8 +15,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import Constants from 'expo-constants';
 
-import { requestUserPermission,listenToForegroundMessages } from '../services/NotificationService';
-
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 

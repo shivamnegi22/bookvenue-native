@@ -57,17 +57,6 @@
   "expo-font",
   "expo-web-browser",
   "expo-image-picker",
-
-  [
-    "@react-native-firebase/app",
-    {
-      "ios": {
-        "useFrameworks": "static"
-      }
-    }
-  ],
-  "@react-native-firebase/messaging",
-
   "@react-native-community/datetimepicker",
 
   [
