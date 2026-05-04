@@ -35,17 +35,6 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  useEffect(() => {
-    const setupNotifications = async () => {
-      await requestUserPermission();
-    };
-    setupNotifications();
-    // Listen for messages while the app is open
-    const unsubscribe = listenToForegroundMessages();
-
-    return () => unsubscribe(); // Cleanup on unmount
-  }, []);
-
   // Return null to keep splash screen visible while fonts load
   if (!fontsLoaded && !fontError) {
     return null;
