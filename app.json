@@ -8,18 +8,37 @@
 "scheme": "myapp",
 "userInterfaceStyle": "automatic",
 
+// "ios": {
+//   "supportsTablet": true,
+//   "bundleIdentifier": "com.shivamnegi.bookvenue",
+//   "googleServicesFile": "./GoogleService-Info.plist",
+//   "infoPlist": {
+//     "ITSAppUsesNonExemptEncryption": false
+//   },
+//   "entitlements": {
+//     "aps-environment": "production"
+//   }
+// },
 "ios": {
   "supportsTablet": true,
   "bundleIdentifier": "com.shivamnegi.bookvenue",
   "googleServicesFile": "./GoogleService-Info.plist",
+
   "infoPlist": {
-    "ITSAppUsesNonExemptEncryption": false
+    "ITSAppUsesNonExemptEncryption": false,
+
+    "NSPhotoLibraryUsageDescription": "BookVenue uses your photo library so you can upload and update your profile picture and share venue-related images.",
+
+    "NSPhotoLibraryAddUsageDescription": "BookVenue saves downloaded venue images and booking-related media to your photo library.",
+
+    "NSCameraUsageDescription": "BookVenue uses your camera so you can capture and upload profile pictures and venue images."
   },
+
   "entitlements": {
     "aps-environment": "production"
   }
-},
-
+}
+,
 "android": {
   "googleServicesFile": "./google-services.json",
   "adaptiveIcon": {
@@ -56,7 +75,7 @@
   "expo-router",
   "expo-font",
   "expo-web-browser",
-  "expo-image-picker",
+[ "expo-image-picker", { "photosPermission": "BookVenue uses your photos so you can upload and update your profile picture and share venue images.", "cameraPermission": "BookVenue uses your camera so you can capture and upload profile pictures and venue images." } ],
   "@react-native-community/datetimepicker",
 
   [
