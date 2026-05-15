@@ -7,7 +7,8 @@ import { venueApi } from '@/api/venueApi';
 import { bookingApi } from '@/api/bookingApi';
 import { Venue, VenueService, VenueCourt } from '@/types/venue';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Star, MapPin, Clock, IndianRupee, Calendar, ArrowRight, ChevronRight, ChevronLeft } from 'lucide-react-native';
+import { ArrowLeft, Star, MapPin, Clock, IndianRupee, ArrowRight, ChevronRight, ChevronLeft } from 'lucide-react-native';
+
 
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -74,16 +75,23 @@ export default function VenueDetailScreen() {
           setSlotsData(fetchedSlotsData);
 
           if (fetchedSlotsData && fetchedSlotsData.services) {
-            const matchingService = fetchedSlotsData.services.find(
-              (s: any) => s.name === selectedCourtName
-            );
+            const services = fetchedSlotsData.services || [];
 
-            if (matchingService && matchingService.court && matchingService.court.length > 0) {
-              const courtData = matchingService.court[0];
-              setSelectedCourtDetails(courtData);
+            // selectedCourtName can be either:
+            // 1) a service name (Cricket/Fooothall) OR
+            // 2) a court name (Court 1 (1 v 1 ) / Court 2 (2 v 2))
+            const matchingService = services.find((s: any) => s.name === selectedCourtName);
+            const matchingCourt = services
+              .flatMap((s: any) => s.courts || s.court || [])
+              .find((c: any) => c.court_name === selectedCourtName || c.name === selectedCourtName);
 
-              if (courtData.slots && Array.isArray(courtData.slots)) {
-                const filteredSlots = filterPastSlots(courtData.slots, selectedDate);
+            const resolvedCourt = matchingCourt || (matchingService?.courts?.[0] ?? matchingService?.court?.[0]);
+
+            if (resolvedCourt) {
+              setSelectedCourtDetails(resolvedCourt);
+
+              if (resolvedCourt?.slots && Array.isArray(resolvedCourt.slots)) {
+                const filteredSlots = filterPastSlots(resolvedCourt.slots, selectedDate);
                 setAvailableTimeSlots(filteredSlots);
               } else {
                 setAvailableTimeSlots([]);
@@ -1068,8 +1076,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
+    // Platform.OS is a union of known RN targets; avoid hardcoding 'web'
     paddingBottom: Platform.OS === 'ios' ? 34 : 16,
   },
+
   footerContent: {
     flexDirection: 'row',
     alignItems: 'center',
