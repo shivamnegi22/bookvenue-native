@@ -76,9 +76,29 @@ useEffect(() => {
 ]);
 
   const handlePayment = async () => {
+    if (bookingData?.totalSlots && parseInt(bookingData.totalSlots, 10) > 3) {
+      Alert.alert('Limit exceeded', 'You can book up to 3 time slots.');
+      return;
+    }
+    if (Array.isArray(bookingData?.bookingSlots) && bookingData.bookingSlots.length > 3) {
+      Alert.alert('Limit exceeded', 'You can book up to 3 time slots.');
+      return;
+    }
+
     if (!bookingData || !user) {
       Alert.alert('Error', 'Please login to complete booking');
       router.push('/(auth)/login');
+      return;
+    }
+
+    // Defensive: enforce max 3 slots on the confirm screen as well.
+    const MAX_SLOTS = 3;
+    const slotCountFromParams = Number(bookingData.totalSlots) || 0;
+    const slotCountFromSlots = Array.isArray(bookingData.bookingSlots)
+      ? bookingData.bookingSlots.length
+      : 0;
+    if (slotCountFromParams > MAX_SLOTS || slotCountFromSlots > MAX_SLOTS) {
+      Alert.alert('Limit reached', `You can book up to ${MAX_SLOTS} time slots.`);
       return;
     }
 
@@ -88,7 +108,9 @@ useEffect(() => {
       const selectedSlots = bookingData.bookingSlots.map((slot: any) => ({
         start_time: slot.startTime,
         end_time: slot.endTime,
-        price: Math.round(bookingData.totalAmount / bookingData.totalSlots).toString()
+        price: Math.round(
+          (slot.price ?? (bookingData.totalAmount / bookingData.totalSlots)) as number
+        ).toString(),
       }));
 
       const bookingPayload = {
@@ -225,9 +247,11 @@ useEffect(() => {
                     {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                   </Text>
                 </View>
+
                 <Text style={styles.slotPrice}>
-                  ₹{Math.round(bookingData.totalAmount / bookingData.totalSlots)}
+                  ₹{Math.round((slot.price ?? (bookingData.totalAmount / bookingData.totalSlots)) as number)}
                 </Text>
+
               </View>
             ))}
           </View>
@@ -259,9 +283,11 @@ useEffect(() => {
                 <Text style={styles.priceLabel}>
                   {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                 </Text>
+
                 <Text style={styles.priceValue}>
-                  ₹{Math.round(bookingData.totalAmount / bookingData.totalSlots)}
+                  ₹{Math.round((slot.price ?? (bookingData.totalAmount / bookingData.totalSlots)) as number)}
                 </Text>
+
               </View>
             ))}
             <View style={styles.divider} />

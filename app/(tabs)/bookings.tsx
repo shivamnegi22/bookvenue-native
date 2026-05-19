@@ -159,7 +159,7 @@ export default function BookingsScreen() {
           onPress={() => setActiveTab('past')}
         >
           <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
-            Past ({pastBookings.length})
+            Past Bookings({pastBookings.length})
           </Text>
         </TouchableOpacity>
       </View>

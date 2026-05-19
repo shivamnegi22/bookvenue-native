@@ -7,7 +7,10 @@ import { venueApi } from '@/api/venueApi';
 import { bookingApi } from '@/api/bookingApi';
 import { Venue, VenueService, VenueCourt } from '@/types/venue';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Star, MapPin, Clock, IndianRupee, ArrowRight, ChevronRight, ChevronLeft } from 'lucide-react-native';
+import { ArrowLeft, Star, MapPin, Clock, IndianRupee, ArrowRight, ChevronRight, ChevronLeft, CalendarDays } from 'lucide-react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
+const toISODate = (d: Date) => d.toISOString().split('T')[0];
 
 
 export default function VenueDetailScreen() {
@@ -25,6 +28,8 @@ export default function VenueDetailScreen() {
   const [availableTimeSlots, setAvailableTimeSlots] = useState<{ time: string; price: number }[]>([]);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   const [selectedCourtDetails, setSelectedCourtDetails] = useState<any>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -154,13 +159,27 @@ export default function VenueDetailScreen() {
     setSelectedTimeSlots([]);
   };
 
+  const MAX_SLOTS = 3;
+
   const handleTimeSlotToggle = (slot: string) => {
-    setSelectedTimeSlots(prev => {
-      if (prev.includes(slot)) {
-        return prev.filter(s => s !== slot);
-      } else {
-        return [...prev, slot].sort();
+
+
+    setSelectedTimeSlots((prev) => {
+      const isAlreadySelected = prev.includes(slot);
+
+      // Always allow deselect
+      if (isAlreadySelected) {
+        return prev.filter((s) => s !== slot);
       }
+
+
+      // Block selecting beyond limit
+      if (prev.length >= MAX_SLOTS) {
+        Alert.alert('Limit reached', `You can book up to ${MAX_SLOTS} time slots.`);
+        return prev;
+      }
+
+      return [...prev, slot].sort();
     });
   };
 
@@ -199,11 +218,20 @@ export default function VenueDetailScreen() {
       return;
     }
 
-    const bookingSlots = selectedTimeSlots.map(slotTime => {
+    const MAX_SLOTS = 3;
+    if (selectedTimeSlots.length > MAX_SLOTS) {
+      Alert.alert('Limit reached', `You can book up to ${MAX_SLOTS} time slots.`);
+      return;
+    }
+
+
+const bookingSlots = selectedTimeSlots.map((slotTime) => {
       const [startTime, endTime] = slotTime.split(' - ');
+      const slotData = availableTimeSlots.find((s) => s.time === slotTime);
       return {
         startTime: startTime,
-        endTime: endTime
+        endTime: endTime,
+        price: slotData?.price ?? 0,
       };
     });
 
@@ -397,42 +425,32 @@ export default function VenueDetailScreen() {
 
           <Text style={styles.sectionTitle}>Location</Text>
           <View style={styles.mapContainer}>
-            {Platform.OS === 'web' ? (
-              <View style={styles.webMapFallback}>
-                <Text style={styles.webMapText}>Map view is not available on web</Text>
-              </View>
-            ) : (
-              (() => {
-                let MapView: any;
-                let Marker: any;
-                if (Platform.OS !== 'web') {
-                  const MapModule = require('react-native-maps');
-                  MapView = MapModule.default;
-                  Marker = MapModule.Marker;
-                }
+            {(() => {
+              const MapModule = require('react-native-maps');
+              const MapView = MapModule.default;
+              const Marker = MapModule.Marker;
 
-                return (
-                  <MapView
-                    provider="google"
-                    style={styles.map}
-                    initialRegion={{
+              return (
+                <MapView
+                  provider="google"
+                  style={styles.map}
+                  initialRegion={{
+                    latitude: venue.coordinates.latitude,
+                    longitude: venue.coordinates.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                >
+                  <Marker
+                    coordinate={{
                       latitude: venue.coordinates.latitude,
                       longitude: venue.coordinates.longitude,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
                     }}
-                  >
-                    <Marker
-                      coordinate={{
-                        latitude: venue.coordinates.latitude,
-                        longitude: venue.coordinates.longitude
-                      }}
-                      title={venue.name}
-                    />
-                  </MapView>
-                );
-              })()
-            )}
+                    title={venue.name}
+                  />
+                </MapView>
+              );
+            })()}
 
             <TouchableOpacity style={styles.viewOnMapButton}>
               <Text style={styles.viewOnMapText}>View on Map</Text>
@@ -475,6 +493,12 @@ export default function VenueDetailScreen() {
 
           {/* Date Selection */}
           <Text style={styles.dateSelectionTitle}>Select Date</Text>
+
+
+
+
+
+          {/* Quick date picker */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.dateContainer}>
               {nextDays.map((day, index) => (
@@ -484,7 +508,9 @@ export default function VenueDetailScreen() {
                     styles.dateItem,
                     selectedDate === day.fullDate && styles.selectedDateItem
                   ]}
-                  onPress={() => setSelectedDate(day.fullDate)}
+                  onPress={() => {
+                    setSelectedDate(day.fullDate);
+                  }}
                 >
                   <Text
                     style={[
@@ -514,6 +540,39 @@ export default function VenueDetailScreen() {
               ))}
             </View>
           </ScrollView>
+
+          {/* Calendar icon (opens popup date picker) */}
+          <TouchableOpacity
+            style={styles.calendarIconButton}
+            onPress={() => setShowDatePicker(true)}
+            activeOpacity={0.8}
+          >
+            <CalendarDays size={22} color="#2563EB" />
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate ? new Date(selectedDate) : new Date()}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={(event: DateTimePickerEvent) => {
+                // On iOS, user can cancel by dismissing; on Android, event.type will fire.
+                // If dismissed, do nothing.
+                if (event.type === 'dismissed') {
+                  setShowDatePicker(false);
+                  return;
+                }
+
+                const pickedDate = event.nativeEvent.timestamp;
+                const iso = new Date(pickedDate).toISOString().split('T')[0];
+                setSelectedDate(iso);
+                setShowDatePicker(false);
+              }}
+            />
+          )}
+
+
+
 
           {selectedCourtDetails && (
             <View style={styles.courtInfoCard}>
@@ -1124,5 +1183,68 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     marginRight: 8,
+  },
+
+  calendarContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  calendarTitle: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#1F2937',
+    marginBottom: 10,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  calendarDay: {
+    width: '28%',
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  calendarDaySelected: {
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
+  },
+  calendarDayText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  calendarDayTextSelected: {
+    color: '#FFFFFF',
+  },
+  calendarDaySubText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 11,
+    color: '#6B7280',
+  },
+  calendarIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    marginTop: -10,
+    marginBottom: 16,
+    marginLeft: 2,
   },
 });
