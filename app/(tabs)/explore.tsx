@@ -96,7 +96,20 @@ export default function ExploreScreen() {
     router.push(`/venue/${venue.slug}`);
   };
 
-  const sportTypes = ['Football', 'Cricket', 'Tennis', 'Basketball', 'Swimming', 'Badminton'];
+  const sportTypes = [
+    'Football',
+    'Cricket',
+    'Tennis',
+    'Basketball',
+    'Swimming',
+    // Requested sports/activity categories
+    'Badminton',
+    'Bubble Soccer',
+    'Go Karting',
+    'Pickleball',
+    'Snooker',
+    'Table Tennis'
+  ];
   const ratingOptions = [1, 2, 3, 4, 5];
 
   let MapView: any;

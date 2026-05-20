@@ -189,6 +189,13 @@ export default function HomeScreen() {
               { name: 'Cricket', emoji: '🏏', bg: '#FEF3F2' },
               { name: 'Basketball', emoji: '🏀', bg: '#F5F3FF' },
               { name: 'Swimming', emoji: '🏊', bg: '#FFEDD5' },
+              // Requested sports/activity categories
+              { name: 'Badminton', emoji: '🏸', bg: '#EFF6FF' },
+              { name: 'Bubble Soccer', emoji: '🫧', bg: '#ECFDF5' },
+              { name: 'Go Karting', emoji: '🏎️', bg: '#FEF3F2' },
+              { name: 'Pickleball', emoji: '🌕', bg: '#F5F3FF' },
+              { name: 'Snooker', emoji: '🎱', bg: '#FFEDD5' },
+              { name: 'Table Tennis', emoji: '🏓', bg: '#DBEAFE' },
             ].map((cat) => (
               <TouchableOpacity
                 key={cat.name}

@@ -43,23 +43,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const token = await AsyncStorage.getItem('token');
         const savedUser = await AsyncStorage.getItem('user');
-        
-        if (token && savedUser) {
-          const parsedUser = JSON.parse(savedUser);
-          console.log('Loaded user from storage:', parsedUser);
-          setUser(parsedUser);
-          try {
-            const userData = await authApi.getProfile();
-            console.log('Background sync fetched:', userData);
-            setUser(userData);
-            await AsyncStorage.setItem('user', JSON.stringify(userData));
-            console.log('Background profile sync successful');
-          } catch (error) {
-            console.error('Background profile sync failed:', error);
-          }
-        } else {
-          console.log('No token or saved user found');
+
+        // Always require login after a reinstall / fresh start.
+        // App storage can sometimes be restored from backups, so we intentionally
+        // do not auto-rehydrate session from AsyncStorage on startup.
+        if (token || savedUser) {
+          await AsyncStorage.removeItem('token');
+          await AsyncStorage.removeItem('user');
+          console.log('Auth session cleared on startup; user must login again');
         }
+
+        console.log('No authenticated user (forced login required)');
       } catch (e) {
         console.error('Startup check failed', e);
       } finally {

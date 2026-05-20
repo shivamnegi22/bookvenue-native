@@ -139,7 +139,7 @@ export default function RegisterScreen() {
                 onPress={() => handleMethodSelect('phone')}
               >
                 <Phone size={24} color="#2563EB" />
-                <Text style={styles.methodButtonText}>Register with Phone</Text>
+                <Text style={styles.methodButtonText}>login/signup with Phone</Text>
               </TouchableOpacity>
             </View>
           )}

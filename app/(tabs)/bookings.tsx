@@ -16,7 +16,8 @@ export default function BookingsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'pending' | 'past'>('upcoming');
+
 
   // Refresh bookings when screen comes into focus
   useFocusEffect(
@@ -80,10 +81,20 @@ export default function BookingsScreen() {
     return bookingDate >= today;
   };
 
-  const upcomingBookings = bookings.filter(isUpcoming);
-  const pastBookings = bookings.filter(booking => !isUpcoming(booking));
+  const pendingBookings = bookings.filter(booking => booking.status === 'pending');
 
-  const currentBookings = activeTab === 'upcoming' ? upcomingBookings : pastBookings;
+  // Successful bookings go to Upcoming/Past.
+  const successfulBookings = bookings.filter(booking => booking.status !== 'pending');
+  const upcomingBookings = successfulBookings.filter(isUpcoming);
+  const pastBookings = successfulBookings.filter(booking => !isUpcoming(booking));
+
+  const currentBookings =
+    activeTab === 'upcoming'
+      ? upcomingBookings
+      : activeTab === 'pending'
+        ? pendingBookings
+        : pastBookings;
+
 
   const handleBookingPress = (booking: Booking) => {
     router.push({
@@ -154,15 +165,26 @@ export default function BookingsScreen() {
             Upcoming ({upcomingBookings.length})
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'pending' && styles.activeTab]}
+          onPress={() => setActiveTab('pending')}
+        >
+          <Text style={[styles.tabText, activeTab === 'pending' && styles.activeTabText]}>
+            Pending ({pendingBookings.length})
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity 
           style={[styles.tab, activeTab === 'past' && styles.activeTab]}
           onPress={() => setActiveTab('past')}
         >
           <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
-            Past Bookings({pastBookings.length})
+            Past ({pastBookings.length})
           </Text>
         </TouchableOpacity>
       </View>
+
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -188,16 +210,17 @@ export default function BookingsScreen() {
           {currentBookings.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Calendar size={64} color="#9CA3AF" />
-              <Text style={styles.emptyTitle}>
-                No {activeTab} bookings
-              </Text>
+              <Text style={styles.emptyTitle}>No {activeTab} bookings</Text>
               <Text style={styles.emptyDescription}>
-                {activeTab === 'upcoming' 
+                {activeTab === 'upcoming'
                   ? "You don't have any upcoming bookings. Start exploring venues to make your first booking!"
-                  : "You don't have any past bookings yet."
+                  : activeTab === 'pending'
+                    ? "You don't have any pending reservations right now."
+                    : "You don't have any past bookings yet."
                 }
               </Text>
               {activeTab === 'upcoming' && (
+
                 <TouchableOpacity 
                   style={styles.exploreButton}
                   onPress={() => router.push('/(tabs)/explore')}
@@ -253,7 +276,7 @@ export default function BookingsScreen() {
                         }
                       </Text>
                     </View>
-                  </View>
+                    </View>
                   
                   <View style={styles.priceRow}>
                     <View style={styles.slotsInfo}>
@@ -267,6 +290,7 @@ export default function BookingsScreen() {
                       <IndianRupee size={16} color="#1F2937" />
                       <Text style={styles.priceText}>₹{booking.totalAmount}</Text>
                     </View>
+
                   </View>
                 </View>
               </TouchableOpacity>

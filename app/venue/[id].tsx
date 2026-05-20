@@ -19,6 +19,11 @@ export default function VenueDetailScreen() {
   const { user } = useAuth();
   const { width } = useWindowDimensions();
 
+  const SLOT_COLUMNS = 3;
+  const SLOT_GAP = 12;
+  const SLOT_CONTAINER_HORIZONTAL_PADDING = 40; // matches common padding/margins in this screen
+  const slotItemWidth = (width - SLOT_CONTAINER_HORIZONTAL_PADDING - (SLOT_COLUMNS - 1) * SLOT_GAP) / SLOT_COLUMNS;
+
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -606,11 +611,16 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
             </View>
           ) : availableTimeSlots.length > 0 ? (
             <View style={styles.timeSlotContainer}>
+              {/** Exactly 3 aligned columns */}
               {availableTimeSlots.map((slot, index) => (
                 <TouchableOpacity
                   key={index}
                   style={[
                     styles.timeSlot,
+                    {
+                      width: slotItemWidth,
+                      marginRight: index % 3 === 2 ? 0 : SLOT_GAP,
+                    },
                     selectedTimeSlots.includes(slot.time) && styles.selectedTimeSlot
                   ]}
                   onPress={() => handleTimeSlotToggle(slot.time)}
@@ -1100,7 +1110,7 @@ const styles = StyleSheet.create({
   },
   timeSlotText: {
     fontFamily: 'Inter-Medium',
-    fontSize: 14,
+    fontSize: 12,
     color: '#4B5563',
     marginBottom: 2,
   },
@@ -1109,7 +1119,7 @@ const styles = StyleSheet.create({
   },
   timeSlotPrice: {
     fontFamily: 'Inter-Regular',
-    fontSize: 12,
+    fontSize: 11,
     color: '#6B7280',
   },
   selectedTimeSlotPriceSelected: {

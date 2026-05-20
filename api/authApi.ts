@@ -98,7 +98,7 @@ export const authApi = {
       console.log('Registration OTP sent successfully');
       return response.data;
     } catch (error: any) {
-      console.error('Register Error:', error.response?.data || error);
+      console.error('login/signup Error:', error.response?.data || error);
       throw new Error(
         error.response?.data?.message || 'Failed to send registration OTP',
       );
@@ -161,7 +161,7 @@ export const authApi = {
 
       return response.data;
     } catch (error: any) {
-      console.error('Register OTP Verification Error:', error.response?.data || error);
+      console.error('login/signup OTP Verification Error:', error.response?.data || error);
       throw new Error(
         error.response?.data?.message || 'Failed to verify registration OTP',
       );
