@@ -120,7 +120,15 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.error('Mobile OTP Verification Error:', error.response?.data || error);
-      throw new Error(error.response?.data?.message || 'Failed to verify OTP');
+
+      const backendMessage: string | undefined = error.response?.data?.message;
+      const normalizedMessage =
+        backendMessage && backendMessage.toLowerCase().includes('invalid') &&
+        backendMessage.toLowerCase().includes('credentials')
+          ? 'Invalid OTP'
+          : backendMessage || 'Failed to verify OTP';
+
+      throw new Error(normalizedMessage);
     }
   },
 
@@ -139,9 +147,15 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.error('Email OTP Verification Error:', error.response?.data || error);
-      throw new Error(
-        error.response?.data?.message || 'Failed to verify email OTP',
-      );
+
+      const backendMessage: string | undefined = error.response?.data?.message;
+      const normalizedMessage =
+        backendMessage && backendMessage.toLowerCase().includes('invalid') &&
+        backendMessage.toLowerCase().includes('credentials')
+          ? 'Invalid OTP'
+          : backendMessage || 'Failed to verify email OTP';
+
+      throw new Error(normalizedMessage);
     }
   },
 
@@ -162,11 +176,18 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.error('login/signup OTP Verification Error:', error.response?.data || error);
-      throw new Error(
-        error.response?.data?.message || 'Failed to verify registration OTP',
-      );
+
+      const backendMessage: string | undefined = error.response?.data?.message;
+      const normalizedMessage =
+        backendMessage && backendMessage.toLowerCase().includes('invalid') &&
+        backendMessage.toLowerCase().includes('credentials')
+          ? 'Invalid OTP'
+          : backendMessage || 'Failed to verify registration OTP';
+
+      throw new Error(normalizedMessage);
     }
   },
+
 
   // Get user profile
   getProfile: async () => {

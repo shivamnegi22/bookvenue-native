@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Filter, MapPin, X, FileSliders as Sliders, Calendar, Star } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,6 +15,9 @@ export default function ExploreScreen() {
 
   const [venues, setVenues] = useState<Venue[]>([]);
   const [filteredVenues, setFilteredVenues] = useState<Venue[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<Venue[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(query || '');
   const [showFilters, setShowFilters] = useState(false);
@@ -28,19 +32,6 @@ export default function ExploreScreen() {
       try {
         const response = await venueApi.getVenues();
         setVenues(response);
-
-        let filtered = [...response];
-
-        if (query) {
-          const lowercaseQuery = query.toLowerCase();
-          filtered = filtered.filter(venue =>
-            venue.name.toLowerCase().includes(lowercaseQuery) ||
-            venue.location.toLowerCase().includes(lowercaseQuery) ||
-            venue.type.toLowerCase().includes(lowercaseQuery)
-          );
-        }
-
-        setFilteredVenues(filtered);
       } catch (error) {
         console.error('Error fetching venues:', error);
       } finally {
@@ -49,23 +40,56 @@ export default function ExploreScreen() {
     };
 
     fetchVenues();
-  }, [query, filter]);
+  }, []);
 
-  const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      setFilteredVenues(venues);
-      return;
+  // Keep searchQuery synced with URL query param (when navigating from Home)
+  useEffect(() => {
+    if (typeof query === 'string') {
+      setSearchQuery(query);
+    }
+  }, [query]);
+
+  // Alphabetical live filtering while typing
+  useEffect(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    const base = [...venues];
+
+    let next = base;
+
+    if (q) {
+      next = next.filter((venue) =>
+        venue.name.toLowerCase().includes(q) ||
+        venue.location.toLowerCase().includes(q) ||
+        venue.type.toLowerCase().includes(q)
+      );
     }
 
-    const lowercaseQuery = searchQuery.toLowerCase();
-    const filtered = venues.filter(venue =>
-      venue.name.toLowerCase().includes(lowercaseQuery) ||
-      venue.location.toLowerCase().includes(lowercaseQuery) ||
-      venue.type.toLowerCase().includes(lowercaseQuery)
-    );
+    // Alphabetical sort (case-insensitive)
+    next.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+    setFilteredVenues(next);
 
-    setFilteredVenues(filtered);
+    // Typeahead suggestions: top 6 alphabetical matches
+    if (q) {
+      const nameStartsWith = next.filter((v) => v.name.toLowerCase().startsWith(q));
+      const suggestionsPool = nameStartsWith.length > 0 ? nameStartsWith : next;
+      setSuggestions(suggestionsPool.slice(0, 6));
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [searchQuery, venues]);
+
+
+  const handleSearch = () => {
+    // No-op: live filtering is handled by useEffect while typing.
+    // Keep for accessibility (submit keyboard)
+    if (!searchQuery.trim()) {
+      setShowSuggestions(false);
+    }
   };
+
 
   const applyFilters = () => {
     let filtered = [...venues];
@@ -130,9 +154,15 @@ export default function ExploreScreen() {
             placeholder="Search venues..."
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
-            onChangeText={setSearchQuery}
+            onChangeText={(text) => {
+              setSearchQuery(text);
+              setShowSuggestions(true);
+            }}
             onSubmitEditing={handleSearch}
+            autoCorrect={false}
+            autoCapitalize="none"
           />
+
           {searchQuery ? (
             <TouchableOpacity
               onPress={() => {
@@ -283,8 +313,30 @@ export default function ExploreScreen() {
         </View>
       ) : (
         <>
+      
+      {/* Suggestions dropdown (alphabetical typeahead) */}
+      {showSuggestions && suggestions.length > 0 ? (
+        <View style={styles.suggestionsContainer}>
+          {suggestions.map((v) => (
+            <TouchableOpacity
+              key={v.id}
+              style={styles.suggestionItem}
+              onPress={() => {
+                setSearchQuery(v.name);
+                setShowSuggestions(false);
+              }}
+            >
+              <Text style={styles.suggestionTitle} numberOfLines={1}>{v.name}</Text>
+              <Text style={styles.suggestionSubtitle} numberOfLines={1}>{v.location}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
+
           {showMap ? (
+
             Platform.OS === 'web' ? (
+
               <View style={styles.webMapFallback}>
                 <Text style={styles.webMapText}>Map view is not available on web</Text>
                 <TouchableOpacity
@@ -577,6 +629,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
   },
+
+  suggestionsContainer: {
+    position: 'absolute',
+    top: 110,
+    left: 16,
+    right: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    zIndex: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 6,
+    maxHeight: 240,
+  },
+  suggestionItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  suggestionTitle: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  suggestionSubtitle: {
+    marginTop: 4,
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#6B7280',
+  },
+
   mapContainer: {
     flex: 1,
   },
