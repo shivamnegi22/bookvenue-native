@@ -102,15 +102,16 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       console.log('Starting OTP verification...');
+      // Always await verification; on failure the API throws and we do not proceed to login.
       if (isEmailValid) {
         await authApi.verifyOTPEmail(identifier, otp);
       } else {
         await authApi.verifyOTP(identifier, otp);
       }
       console.log('OTP verified successfully, token saved');
-      await login();     
+      await login();
       console.log('Login completed, navigating to tabs');
-      router.replace('/(tabs)');    
+      router.replace('/(tabs)');
     } catch (err: any) {
       console.error('Verification error:', err);
       setError(err.message || 'OTP verification failed');

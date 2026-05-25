@@ -135,11 +135,19 @@ export const authApi = {
       console.error('Mobile OTP Verification Error:', error.response?.data || error);
 
       const backendMessage: string | undefined = error.response?.data?.message;
+      const message = backendMessage || '';
       const normalizedMessage =
-        backendMessage && backendMessage.toLowerCase().includes('invalid') &&
-        backendMessage.toLowerCase().includes('credentials')
-          ? 'Invalid OTP'
-          : backendMessage || 'Failed to verify OTP';
+        // Prefer explicit OTP expiration messaging
+        message.toLowerCase().includes('expired') ||
+        message.toLowerCase().includes('otp') && message.toLowerCase().includes('expir')
+          ? 'OTP Expired'
+          : message.toLowerCase().includes('invalid') &&
+            message.toLowerCase().includes('otp')
+            ? 'Invalid OTP'
+            : message.toLowerCase().includes('invalid') &&
+              message.toLowerCase().includes('credentials')
+              ? 'Invalid OTP'
+              : backendMessage || 'Failed to verify OTP';
 
       throw new Error(normalizedMessage);
     }
@@ -164,11 +172,19 @@ export const authApi = {
       console.error('Email OTP Verification Error:', error.response?.data || error);
 
       const backendMessage: string | undefined = error.response?.data?.message;
+      const message = backendMessage || '';
       const normalizedMessage =
-        backendMessage && backendMessage.toLowerCase().includes('invalid') &&
-        backendMessage.toLowerCase().includes('credentials')
-          ? 'Invalid OTP'
-          : backendMessage || 'Failed to verify email OTP';
+        // Prefer explicit OTP expiration messaging
+        message.toLowerCase().includes('expired') ||
+        message.toLowerCase().includes('otp') && message.toLowerCase().includes('expir')
+          ? 'OTP Expired'
+          : message.toLowerCase().includes('invalid') &&
+            message.toLowerCase().includes('otp')
+            ? 'Invalid OTP'
+            : message.toLowerCase().includes('invalid') &&
+              message.toLowerCase().includes('credentials')
+              ? 'Invalid OTP'
+              : backendMessage || 'Failed to verify email OTP';
 
       throw new Error(normalizedMessage);
     }
