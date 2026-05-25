@@ -1,6 +1,28 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi } from '@/api/authApi';
+import { router } from 'expo-router';
+import { Alert } from 'react-native';
+import { SESSION_TIMEOUT_MS, SESSION_EXPIRED_MESSAGE } from '@/contexts/sessionTimeout';
+
+
+const clearSessionAndRedirect = async (message?: string) => {
+
+  try {
+    await AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('tokenIssuedAt');
+    await AsyncStorage.removeItem('sessionExpiresAt');
+  } finally {
+    setTimeout(() => {
+      if (message) {
+        Alert.alert('Session expired', message, [{ text: 'Login', onPress: () => router.replace('/(auth)/login') }]);
+      } else {
+        router.replace('/(auth)/login');
+      }
+    }, 0);
+  }
+};
 
 export type User = {
   id: string;
@@ -39,6 +61,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const clearIfExpired = async (showMessage: boolean) => {
+      const sessionExpiresAtRaw = await AsyncStorage.getItem('sessionExpiresAt');
+      const sessionExpiresAt = sessionExpiresAtRaw ? Number(sessionExpiresAtRaw) : null;
+      const token = await AsyncStorage.getItem('token');
+
+      if (!token) return;
+      if (!sessionExpiresAt || Number.isNaN(sessionExpiresAt)) return;
+
+      if (Date.now() >= sessionExpiresAt) {
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
+        await AsyncStorage.removeItem('tokenIssuedAt');
+        await AsyncStorage.removeItem('sessionExpiresAt');
+
+        if (showMessage) {
+          Alert.alert(
+            'Session expired',
+            'Please login again to continue.',
+            [{ text: 'Login', onPress: () => router.replace('/(auth)/login') }],
+          );
+        } else {
+          router.replace('/(auth)/login');
+        }
+      }
+    };
+
     const checkLoggedIn = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
@@ -48,12 +98,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // App storage can sometimes be restored from backups, so we intentionally
         // do not auto-rehydrate session from AsyncStorage on startup.
         if (token || savedUser) {
+          // If user exists in storage, treat as expired/invalid and force fresh login.
+          // Also, respect our explicit session expiry if it exists.
+          await clearIfExpired(false);
+
+          // Force login after reinstall / fresh start.
           await AsyncStorage.removeItem('token');
           await AsyncStorage.removeItem('user');
+          await AsyncStorage.removeItem('tokenIssuedAt');
+          await AsyncStorage.removeItem('sessionExpiresAt');
           console.log('Auth session cleared on startup; user must login again');
         }
 
+        // Start interval watcher only while provider is mounted
+        intervalId = setInterval(() => {
+          clearIfExpired(false);
+        }, 15 * 1000);
+
         console.log('No authenticated user (forced login required)');
+
       } catch (e) {
         console.error('Startup check failed', e);
       } finally {

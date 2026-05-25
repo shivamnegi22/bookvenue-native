@@ -48,6 +48,17 @@ api.interceptors.response.use(
   },
 );
 
+import { SESSION_TIMEOUT_MS } from '@/contexts/sessionTimeout';
+
+const setSessionExpiry = async () => {
+  const now = Date.now();
+  const sessionExpiresAt = now + SESSION_TIMEOUT_MS;
+
+  await AsyncStorage.setItem('tokenIssuedAt', now.toString());
+  await AsyncStorage.setItem('sessionExpiresAt', sessionExpiresAt.toString());
+};
+
+
 export const authApi = {
   // Send OTP for login via mobile
   login: async (mobile: string) => {
@@ -114,8 +125,10 @@ export const authApi = {
 
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
+        await setSessionExpiry();
         console.log('Token saved to AsyncStorage');
       }
+
 
       return response.data;
     } catch (error: any) {
@@ -141,10 +154,12 @@ export const authApi = {
 
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
+        await setSessionExpiry();
         console.log('Token saved to AsyncStorage');
       }
 
       return response.data;
+
     } catch (error: any) {
       console.error('Email OTP Verification Error:', error.response?.data || error);
 
@@ -161,6 +176,7 @@ export const authApi = {
 
   // Verify OTP for registration
   verifyRegisterOTP: async (mobile: string, otp: string) => {
+
     try {
       const payload = { mobile, otp };
       console.log('Verifying registration OTP');
@@ -170,8 +186,10 @@ export const authApi = {
 
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
+        await setSessionExpiry();
         console.log('Token saved to AsyncStorage');
       }
+
 
       return response.data;
     } catch (error: any) {

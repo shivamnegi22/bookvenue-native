@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, Platform, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert } from 'react-native';
@@ -9,6 +9,7 @@ import { Venue, VenueService, VenueCourt } from '@/types/venue';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Star, MapPin, Clock, IndianRupee, ArrowRight, ChevronRight, ChevronLeft, CalendarDays } from 'lucide-react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
 
 const toISODate = (d: Date) => d.toISOString().split('T')[0];
 
@@ -202,6 +203,24 @@ export default function VenueDetailScreen() {
     return total;
   };
 
+  const handleShareVenue = async () => {
+    if (!venue?.slug) {
+      Alert.alert('Unable to share', 'Venue link is not available yet.');
+      return;
+    }
+
+    const url = `https://bookvenue.app/facility/${venue.slug}`;
+    try {
+      await Share.share({
+        message: `Check out ${venue.name} on BookVenue: ${url}`,
+        url,
+        title: 'Share Venue',
+      });
+    } catch (e) {
+      console.error('Share failed:', e);
+    }
+  };
+
   const handleBooking = () => {
     if (!user) {
       Alert.alert(
@@ -217,6 +236,7 @@ export default function VenueDetailScreen() {
       );
       return;
     }
+
 
     if (selectedTimeSlots.length === 0 || !selectedCourtDetails || !venue) {
       Alert.alert('Error', 'Please select time slots to continue');
@@ -396,6 +416,16 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
 
           <View style={styles.separator} />
 
+          <TouchableOpacity
+            style={styles.shareVenueIconButton}
+            onPress={handleShareVenue}
+            accessibilityRole="button"
+            accessibilityLabel="Share Venue"
+          >
+            <Text style={styles.shareVenueIcon}>↗</Text>
+          </TouchableOpacity>
+
+
           <Text style={styles.sectionTitle}>About</Text>
           <Text
             style={styles.descriptionText}
@@ -403,6 +433,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
           >
             {venue.description}
           </Text>
+
           {venue.description && venue.description.length > 200 && (
             <TouchableOpacity
               onPress={() => setShowFullDescription(!showFullDescription)}
@@ -466,6 +497,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
           <View style={styles.separator} />
 
           <Text style={styles.sectionTitle}>Booking</Text>
+
 
           {courtNames.length > 1 && (
             <>
@@ -1125,6 +1157,25 @@ const styles = StyleSheet.create({
   selectedTimeSlotPriceSelected: {
     color: '#FFFFFF',
   },
+  shareVenueIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+    marginBottom: 12,
+  },
+  shareVenueIcon: {
+    fontSize: 18,
+    lineHeight: 18,
+    color: '#2563EB',
+    fontFamily: 'Inter-SemiBold',
+  },
+
   noSlotsContainer: {
     padding: 20,
     alignItems: 'center',
@@ -1132,6 +1183,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 24,
   },
+
   noSlotsText: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
