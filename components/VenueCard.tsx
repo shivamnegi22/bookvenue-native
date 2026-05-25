@@ -2,12 +2,42 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Venue } from '@/types/venue';
-import { MapPin, Star, IndianRupee } from 'lucide-react-native';
+import { MapPin, Star } from 'lucide-react-native';
 
 type VenueCardProps = {
   venue: Venue;
   size: 'small' | 'large';
 };
+
+function getSportsOffered(venue: Venue): string[] {
+  const fromServices = (venue.services || [])
+    .map((s) => s?.name)
+    .filter(Boolean) as string[];
+
+  const unique = Array.from(new Set(fromServices));
+  if (unique.length > 0) return unique;
+
+  // Fallback
+  if (venue.type) return [venue.type];
+  return [];
+}
+
+function renderSportsBoxes(sports: string[]) {
+  if (sports.length === 0) return null;
+
+  return (
+    <View style={styles.sportsBoxesContainer}>
+      {sports.map((sport) => (
+        <View key={sport} style={styles.sportBox}>
+          <Text style={styles.sportBoxText} numberOfLines={1}>
+            {sport}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 
 export default function VenueCard({ venue, size }: VenueCardProps) {
   const router = useRouter();
@@ -15,27 +45,26 @@ export default function VenueCard({ venue, size }: VenueCardProps) {
   const handlePress = () => {
     router.push({
       pathname: '/venue/[id]',
-      params: { id: venue.slug }
+      params: { id: venue.slug },
     });
   };
 
-  // Get the current price based on selected service/court or default
   const getCurrentPrice = () => {
     if (venue.services && venue.services.length > 0) {
       const firstService = venue.services[0];
       if (firstService.courts && firstService.courts.length > 0) {
-        return parseFloat(firstService.courts[0].slot_price);
+        const slotPrice = firstService.courts[0]?.slot_price;
+        if (slotPrice != null) return parseFloat(slotPrice);
       }
     }
     return venue.pricePerHour;
   };
 
+  const sportsOffered = getSportsOffered(venue);
+
   if (size === 'large') {
     return (
-      <TouchableOpacity
-        style={styles.largeCardContainer}
-        onPress={handlePress}
-      >
+      <TouchableOpacity style={styles.largeCardContainer} onPress={handlePress}>
         <View style={styles.largeImageContainer}>
           <Image source={{ uri: venue.images[0] }} style={styles.largeImage} />
           <View style={styles.ratingContainer}>
@@ -43,16 +72,25 @@ export default function VenueCard({ venue, size }: VenueCardProps) {
             <Text style={styles.ratingText}>{venue.rating.toFixed(1)}</Text>
           </View>
         </View>
+
         <View style={styles.largeCardContent}>
-          <Text style={styles.venueName} numberOfLines={1}>{venue.name}</Text>
+          <Text style={styles.venueName} numberOfLines={1}>
+            {venue.name}
+          </Text>
           <View style={styles.locationContainer}>
             <MapPin size={14} color="#6B7280" />
-            <Text style={styles.locationText} numberOfLines={1}>{venue.location}</Text>
+            <Text style={styles.locationText} numberOfLines={1}>
+              {venue.location}
+            </Text>
           </View>
+
+          <View style={styles.sportsRow}>
+            <Text style={styles.sportsLabel}>Sports</Text>
+            {renderSportsBoxes(sportsOffered)}
+          </View>
+
           <View style={styles.bottomRow}>
-            {!!venue.totalReviews && (
-              <Text style={styles.reviewCount}>({venue.totalReviews} reviews)</Text>
-            )}
+            {!!venue.totalReviews && <Text style={styles.reviewCount}>({venue.totalReviews} reviews)</Text>}
             <View style={styles.priceContainer}>
               <Text style={styles.priceText}>₹{getCurrentPrice()}/hour</Text>
             </View>
@@ -63,27 +101,32 @@ export default function VenueCard({ venue, size }: VenueCardProps) {
   }
 
   return (
-    <TouchableOpacity
-      style={styles.cardContainer}
-      onPress={handlePress}
-    >
+    <TouchableOpacity style={styles.cardContainer} onPress={handlePress}>
       <Image source={{ uri: venue.images[0] }} style={styles.image} />
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
-          <Text style={styles.venueName} numberOfLines={1}>{venue.name}</Text>
+          <Text style={styles.venueName} numberOfLines={1}>
+            {venue.name}
+          </Text>
           <View style={styles.ratingContainer}>
             <Star size={12} color="#F59E0B" fill="#F59E0B" />
             <Text style={styles.ratingText}>{venue.rating.toFixed(1)}</Text>
           </View>
         </View>
+
         <View style={styles.locationContainer}>
           <MapPin size={14} color="#6B7280" />
-          <Text style={styles.locationText} numberOfLines={1}>{venue.location}</Text>
+          <Text style={styles.locationText} numberOfLines={1}>
+            {venue.location}
+          </Text>
         </View>
+
         <View style={styles.cardFooter}>
           <View style={styles.venueTypeContainer}>
-            <Text style={styles.venueTypeText}>{venue.type}</Text>
+            <Text style={styles.venueTypeText}>Sports</Text>
+            {renderSportsBoxes(sportsOffered)}
           </View>
+
           <View style={styles.priceContainer}>
             <Text style={styles.priceText}>₹{getCurrentPrice()}/hour</Text>
           </View>
@@ -109,6 +152,7 @@ const styles = StyleSheet.create({
   image: {
     width: 100,
     height: 100,
+    resizeMode: 'cover',
   },
   cardContent: {
     flex: 1,
@@ -146,23 +190,34 @@ const styles = StyleSheet.create({
   venueTypeContainer: {
     backgroundColor: '#F3F4F6',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 4,
+    flex: 1,
+    marginRight: 12,
   },
   venueTypeText: {
     fontFamily: 'Inter-Medium',
+    fontSize: 10,
+    color: '#4B5563',
+    marginBottom: 2,
+  },
+  sportsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    marginBottom: 8,
+  },
+  sportsLabel: {
+    fontFamily: 'Inter-Medium',
     fontSize: 12,
     color: '#4B5563',
+    marginRight: 6,
   },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  reviewCount: {
+  sportsText: {
     fontFamily: 'Inter-Regular',
-    fontSize: 12,
+    fontSize: 13,
     color: '#6B7280',
+    flex: 1,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -173,6 +228,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2563EB',
     marginLeft: 4,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reviewCount: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#6B7280',
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -207,7 +272,28 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 140,
   },
+  sportsBoxesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    flex: 1,
+  },
+  sportBox: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  sportBoxText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 12,
+    color: '#4B5563',
+    maxWidth: 110,
+  },
+
   largeCardContent: {
     padding: 12,
   },
 });
+

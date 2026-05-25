@@ -94,11 +94,14 @@ export default function ExploreScreen() {
   const applyFilters = () => {
     let filtered = [...venues];
 
+    const normalize = (v: string) => v.trim().toLowerCase().replace(/\s+/g, ' ');
+
     if (selectedSportType) {
-      filtered = filtered.filter(venue => venue.type === selectedSportType);
+      const target = normalize(selectedSportType);
+      filtered = filtered.filter((venue) => normalize(venue.type) === target);
     }
 
-    filtered = filtered.filter(venue =>
+    filtered = filtered.filter((venue) =>
       venue.pricePerHour >= priceRange[0] &&
       venue.pricePerHour <= priceRange[1] &&
       venue.rating >= minRating

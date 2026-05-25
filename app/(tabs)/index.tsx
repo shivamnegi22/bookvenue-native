@@ -9,6 +9,7 @@ import { Venue } from '@/types/venue';
 import VenueCard from '@/components/VenueCard';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -49,11 +50,60 @@ export default function HomeScreen() {
           .slice(0, 5);
         setFeaturedVenues(featured);
 
-        // Set nearby venues (for demo, using random venues)
-        const nearby = [...response]
+        const computeDistanceKm = (
+          userLat: number,
+          userLng: number,
+          venueLat: number,
+          venueLng: number
+        ) => {
+          // Haversine formula
+          const toRad = (v: number) => (v * Math.PI) / 180;
+          const R = 6371; // Earth radius in km
+          const dLat = toRad(venueLat - userLat);
+          const dLng = toRad(venueLng - userLng);
+          const lat1 = toRad(userLat);
+          const lat2 = toRad(venueLat);
+          const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c;
+        };
+
+        const fallbackNearby = [...response]
           .sort(() => 0.5 - Math.random())
           .slice(0, 5);
-        setNearbyVenues(nearby);
+
+        // If any venue has 0,0 coords we still compute distance; API should provide valid coords.
+
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+
+          if (status !== 'granted') {
+            setNearbyVenues(fallbackNearby);
+            return;
+          }
+
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+
+          const userLat = location.coords.latitude;
+          const userLng = location.coords.longitude;
+
+          const venuesWithDistance = response.map((v) => {
+            const venueLat = v.coordinates.latitude;
+            const venueLng = v.coordinates.longitude;
+            const distanceKm = computeDistanceKm(userLat, userLng, venueLat, venueLng);
+            return { v, distanceKm };
+          });
+
+          venuesWithDistance.sort((a, b) => a.distanceKm - b.distanceKm);
+
+          setNearbyVenues(venuesWithDistance.map((x) => x.v).slice(0, 5));
+        } catch (locErr) {
+          console.warn('Location unavailable, using fallback nearby list:', locErr);
+          setNearbyVenues(fallbackNearby);
+        }
       } catch (error) {
         console.error('Error fetching venues:', error);
       } finally {
@@ -63,6 +113,9 @@ export default function HomeScreen() {
 
     fetchVenues();
   }, []);
+
+
+
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
