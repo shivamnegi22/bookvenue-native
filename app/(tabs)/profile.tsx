@@ -119,11 +119,11 @@ export default function ProfileScreen() {
   };
 
   const menuItems = [
-    {
-      icon: <BookOpen size={20} color="#2563EB" />,
-      title: 'Blog',
-      onPress: () => router.push('/blog-list' as any),
-    },
+    // {
+    //   icon: <BookOpen size={20} color="#2563EB" />,
+    //   title: 'Blog',
+    //   onPress: () => router.push('/blog-list' as any),
+    // },
     {
       icon: <MapPin size={20} color="#2563EB" />,
       title: 'Saved Addresses',
