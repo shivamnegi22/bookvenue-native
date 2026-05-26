@@ -1,14 +1,20 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Image, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Image, ActivityIndicator, Linking, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { router, useFocusEffect } from 'expo-router';
-import { User, ChevronRight, CreditCard, MapPin, Bell, CircleHelp as HelpCircle, LogOut, Edit2, Shield } from 'lucide-react-native';
+import { User, ChevronRight, CreditCard, MapPin, Bell, CircleHelp as HelpCircle, LogOut, Edit2, Shield, BookOpen } from 'lucide-react-native';
 import ProfileAvatar from '@/components/ProfileAvatar';
+import BlogCard from '@/components/BlogCard';
+import { blogApi } from '@/api/blogApi';
+import { Blog } from '@/types/blog';
 
 export default function ProfileScreen() {
   const { user, logout, loading, refreshUser } = useAuth();
   const [notifications, setNotifications] = useState(true);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [blogsLoading, setBlogsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Log whenever user state changes
   useEffect(() => {
@@ -28,6 +34,31 @@ export default function ProfileScreen() {
       }
     }, [])
   );
+
+  // Fetch blogs
+  const fetchBlogs = async () => {
+    try {
+      const blogsData = await blogApi.getBlogs();
+      setBlogs(blogsData);
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+    } finally {
+      setBlogsLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    if (user) {
+      refreshUser();
+    }
+    fetchBlogs();
+  };
 
   // Show loading only on initial mount when there's no user data
   if (loading && !user) {
@@ -89,6 +120,11 @@ export default function ProfileScreen() {
 
   const menuItems = [
     {
+      icon: <BookOpen size={20} color="#2563EB" />,
+      title: 'Blog',
+      onPress: () => router.push('/blog-list' as any),
+    },
+    {
       icon: <MapPin size={20} color="#2563EB" />,
       title: 'Saved Addresses',
       onPress: () => router.push('/saved-addresses'),
@@ -132,7 +168,12 @@ export default function ProfileScreen() {
         <Text style={styles.headerTitle}>Profile</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             {user.profileImage ? (
@@ -197,6 +238,34 @@ export default function ProfileScreen() {
               </View>
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Blog Section */}
+        <View style={styles.blogSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Latest Blogs</Text>
+            <TouchableOpacity onPress={() => router.push('/blog-list' as any)}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {blogsLoading ? (
+            <ActivityIndicator size="large" color="#2563EB" style={styles.blogLoading} />
+          ) : blogs.length > 0 ? (
+            <FlatList
+              data={blogs}
+              keyExtractor={(item) => item.id.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.blogListContainer}
+              renderItem={({ item }) => <BlogCard blog={item} size="large" />}
+            />
+          ) : (
+            <View style={styles.emptyBlogsContainer}>
+              <BookOpen size={48} color="#9CA3AF" />
+              <Text style={styles.emptyBlogsText}>No blogs available</Text>
+            </View>
+          )}
         </View>
 
         <TouchableOpacity
@@ -363,5 +432,47 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: '#9CA3AF'
+  },
+  blogSection: {
+    marginTop: 16,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  sectionTitle: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 18,
+    color: '#1F2937',
+  },
+  seeAllText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+    color: '#2563EB',
+  },
+  blogLoading: {
+    marginVertical: 20,
+  },
+  blogListContainer: {
+    paddingHorizontal: 16,
+  },
+  emptyBlogsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyBlogsText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 12,
   },
 });
