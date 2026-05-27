@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, Platform, Share } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, useWindowDimensions, Platform, Share, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import { venueApi } from '@/api/venueApi';
 import { bookingApi } from '@/api/bookingApi';
+import { reviewApi } from '@/api/reviewApi';
 import { Venue, VenueService, VenueCourt } from '@/types/venue';
+import { Review } from '@/types/review';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Star, MapPin, Clock, IndianRupee, ArrowRight, ChevronRight, ChevronLeft, CalendarDays } from 'lucide-react-native';
+import { ArrowLeft, Star, MapPin, Clock, IndianRupee, ArrowRight, ChevronRight, ChevronLeft, CalendarDays, Send, MessageSquare } from 'lucide-react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 
@@ -40,6 +42,12 @@ export default function VenueDetailScreen() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const flatListRef = React.useRef<FlatList>(null);
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewMessage, setReviewMessage] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const today = new Date();
   const nextDays = Array.from({ length: 15 }, (_, i) => {
@@ -76,6 +84,23 @@ export default function VenueDetailScreen() {
 
     fetchVenue();
   }, [id]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!venue) return;
+      setReviewsLoading(true);
+      try {
+        const reviewsData = await reviewApi.getReviewsByFacilityId(venue.id);
+        setReviews(reviewsData);
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [venue]);
 
   useEffect(() => {
     const fetchAvailability = async () => {
@@ -280,6 +305,50 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
         totalSlots: selectedTimeSlots.length.toString()
       }
     });
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user) {
+      Alert.alert('Login Required', 'Please log in to submit a review', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Login', onPress: () => router.push('/(auth)/login') },
+      ]);
+      return;
+    }
+
+    if (reviewRating === 0) {
+      Alert.alert('Rating Required', 'Please select a rating');
+      return;
+    }
+
+    if (!reviewMessage.trim()) {
+      Alert.alert('Review Required', 'Please write a review message');
+      return;
+    }
+
+    if (!venue) return;
+
+    setSubmittingReview(true);
+    try {
+      await reviewApi.createReview({
+        facility_id: parseInt(venue.id),
+        user_id: parseInt(user.user_id || user.id || '0'),
+        rating: reviewRating,
+        message: reviewMessage.trim(),
+      });
+
+      // Refresh reviews
+      const reviewsData = await reviewApi.getReviewsByFacilityId(venue.id);
+      setReviews(reviewsData);
+
+      setReviewRating(0);
+      setReviewMessage('');
+      Alert.alert('Success', 'Review submitted successfully');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   if (loading) {
@@ -683,6 +752,122 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
               <Text style={styles.noSlotsText}>No time slots available for selected date and court</Text>
             </View>
           )}
+
+          <View style={styles.separator} />
+
+          {/* Reviews Section */}
+          <View style={styles.reviewsSection}>
+            <View style={styles.reviewsHeader}>
+              <MessageSquare size={20} color="#2563EB" />
+              <Text style={styles.sectionTitle}>Reviews</Text>
+              {reviews.length > 0 && (
+                <Text style={styles.reviewCount}>({reviews.length})</Text>
+              )}
+            </View>
+
+            {/* Write Review */}
+            <View style={styles.writeReviewCard}>
+              <Text style={styles.writeReviewTitle}>Write a Review</Text>
+
+              <View style={styles.starRatingContainer}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity
+                    key={star}
+                    onPress={() => setReviewRating(star)}
+                    activeOpacity={0.7}
+                  >
+                    <Star
+                      size={28}
+                      color={star <= reviewRating ? '#F59E0B' : '#D1D5DB'}
+                      fill={star <= reviewRating ? '#F59E0B' : 'none'}
+                    />
+                  </TouchableOpacity>
+                ))}
+                {reviewRating > 0 && (
+                  <Text style={styles.ratingLabelText}>
+                    {reviewRating === 1 ? 'Poor' : reviewRating === 2 ? 'Fair' : reviewRating === 3 ? 'Good' : reviewRating === 4 ? 'Very Good' : 'Excellent'}
+                  </Text>
+                )}
+              </View>
+
+              <View style={styles.reviewInputContainer}>
+                <TextInput
+                  style={styles.reviewInput}
+                  placeholder="Share your experience..."
+                  placeholderTextColor="#9CA3AF"
+                  value={reviewMessage}
+                  onChangeText={setReviewMessage}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.submitReviewButton, (submittingReview || reviewRating === 0 || !reviewMessage.trim()) && styles.submitReviewButtonDisabled]}
+                onPress={handleSubmitReview}
+                disabled={submittingReview || reviewRating === 0 || !reviewMessage.trim()}
+              >
+                {submittingReview ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Send size={16} color="#FFFFFF" />
+                    <Text style={styles.submitReviewButtonText}>Submit Review</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* Reviews List */}
+            {reviewsLoading ? (
+              <View style={styles.reviewsLoadingContainer}>
+                <ActivityIndicator size="small" color="#2563EB" />
+                <Text style={styles.reviewsLoadingText}>Loading reviews...</Text>
+              </View>
+            ) : reviews.length === 0 ? (
+              <View style={styles.noReviewsContainer}>
+                <MessageSquare size={32} color="#9CA3AF" />
+                <Text style={styles.noReviewsText}>No reviews yet</Text>
+                <Text style={styles.noReviewsSubtext}>Be the first to share your experience</Text>
+              </View>
+            ) : (
+              reviews.map((review) => (
+                <View key={review.id} style={styles.reviewCard}>
+                  <View style={styles.reviewHeader}>
+                    <View style={styles.reviewerInfo}>
+                      <View style={styles.reviewerAvatar}>
+                        <Text style={styles.reviewerInitial}>
+                          {(review.user_name || 'U').charAt(0).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text style={styles.reviewerName}>{review.user_name || 'User'}</Text>
+                        <Text style={styles.reviewDate}>
+                          {new Date(review.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.reviewStarsContainer}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          size={14}
+                          color={star <= review.rating ? '#F59E0B' : '#D1D5DB'}
+                          fill={star <= review.rating ? '#F59E0B' : 'none'}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                  <Text style={styles.reviewMessage}>{review.message}</Text>
+                </View>
+              ))
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -1308,5 +1493,159 @@ const styles = StyleSheet.create({
     marginTop: -10,
     marginBottom: 16,
     marginLeft: 2,
+  },
+  reviewsSection: {
+    marginBottom: 16,
+  },
+  reviewsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  reviewCount: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#6B7280',
+    marginLeft: 4,
+  },
+  writeReviewCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  writeReviewTitle: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#1F2937',
+    marginBottom: 12,
+  },
+  starRatingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 12,
+  },
+  ratingLabelText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+    color: '#F59E0B',
+    marginLeft: 8,
+  },
+  reviewInputContainer: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#F9FAFB',
+  },
+  reviewInput: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#1F2937',
+    padding: 12,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  submitReviewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2563EB',
+    borderRadius: 8,
+    paddingVertical: 10,
+    gap: 6,
+  },
+  submitReviewButtonDisabled: {
+    backgroundColor: '#93C5FD',
+  },
+  submitReviewButtonText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
+  reviewsLoadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    gap: 8,
+  },
+  reviewsLoadingText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  noReviewsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+  },
+  noReviewsText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 8,
+  },
+  noReviewsSubtext: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 4,
+  },
+  reviewCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  reviewerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reviewerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  reviewerInitial: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#2563EB',
+  },
+  reviewerName: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#1F2937',
+  },
+  reviewDate: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  reviewStarsContainer: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  reviewMessage: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#4B5563',
+    lineHeight: 20,
   },
 });
