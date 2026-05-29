@@ -50,18 +50,24 @@ export const reviewApi = {
       );
       console.log('Reviews response:', response.data);
 
-      const reviewsData = response.data.reviews || response.data.data || [];
+      const reviewsData =
+        response.data.review || response.data.reviews || response.data.data || [];
 
       return reviewsData.map((review: any) => ({
         id: review.id,
         facility_id: review.facility_id,
-        user_id: review.user_id,
-        rating: review.rating,
-        message: review.message || review.review || '',
-        user_name: review.user_name || review.name || review.user?.name || 'User',
-        user_image: review.user_image || review.image || review.user?.image
-          ? `https://admin.bookvenue.app/${review.user_image || review.image || review.user?.image}`
-          : undefined,
+        // backend can return user_id as null
+        user_id: review.user_id ?? null,
+        // backend rating can be string (e.g. "5")
+        rating: Number(review.rating ?? 0),
+        message:
+          String(review.message ?? review.review ?? ''),
+        user_name:
+          review.user_name || review.name || review.user?.name || 'User',
+        user_image:
+          review.user_image || review.image || review.user?.image
+            ? `https://admin.bookvenue.app/${review.user_image || review.image || review.user?.image}`
+            : undefined,
         created_at: review.created_at,
         updated_at: review.updated_at,
       }));

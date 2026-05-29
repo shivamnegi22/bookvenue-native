@@ -49,6 +49,9 @@ export default function VenueDetailScreen() {
   const [reviewMessage, setReviewMessage] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
 
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
+
   const today = new Date();
   const nextDays = Array.from({ length: 15 }, (_, i) => {
     const date = new Date();
@@ -92,12 +95,14 @@ export default function VenueDetailScreen() {
       try {
         const reviewsData = await reviewApi.getReviewsByFacilityId(venue.id);
         setReviews(reviewsData);
-      } catch (error) {
+        } catch (error) {
         console.error('Error fetching reviews:', error);
       } finally {
         setReviewsLoading(false);
       }
-    };
+    }
+
+    // nothing
 
     fetchReviews();
   }, [venue]);
@@ -832,40 +837,67 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
                 <Text style={styles.noReviewsSubtext}>Be the first to share your experience</Text>
               </View>
             ) : (
-              reviews.map((review) => (
-                <View key={review.id} style={styles.reviewCard}>
-                  <View style={styles.reviewHeader}>
-                    <View style={styles.reviewerInfo}>
-                      <View style={styles.reviewerAvatar}>
-                        <Text style={styles.reviewerInitial}>
-                          {(review.user_name || 'U').charAt(0).toUpperCase()}
-                        </Text>
+              <>
+                {(showAllReviews ? [...reviews].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) :
+                  [...reviews]
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .slice(0, 2)
+                ).map((review) => (
+
+                  <View key={review.id} style={styles.reviewCard}>
+                    <View style={styles.reviewHeader}>
+                      <View style={styles.reviewerInfo}>
+                        <View style={styles.reviewerAvatar}>
+                          <Text style={styles.reviewerInitial}>
+                            {(review.user_name || 'U').charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                        <View>
+                          <Text style={styles.reviewerName}>{review.user_name || 'User'}</Text>
+                          <Text style={styles.reviewDate}>
+                            {new Date(review.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </Text>
+                        </View>
                       </View>
-                      <View>
-                        <Text style={styles.reviewerName}>{review.user_name || 'User'}</Text>
-                        <Text style={styles.reviewDate}>
-                          {new Date(review.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </Text>
+                      <View style={styles.reviewStarsContainer}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={14}
+                            color={star <= review.rating ? '#F59E0B' : '#D1D5DB'}
+                            fill={star <= review.rating ? '#F59E0B' : 'none'}
+                          />
+                        ))}
                       </View>
                     </View>
-                    <View style={styles.reviewStarsContainer}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          size={14}
-                          color={star <= review.rating ? '#F59E0B' : '#D1D5DB'}
-                          fill={star <= review.rating ? '#F59E0B' : 'none'}
-                        />
-                      ))}
-                    </View>
+                    <Text style={styles.reviewMessage}>{review.message}</Text>
                   </View>
-                  <Text style={styles.reviewMessage}>{review.message}</Text>
-                </View>
-              ))
+                ))}
+
+                {reviews.length > 2 && !showAllReviews && (
+                  <TouchableOpacity
+                    style={styles.viewMoreButton}
+                    onPress={() => setShowAllReviews(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.viewMoreButtonText}>View more</Text>
+                  </TouchableOpacity>
+                )}
+
+                {reviews.length > 2 && showAllReviews && (
+                  <TouchableOpacity
+                    style={styles.viewMoreButton}
+                    onPress={() => setShowAllReviews(false)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.viewMoreButtonText}>View less</Text>
+                  </TouchableOpacity>
+                )}
+              </>
             )}
           </View>
         </View>
@@ -1647,5 +1679,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#4B5563',
     lineHeight: 20,
+  },
+  viewMoreButton: {
+    marginTop: 8,
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 9999,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  viewMoreButtonText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 14,
+    color: '#2563EB',
   },
 });
