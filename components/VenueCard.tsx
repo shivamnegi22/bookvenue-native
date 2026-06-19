@@ -22,6 +22,43 @@ function getSportsOffered(venue: Venue): string[] {
   return [];
 }
 
+function getSportLogoEmoji(sport: string) {
+  const key = (sport || '').toLowerCase();
+
+  // Common mapping (extend as needed)
+  const map: Record<string, string> = {
+    cricket: '🏏',
+    football: '⚽',
+    soccer: '⚽',
+    swimming: '🏊',
+    badminton: '🏸',
+    tennis: '🎾',
+    tabletennis: '🏓',
+    table_tennis: '🏓',
+    volleyball: '🏐',
+    basket: '🏀',
+    basketball: '🏀',
+    kabaddi: '🤾',
+    hockey: '🏑',
+    golf: '⛳',
+    cycling: '🚴',
+    running: '🏃',
+    athletics: '🏃',
+    gym: '🏋️',
+    fitness: '🏋️',
+    yoga: '🧘',
+  };
+
+  if (map[key]) return map[key];
+
+  // Try contains-based match
+  const found = Object.keys(map).find((k) => key.includes(k));
+  if (found) return map[found];
+
+  // Fallback: use the first letter as a simple "logo"
+  return (sport || '?').trim().slice(0, 1).toUpperCase();
+}
+
 function renderSportsBoxes(sports: string[]) {
   if (sports.length === 0) return null;
 
@@ -29,14 +66,15 @@ function renderSportsBoxes(sports: string[]) {
     <View style={styles.sportsBoxesContainer}>
       {sports.map((sport) => (
         <View key={sport} style={styles.sportBox}>
-          <Text style={styles.sportBoxText} numberOfLines={1}>
-            {sport}
+          <Text style={styles.sportBoxLogo} numberOfLines={1}>
+            {getSportLogoEmoji(sport)}
           </Text>
         </View>
       ))}
     </View>
   );
 }
+
 
 
 export default function VenueCard({ venue, size }: VenueCardProps) {
@@ -285,11 +323,13 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginBottom: 6,
   },
-  sportBoxText: {
+  sportBoxLogo: {
     fontFamily: 'Inter-Medium',
-    fontSize: 12,
-    color: '#4B5563',
-    maxWidth: 110,
+    fontSize: 16,
+    color: '#111827',
+    lineHeight: 18,
+    maxWidth: 28,
+    textAlign: 'center',
   },
 
   largeCardContent: {
