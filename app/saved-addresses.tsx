@@ -2,11 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { router } from 'expo-router';
 import { ArrowLeft, MapPin, Plus, Edit2 } from 'lucide-react-native';
 
 export default function SavedAddressesScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -17,7 +19,7 @@ export default function SavedAddressesScreen() {
         >
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Saved Addresses</Text>
+        <Text style={styles.headerTitle}>{t('savedAddressesTitle')}</Text>
         <TouchableOpacity style={styles.addButton}>
           <Plus size={20} color="#2563EB" />
         </TouchableOpacity>
@@ -31,7 +33,7 @@ export default function SavedAddressesScreen() {
                 <MapPin size={20} color="#2563EB" />
               </View>
               <View style={styles.addressInfo}>
-                <Text style={styles.addressLabel}>Home</Text>
+                <Text style={styles.addressLabel}>{t('home')}</Text>
                 <Text style={styles.addressText}>{user.address}</Text>
               </View>
               <TouchableOpacity 
@@ -45,15 +47,15 @@ export default function SavedAddressesScreen() {
         ) : (
           <View style={styles.emptyContainer}>
             <MapPin size={48} color="#9CA3AF" />
-            <Text style={styles.emptyTitle}>No saved addresses</Text>
+            <Text style={styles.emptyTitle}>{t('noSavedAddresses')}</Text>
             <Text style={styles.emptyDescription}>
-              Add your addresses to make booking venues easier
+              {t('addAddressHelp')}
             </Text>
             <TouchableOpacity 
               style={styles.addAddressButton}
               onPress={() => router.push('/edit-profile')}
             >
-              <Text style={styles.addAddressButtonText}>Add Address</Text>
+              <Text style={styles.addAddressButtonText}>{t('addAddress')}</Text>
             </TouchableOpacity>
           </View>
         )}

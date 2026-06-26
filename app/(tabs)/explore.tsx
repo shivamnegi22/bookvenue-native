@@ -4,12 +4,14 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Activi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Filter, MapPin, X, FileSliders as Sliders, Calendar, Star } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { venueApi } from '@/api/venueApi';
 import { Venue } from '@/types/venue';
 import VenueCard from '@/components/VenueCard';
 
 export default function ExploreScreen() {
   const { query, filter } = useLocalSearchParams<{ query?: string; filter?: string }>();
+  const { t } = useLanguage();
   const router = useRouter();
   const { width } = useWindowDimensions();
 
@@ -154,7 +156,7 @@ export default function ExploreScreen() {
           <Search size={20} color="#6B7280" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search venues..."
+            placeholder={t('searchVenues')}
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={(text) => {
@@ -191,20 +193,20 @@ export default function ExploreScreen() {
           style={[styles.toggleButton, !showMap ? styles.toggleButtonActive : null]}
           onPress={() => setShowMap(false)}
         >
-          <Text style={[styles.toggleText, !showMap ? styles.toggleTextActive : null]}>List</Text>
+          <Text style={[styles.toggleText, !showMap ? styles.toggleTextActive : null]}>{t('list')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.toggleButton, showMap ? styles.toggleButtonActive : null]}
           onPress={() => setShowMap(true)}
         >
-          <Text style={[styles.toggleText, showMap ? styles.toggleTextActive : null]}>Map</Text>
+          <Text style={[styles.toggleText, showMap ? styles.toggleTextActive : null]}>{t('map')}</Text>
         </TouchableOpacity>
       </View>
 
       {showFilters && (
         <View style={styles.filtersContainer}>
           <View style={styles.filterHeader}>
-            <Text style={styles.filterTitle}>Filter Venues</Text>
+            <Text style={styles.filterTitle}>{t('filterVenues')}</Text>
             <TouchableOpacity onPress={() => setShowFilters(false)}>
               <X size={20} color="#1F2937" />
             </TouchableOpacity>
@@ -214,7 +216,7 @@ export default function ExploreScreen() {
             <View style={styles.filterSection}>
               <View style={styles.filterSectionHeader}>
                 <Sliders size={20} color="#2563EB" />
-                <Text style={styles.filterSectionTitle}>Sport Type</Text>
+                <Text style={styles.filterSectionTitle}>{t('sportType')}</Text>
               </View>
               <View style={styles.sportTypeContainer}>
                 {sportTypes.map((sport) => (
@@ -241,7 +243,7 @@ export default function ExploreScreen() {
 
             <View style={styles.filterSection}>
               <View style={styles.filterSectionHeader}>
-                <Text style={styles.filterSectionTitle}>Price Range</Text>
+                <Text style={styles.filterSectionTitle}>{t('priceRange')}</Text>
               </View>
               <View style={styles.priceRangeContainer}>
                 <Text style={styles.priceRangeText}>
@@ -273,7 +275,7 @@ export default function ExploreScreen() {
             <View style={styles.filterSection}>
               <View style={styles.filterSectionHeader}>
                 <Star size={20} color="#2563EB" />
-                <Text style={styles.filterSectionTitle}>Minimum Rating</Text>
+                <Text style={styles.filterSectionTitle}>{t('minimumRating')}</Text>
               </View>
               <View style={styles.ratingContainer}>
                 {ratingOptions.map((rating) => (
@@ -300,10 +302,10 @@ export default function ExploreScreen() {
 
             <View style={styles.filterActions}>
               <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
-                <Text style={styles.resetButtonText}>Reset</Text>
+                <Text style={styles.resetButtonText}>{t('reset')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
-                <Text style={styles.applyButtonText}>Apply Filters</Text>
+                <Text style={styles.applyButtonText}>{t('applyFilters')}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -341,12 +343,12 @@ export default function ExploreScreen() {
             Platform.OS === 'web' ? (
 
               <View style={styles.webMapFallback}>
-                <Text style={styles.webMapText}>Map view is not available on web</Text>
+                <Text style={styles.webMapText}>{t('mapViewNotAvailable')}</Text>
                 <TouchableOpacity
                   style={styles.webMapButton}
                   onPress={() => setShowMap(false)}
                 >
-                  <Text style={styles.webMapButtonText}>Switch to List View</Text>
+                  <Text style={styles.webMapButtonText}>{t('switchToListView')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -389,8 +391,8 @@ export default function ExploreScreen() {
             <ScrollView contentContainerStyle={styles.venueList}>
               {filteredVenues.length === 0 ? (
                 <View style={styles.noResultsContainer}>
-                  <Text style={styles.noResultsText}>No venues found</Text>
-                  <Text style={styles.noResultsSubtext}>Try adjusting your search or filters</Text>
+                  <Text style={styles.noResultsText}>{t('noVenuesFound')}</Text>
+                  <Text style={styles.noResultsSubtext}>{t('tryAdjustingSearch')}</Text>
                 </View>
               ) : (
                 filteredVenues.map((venue) => (

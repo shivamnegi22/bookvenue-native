@@ -5,13 +5,14 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Phone, CircleAlert as AlertCircle, ArrowRight, User } from 'lucide-react-native';
 import { authApi } from '@/api/authApi';
-import login from './login';
 
 export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
   const [showOTP, setShowOTP] = useState(false);
   const [identifier, setIdentifier] = useState('');
   const [otp, setOTP] = useState('');
@@ -55,7 +56,7 @@ export default function RegisterScreen() {
 
   const handleSendOTP = async () => {
     if (showInput !== 'phone' || !validateInput()) {
-      setError('Invalid phone number');
+      setError(t('invalidPhoneNumber'));
       return;
     }
     setLoading(true);
@@ -67,7 +68,7 @@ export default function RegisterScreen() {
       setResendTimer(60);
     } catch (err: any) {
       console.error('Registration OTP error:', err);
-      setError(err.message || 'Failed to send OTP');
+      setError(err.message || t('failedToSendOtp'));
     } finally {
       setLoading(false);
     }
@@ -78,12 +79,12 @@ export default function RegisterScreen() {
     const isOtpValid = otp !== '' && /^[0-9]{6}$/.test(otp);
 
     if (!isMobileValid) {
-      setError('Invalid Mobile No.');
+      setError(t('invalidPhoneNumber'));
       return;
     }
 
     if (!isOtpValid) {
-      setError('Please enter a valid 6-digit OTP');
+      setError(t('invalidOTP'));
       return;
     }
 
@@ -103,7 +104,7 @@ export default function RegisterScreen() {
       router.replace('/');
     } catch (err: any) {
       console.error('Registration verification error:', err);
-      setError(err.message || 'Registration failed');
+      setError(err.message || t('registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,7 @@ export default function RegisterScreen() {
               style={styles.logo}
             />
             <Text style={styles.appName}>BookVenue</Text>
-            <Text style={styles.tagline}>Create your account to get started</Text>
+            <Text style={styles.tagline}>{t('registerTagline')}</Text>
           </View>
 
           {error && (
@@ -139,7 +140,7 @@ export default function RegisterScreen() {
                 onPress={() => handleMethodSelect('phone')}
               >
                 <Phone size={24} color="#2563EB" />
-                <Text style={styles.methodButtonText}>login/signup with Phone</Text>
+                <Text style={styles.methodButtonText}>{t('registerWithPhone')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -147,13 +148,13 @@ export default function RegisterScreen() {
           {showInput && !showOTP && (
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>
-                Enter your phone number
+                {t('enterYourPhoneNumber')}
               </Text>
               <View style={styles.inputWrapper}>
                 <Text style={styles.countryCode}>+91</Text>
                 <TextInput
                   style={[styles.input, styles.phoneInput]}
-                  placeholder="Phone number"
+                  placeholder={t('phoneNumber')}
                   value={identifier}
                   onChangeText={setIdentifier}
                   keyboardType="phone-pad"
@@ -170,7 +171,7 @@ export default function RegisterScreen() {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
-                    <Text style={styles.actionButtonText}>Send OTP</Text>
+                    <Text style={styles.actionButtonText}>{t('sendOTP')}</Text>
                     <ArrowRight size={20} color="#FFFFFF" />
                   </>
                 )}
@@ -180,13 +181,13 @@ export default function RegisterScreen() {
 
           {showOTP && (
             <View style={styles.otpContainer}>
-              <Text style={styles.otpTitle}>Enter Verification Code</Text>
+              <Text style={styles.otpTitle}>{t('enterVerificationCode')}</Text>
               <Text style={styles.otpSubtitle}>
-                We've sent a 6-digit code to your phone
+                {t('otpSentMessage', { method: t('phoneNumber') })}
               </Text>
               <TextInput
                 style={styles.otpInput}
-                placeholder="Enter 6-digit OTP"
+                placeholder={t('enterOTPPlaceholder')}
                 value={otp}
                 onChangeText={setOTP}
                 keyboardType="number-pad"
@@ -200,26 +201,26 @@ export default function RegisterScreen() {
                 {loading ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.actionButtonText}>Create Account</Text>
+                  <Text style={styles.actionButtonText}>{t('createAccount')}</Text>
                 )}
               </TouchableOpacity>
 
               {resendTimer > 0 ? (
                 <Text style={styles.resendTimer}>
-                  Resend OTP in {resendTimer} seconds
+                  {t('resendOtpTimer', { seconds: resendTimer })}
                 </Text>
               ) : (
                 <TouchableOpacity onPress={handleSendOTP} disabled={loading}>
-                  <Text style={styles.resendButtonText}>Resend OTP</Text>
+                  <Text style={styles.resendButtonText}>{t('resendOTP')}</Text>
                 </TouchableOpacity>
               )}
             </View>
           )}
 
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account?</Text>
+            <Text style={styles.loginText}>{t('alreadyHaveAccount')}</Text>
             <TouchableOpacity onPress={() => router.push('/login')}>
-              <Text style={styles.loginLink}>Login</Text>
+              <Text style={styles.loginLink}>{t('loginLink')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

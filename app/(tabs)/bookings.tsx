@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { bookingApi } from '@/api/bookingApi';
 import { Booking } from '@/types/booking';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -10,6 +11,7 @@ import { useCallback } from 'react';
 
 export default function BookingsScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -135,15 +137,15 @@ export default function BookingsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.notLoggedInContainer}>
           <AlertCircle size={64} color="#6B7280" />
-          <Text style={styles.notLoggedInTitle}>You're not logged in</Text>
+          <Text style={styles.notLoggedInTitle}>{t('notLoggedInTitle')}</Text>
           <Text style={styles.notLoggedInText}>
-            Please log in to view your bookings and manage your reservations
+            {t('notLoggedInText')} {t('myBookings')}
           </Text>
           <TouchableOpacity 
             style={styles.loginButton}
             onPress={() => router.push('/(auth)/login')}
           >
-            <Text style={styles.loginButtonText}>Go to Login</Text>
+            <Text style={styles.loginButtonText}>{t('goToLogin')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -153,7 +155,7 @@ export default function BookingsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Bookings</Text>
+        <Text style={styles.headerTitle}>{t('myBookings')}</Text>
       </View>
 
       <View style={styles.tabContainer}>
@@ -162,7 +164,7 @@ export default function BookingsScreen() {
           onPress={() => setActiveTab('upcoming')}
         >
           <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>
-            Upcoming ({upcomingBookings.length})
+            {t('upcoming')} ({upcomingBookings.length})
           </Text>
         </TouchableOpacity>
 
@@ -171,7 +173,7 @@ export default function BookingsScreen() {
           onPress={() => setActiveTab('pending')}
         >
           <Text style={[styles.tabText, activeTab === 'pending' && styles.activeTabText]}>
-            Pending ({pendingBookings.length})
+            {t('pending')} ({pendingBookings.length})
           </Text>
         </TouchableOpacity>
 
@@ -180,7 +182,7 @@ export default function BookingsScreen() {
           onPress={() => setActiveTab('past')}
         >
           <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>
-            Past ({pastBookings.length})
+            {t('past')} ({pastBookings.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -189,15 +191,15 @@ export default function BookingsScreen() {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
-          <Text style={styles.loadingText}>Loading your bookings...</Text>
+          <Text style={styles.loadingText}>{t('loadingBookings')}</Text>
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
           <AlertCircle size={48} color="#EF4444" />
-          <Text style={styles.errorTitle}>Failed to load bookings</Text>
+          <Text style={styles.errorTitle}>{t('failedLoadBookings')}</Text>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchBookings}>
-            <Text style={styles.retryButtonText}>Try Again</Text>
+            <Text style={styles.retryButtonText}>{t('tryAgain')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -210,13 +212,13 @@ export default function BookingsScreen() {
           {currentBookings.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Calendar size={64} color="#9CA3AF" />
-              <Text style={styles.emptyTitle}>No {activeTab} bookings</Text>
+              <Text style={styles.emptyTitle}>{t('noBookings', { type: t(activeTab) })}</Text>
               <Text style={styles.emptyDescription}>
                 {activeTab === 'upcoming'
-                  ? "You don't have any upcoming bookings. Start exploring venues to make your first booking!"
+                  ? t('noUpcomingBookings')
                   : activeTab === 'pending'
-                    ? "You don't have any pending reservations right now."
-                    : "You don't have any past bookings yet."
+                    ? t('noPendingBookings')
+                    : t('noPastBookings')
                 }
               </Text>
               {activeTab === 'upcoming' && (
@@ -225,7 +227,7 @@ export default function BookingsScreen() {
                   style={styles.exploreButton}
                   onPress={() => router.push('/(tabs)/explore')}
                 >
-                  <Text style={styles.exploreButtonText}>Explore Venues</Text>
+                  <Text style={styles.exploreButtonText}>{t('exploreVenues')}</Text>
                 </TouchableOpacity>
               )}
             </View>

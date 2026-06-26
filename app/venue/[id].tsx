@@ -9,6 +9,7 @@ import { reviewApi } from '@/api/reviewApi';
 import { Venue, VenueService, VenueCourt } from '@/types/venue';
 import { Review } from '@/types/review';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowLeft, Star, MapPin, Clock, IndianRupee, ArrowRight, ChevronRight, ChevronLeft, CalendarDays, Send, MessageSquare } from 'lucide-react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
@@ -20,6 +21,7 @@ export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
 
   const SLOT_COLUMNS = 3;
@@ -211,7 +213,7 @@ export default function VenueDetailScreen() {
 
       // Block selecting beyond limit
       if (prev.length >= MAX_SLOTS) {
-        Alert.alert('Limit reached', `You can book up to ${MAX_SLOTS} time slots.`);
+        Alert.alert(t('limitReached'), t('limitReachedMessage', { max: MAX_SLOTS }));
         return prev;
       }
 
@@ -235,7 +237,7 @@ export default function VenueDetailScreen() {
 
   const handleShareVenue = async () => {
     if (!venue?.slug) {
-      Alert.alert('Unable to share', 'Venue link is not available yet.');
+      Alert.alert(t('unableToShare'), t('venueLinkNotAvailable'));
       return;
     }
 
@@ -244,7 +246,7 @@ export default function VenueDetailScreen() {
       await Share.share({
         message: `Check out ${venue.name} on BookVenue: ${url}`,
         url,
-        title: 'Share Venue',
+        title: t('share'),
       });
     } catch (e) {
       console.error('Share failed:', e);
@@ -254,12 +256,12 @@ export default function VenueDetailScreen() {
   const handleBooking = () => {
     if (!user) {
       Alert.alert(
-        'Login Required',
-        'Please log in to book this venue',
+        t('loginRequired'),
+        t('pleaseLogInToBookVenue'),
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: t('cancel'), style: 'cancel' },
           {
-            text: 'Login',
+            text: t('login'),
             onPress: () => router.push('/(auth)/login')
           }
         ]
@@ -269,7 +271,7 @@ export default function VenueDetailScreen() {
 
 
     if (selectedTimeSlots.length === 0 || !selectedCourtDetails || !venue) {
-      Alert.alert('Error', 'Please select time slots to continue');
+      Alert.alert(t('oops'), t('errorSelectTimeSlots'));
       return;
     }
 
@@ -314,20 +316,20 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
 
   const handleSubmitReview = async () => {
     if (!user) {
-      Alert.alert('Login Required', 'Please log in to submit a review', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Login', onPress: () => router.push('/(auth)/login') },
+      Alert.alert(t('loginRequired'), t('pleaseLogInToSubmitReview'), [
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('login'), onPress: () => router.push('/(auth)/login') },
       ]);
       return;
     }
 
     if (reviewRating === 0) {
-      Alert.alert('Rating Required', 'Please select a rating');
+      Alert.alert(t('ratingRequired'), t('selectRating'));
       return;
     }
 
     if (!reviewMessage.trim()) {
-      Alert.alert('Review Required', 'Please write a review message');
+      Alert.alert(t('reviewRequired'), t('reviewMessageRequired'));
       return;
     }
 
@@ -348,9 +350,9 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
 
       setReviewRating(0);
       setReviewMessage('');
-      Alert.alert('Success', 'Review submitted successfully');
+      Alert.alert(t('reviewSubmittedSuccess'), '');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to submit review');
+      Alert.alert(t('oops'), error.message || t('failedSubmitReview'));
     } finally {
       setSubmittingReview(false);
     }
@@ -368,12 +370,12 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Venue not found</Text>
+          <Text style={styles.errorText}>{t('venueNotFound')}</Text>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backButtonText}>Go Back</Text>
+            <Text style={styles.backButtonText}>{t('goBack')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -494,13 +496,13 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
             style={styles.shareVenueIconButton}
             onPress={handleShareVenue}
             accessibilityRole="button"
-            accessibilityLabel="Share Venue"
+            accessibilityLabel={t('share')}
           >
             <Text style={styles.shareVenueIcon}>↗</Text>
           </TouchableOpacity>
 
 
-          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.sectionTitle}>{t('about')}</Text>
           <Text
             style={styles.descriptionText}
             numberOfLines={showFullDescription ? undefined : 4}
@@ -514,14 +516,14 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
               style={styles.showMoreButton}
             >
               <Text style={styles.showMoreText}>
-                {showFullDescription ? 'Show Less' : 'Show More'}
+                {showFullDescription ? t('showLess') : t('showMore')}
               </Text>
             </TouchableOpacity>
           )}
 
           <View style={styles.separator} />
 
-          <Text style={styles.sectionTitle}>Amenities</Text>
+          <Text style={styles.sectionTitle}>{t('amenities')}</Text>
           <View style={styles.amenitiesContainer}>
             {venue.amenities.map((amenity, index) => (
               <View key={index} style={styles.amenityItem}>
@@ -533,7 +535,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
 
           <View style={styles.separator} />
 
-          <Text style={styles.sectionTitle}>Location</Text>
+          <Text style={styles.sectionTitle}>{t('location')}</Text>
           <View style={styles.mapContainer}>
             {(() => {
               const MapModule = require('react-native-maps');
@@ -558,24 +560,23 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
                     }}
                     title={venue.name}
                   />
-                </MapView>
+                  </MapView>
               );
             })()}
 
             <TouchableOpacity style={styles.viewOnMapButton}>
-              <Text style={styles.viewOnMapText}>View on Map</Text>
-              <ChevronRight size={16} color="#2563EB" />
+              <Text style={styles.viewOnMapText}>{t('viewOnMap')}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.separator} />
 
-          <Text style={styles.sectionTitle}>Booking</Text>
+          <Text style={styles.sectionTitle}>{t('booking')}</Text>
 
 
           {courtNames.length > 1 && (
             <>
-              <Text style={styles.selectionTitle}>Select Sport</Text>
+              <Text style={styles.selectionTitle}>{t('selectSport')}</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={styles.serviceContainer}>
                   {courtNames.map((courtName) => (
@@ -603,7 +604,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
           )}
 
           {/* Date Selection */}
-          <Text style={styles.dateSelectionTitle}>Select Date</Text>
+          <Text style={styles.dateSelectionTitle}>{t('selectDate')}</Text>
 
 
 
@@ -688,32 +689,32 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
           {selectedCourtDetails && (
             <View style={styles.courtInfoCard}>
               <View style={styles.courtInfoRow}>
-                <Text style={styles.courtInfoLabel}>Day Slots:</Text>
-                <Text style={styles.courtInfoValue}>₹{selectedCourtDetails.day_slot_price}/hr</Text>
+                <Text style={styles.courtInfoLabel}>{t('daySlots')}</Text>
+                <Text style={styles.courtInfoValue}>₹{selectedCourtDetails.day_slot_price}{t('pricePerHour')}</Text>
               </View>
               <View style={styles.courtInfoRow}>
-                <Text style={styles.courtInfoLabel}>Night Slots:</Text>
-                <Text style={styles.courtInfoValue}>₹{selectedCourtDetails.night_slot_price}/hr</Text>
+                <Text style={styles.courtInfoLabel}>{t('nightSlots')}</Text>
+                <Text style={styles.courtInfoValue}>₹{selectedCourtDetails.night_slot_price}{t('pricePerHour')}</Text>
               </View>
               <View style={styles.courtInfoRow}>
-                <Text style={styles.courtInfoLabel}>Duration:</Text>
+                <Text style={styles.courtInfoLabel}>{t('duration')}</Text>
                 <Text style={styles.courtInfoValue}>{selectedCourtDetails.duration} minutes</Text>
               </View>
             </View>
           )}
 
           <Text style={styles.timeSelectionTitle}>
-            Select Time Slots {selectedTimeSlots.length > 0 && `(${selectedTimeSlots.length} selected)`}
+            {t('selectTimeSlots')}{selectedTimeSlots.length > 0 ? ` ${t('selectedSlotsCount', { count: selectedTimeSlots.length })}` : ''}
           </Text>
 
           {!selectedCourtName ? (
             <View style={styles.noSlotsContainer}>
-              <Text style={styles.noSlotsText}>Please select a sport to view available time slots</Text>
+              <Text style={styles.noSlotsText}>{t('pleaseSelectSport')}</Text>
             </View>
           ) : availabilityLoading ? (
             <View style={styles.loadingSlots}>
               <ActivityIndicator size="small" color="#2563EB" />
-              <Text style={styles.loadingSlotsText}>Loading available slots...</Text>
+              <Text style={styles.loadingSlotsText}>{t('loadingAvailableSlots')}</Text>
             </View>
           ) : availableTimeSlots.length > 0 ? (
             <View style={styles.timeSlotContainer}>
@@ -754,7 +755,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
             </View>
           ) : (
             <View style={styles.noSlotsContainer}>
-              <Text style={styles.noSlotsText}>No time slots available for selected date and court</Text>
+              <Text style={styles.noSlotsText}>{t('noTimeSlotsAvailable')}</Text>
             </View>
           )}
 
@@ -764,7 +765,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
           <View style={styles.reviewsSection}>
             <View style={styles.reviewsHeader}>
               <MessageSquare size={20} color="#2563EB" />
-              <Text style={styles.sectionTitle}>Reviews</Text>
+              <Text style={styles.sectionTitle}>{t('reviews')}</Text>
               {reviews.length > 0 && (
                 <Text style={styles.reviewCount}>({reviews.length})</Text>
               )}
@@ -772,7 +773,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
 
             {/* Write Review */}
             <View style={styles.writeReviewCard}>
-              <Text style={styles.writeReviewTitle}>Write a Review</Text>
+              <Text style={styles.writeReviewTitle}>{t('writeReview')}</Text>
 
               <View style={styles.starRatingContainer}>
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -790,7 +791,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
                 ))}
                 {reviewRating > 0 && (
                   <Text style={styles.ratingLabelText}>
-                    {reviewRating === 1 ? 'Poor' : reviewRating === 2 ? 'Fair' : reviewRating === 3 ? 'Good' : reviewRating === 4 ? 'Very Good' : 'Excellent'}
+                    {reviewRating === 1 ? t('ratingPoor') : reviewRating === 2 ? t('ratingFair') : reviewRating === 3 ? t('ratingGood') : reviewRating === 4 ? t('ratingVeryGood') : t('ratingExcellent')}
                   </Text>
                 )}
               </View>
@@ -798,7 +799,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
               <View style={styles.reviewInputContainer}>
                 <TextInput
                   style={styles.reviewInput}
-                  placeholder="Share your experience..."
+                  placeholder={t('shareYourExperience')}
                   placeholderTextColor="#9CA3AF"
                   value={reviewMessage}
                   onChangeText={setReviewMessage}
@@ -818,7 +819,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
                 ) : (
                   <>
                     <Send size={16} color="#FFFFFF" />
-                    <Text style={styles.submitReviewButtonText}>Submit Review</Text>
+                    <Text style={styles.submitReviewButtonText}>{t('submitReview')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -828,13 +829,13 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
             {reviewsLoading ? (
               <View style={styles.reviewsLoadingContainer}>
                 <ActivityIndicator size="small" color="#2563EB" />
-                <Text style={styles.reviewsLoadingText}>Loading reviews...</Text>
+                <Text style={styles.reviewsLoadingText}>{t('loadingReviews')}</Text>
               </View>
             ) : reviews.length === 0 ? (
               <View style={styles.noReviewsContainer}>
                 <MessageSquare size={32} color="#9CA3AF" />
-                <Text style={styles.noReviewsText}>No reviews yet</Text>
-                <Text style={styles.noReviewsSubtext}>Be the first to share your experience</Text>
+                <Text style={styles.noReviewsText}>{t('noReviewsYet')}</Text>
+                <Text style={styles.noReviewsSubtext}>{t('beFirstReview')}</Text>
               </View>
             ) : (
               <>
@@ -884,7 +885,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
                     onPress={() => setShowAllReviews(true)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.viewMoreButtonText}>View more</Text>
+                    <Text style={styles.viewMoreButtonText}>{t('viewMore')}</Text>
                   </TouchableOpacity>
                 )}
 
@@ -894,7 +895,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
                     onPress={() => setShowAllReviews(false)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.viewMoreButtonText}>View less</Text>
+                    <Text style={styles.viewMoreButtonText}>{t('viewLess')}</Text>
                   </TouchableOpacity>
                 )}
               </>
@@ -908,16 +909,16 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
         <View style={styles.footerContent}>
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>
-              {selectedTimeSlots.length > 1 ? 'Total' : 'Price'}
+              {selectedTimeSlots.length > 1 ? t('total') : t('price')}
             </Text>
             <Text style={styles.priceValue}>
               ₹{totalAmount || (selectedCourtDetails ? selectedCourtDetails.day_slot_price : venue.pricePerHour)}
             </Text>
             {selectedTimeSlots.length <= 1 && (
-              <Text style={styles.priceUnit}>/hour</Text>
+              <Text style={styles.priceUnit}>{t('pricePerHour')}</Text>
             )}
             {selectedTimeSlots.length > 1 && (
-              <Text style={styles.priceUnit}>({selectedTimeSlots.length} slots)</Text>
+              <Text style={styles.priceUnit}>({t('bookSlots', { count: selectedTimeSlots.length })})</Text>
             )}
           </View>
 
@@ -930,7 +931,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
             disabled={selectedTimeSlots.length === 0}
           >
             <Text style={styles.bookButtonText}>
-              Book {selectedTimeSlots.length > 1 ? `${selectedTimeSlots.length} Slots` : 'Now'}
+              {selectedTimeSlots.length > 1 ? t('bookSlots', { count: selectedTimeSlots.length }) : t('bookNow')}
             </Text>
             <ArrowRight size={20} color="#FFFFFF" />
           </TouchableOpacity>

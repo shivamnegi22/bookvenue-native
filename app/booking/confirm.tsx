@@ -13,12 +13,14 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar, Clock, MapPin, User, CreditCard, ArrowLeft, IndianRupee } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { bookingApi } from '@/api/bookingApi';
 import { RazorpayService } from '@/utils/razorpay';
 
 export default function ConfirmBooking() {
   const params = useLocalSearchParams();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [bookingData, setBookingData] = useState<any>(null);
 
@@ -48,12 +50,12 @@ useEffect(() => {
 
   const data = {
     venueId: params.venueId as string,
-    venueName: (params.venueName as string) || 'Unknown Venue',
+    venueName: (params.venueName as string) || t('unknownVenue'),
     facility_id: params.facility_id as string,
     serviceId: params.serviceId as string,
     courtId: params.courtId as string,
-    courtName: (params.courtName as string) || 'Court',
-    serviceName: (params.serviceName as string) || 'Service',
+    courtName: (params.courtName as string) || t('court'),
+    serviceName: (params.serviceName as string) || t('service'),
     date: params.date as string,
     totalAmount: parseFloat((params.totalAmount as string) || '0'),
     totalSlots: parseInt((params.totalSlots as string) || '1'),
@@ -77,16 +79,16 @@ useEffect(() => {
 
   const handlePayment = async () => {
     if (bookingData?.totalSlots && parseInt(bookingData.totalSlots, 10) > 3) {
-      Alert.alert('Limit exceeded', 'You can book up to 3 time slots.');
+      Alert.alert(t('limitReached'), t('limitReachedMessage', { max: 3 }));
       return;
     }
     if (Array.isArray(bookingData?.bookingSlots) && bookingData.bookingSlots.length > 3) {
-      Alert.alert('Limit exceeded', 'You can book up to 3 time slots.');
+      Alert.alert(t('limitReached'), t('limitReachedMessage', { max: 3 }));
       return;
     }
 
     if (!bookingData || !user) {
-      Alert.alert('Error', 'Please login to complete booking');
+      Alert.alert(t('oops'), t('loginToCompleteBooking'));
       router.push('/(auth)/login');
       return;
     }
@@ -166,9 +168,9 @@ useEffect(() => {
       console.error('Payment error:', error);
       
       if (error.message.includes('cancelled')) {
-        Alert.alert('Payment Cancelled', 'You cancelled the payment.');
+        Alert.alert(t('paymentCancelled'), t('paymentCancelledMessage'));
       } else {
-        Alert.alert('Payment Failed', error.message || 'Something went wrong. Please try again.');
+        Alert.alert(t('paymentFailed'), error.message || t('paymentFailedMessage'));
       }
     } finally {
       setLoading(false);
@@ -180,7 +182,7 @@ useEffect(() => {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
-          <Text style={styles.loadingText}>Loading booking details...</Text>
+          <Text style={styles.loadingText}>{t('loadingBookingDetails')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -213,20 +215,20 @@ useEffect(() => {
         >
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Confirm Booking</Text>
+        <Text style={styles.headerTitle}>{t('confirmYourBooking')}</Text>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.confirmHeader}>
-          <Text style={styles.confirmTitle}>Confirm Your Booking</Text>
-          <Text style={styles.confirmSubtitle}>Review your booking details</Text>
+          <Text style={styles.confirmTitle}>{t('confirmYourBooking')}</Text>
+          <Text style={styles.confirmSubtitle}>{t('reviewYourBookingDetails')}</Text>
         </View>
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <MapPin size={20} color="#2563EB" />
-            <Text style={styles.cardTitle}>Venue Details</Text>
+            <Text style={styles.cardTitle}>{t('venueDetails')}</Text>
           </View>
           <Text style={styles.venueName}>{bookingData.venueName}</Text>
           <Text style={styles.courtName}>{bookingData.serviceName} - {bookingData.courtName}</Text>
@@ -235,7 +237,7 @@ useEffect(() => {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Calendar size={20} color="#2563EB" />
-            <Text style={styles.cardTitle}>Date & Time</Text>
+            <Text style={styles.cardTitle}>{t('dateTime')}</Text>
           </View>
           <Text style={styles.dateText}>{formatDate(bookingData.date)}</Text>
           <View style={styles.slotsContainer}>
@@ -260,14 +262,14 @@ useEffect(() => {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <User size={20} color="#2563EB" />
-            <Text style={styles.cardTitle}>Booking Details</Text>
+            <Text style={styles.cardTitle}>{t('bookingDetails')}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Duration per slot:</Text>
-            <Text style={styles.detailValue}>60 minutes</Text>
+            <Text style={styles.detailLabel}>{t('durationPerSlot')}</Text>
+            <Text style={styles.detailValue}>{t('slotDuration', { minutes: 60 })}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Number of Slots:</Text>
+            <Text style={styles.detailLabel}>{t('numberOfSlots')}</Text>
             <Text style={styles.detailValue}>{bookingData.totalSlots}</Text>
           </View>
         </View>
@@ -275,7 +277,7 @@ useEffect(() => {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <CreditCard size={20} color="#2563EB" />
-            <Text style={styles.cardTitle}>Payment Summary</Text>
+            <Text style={styles.cardTitle}>{t('paymentSummary')}</Text>
           </View>
           <View style={styles.priceBreakdown}>
             {bookingData.bookingSlots.map((slot: any, index: number) => (
@@ -292,7 +294,7 @@ useEffect(() => {
             ))}
             <View style={styles.divider} />
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total Amount</Text>
+              <Text style={styles.totalLabel}>{t('totalAmount')}</Text>
               <View style={styles.totalValueContainer}>
                 <IndianRupee size={18} color="#059669" />
                 <Text style={styles.totalValue}>₹{bookingData.totalAmount}</Text>
@@ -311,14 +313,14 @@ useEffect(() => {
           ) : (
             <>
               <CreditCard size={20} color="#FFFFFF" />
-              <Text style={styles.payButtonText}>Pay ₹{bookingData.totalAmount}</Text>
+              <Text style={styles.payButtonText}>{t('payAmount', { amount: bookingData.totalAmount })}</Text>
             </>
           )}
         </TouchableOpacity>
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            By proceeding, you agree to our terms and conditions
+            {t('termsAndConditions')}
           </Text>
         </View>
       </ScrollView>

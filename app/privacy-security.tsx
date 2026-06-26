@@ -4,23 +4,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ArrowLeft, Shield, Trash2, ChevronRight, ExternalLink } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { authApi } from '@/api/authApi';
 
 export default function PrivacySecurityScreen() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   console.log("user :", user)
 
   const handlePrivacyPolicy = () => {
     Linking.openURL('https://bookvenue.app/privacy-policy').catch(() => {
-      Alert.alert('Error', 'Could not open the privacy policy link.');
+      Alert.alert(t('oops'), t('failedLoadBookings'));
     });
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This action is permanent and cannot be undone.',
+      t('deleteAccount'),
+      t('deleteAccountConfirm'),
       [
         {
           text: 'Cancel',
@@ -39,7 +41,7 @@ export default function PrivacySecurityScreen() {
               router.replace('/(auth)/login' as any);
             } catch (error) {
               setLoading(false);
-              Alert.alert('Error', 'Failed to delete account. Please try again or contact support.');
+              Alert.alert(t('oops'), t('deleteAccountError'));
             }
           },
         },
@@ -56,7 +58,7 @@ export default function PrivacySecurityScreen() {
         >
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Privacy & Security</Text>
+        <Text style={styles.headerTitle}>{t('privacySecurity')}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -64,9 +66,9 @@ export default function PrivacySecurityScreen() {
 
         <View style={styles.infoContainer}>
           <Shield size={48} color="#2563EB" style={styles.icon} />
-          <Text style={styles.infoTitle}>Your data is safe with us</Text>
+          <Text style={styles.infoTitle}>{t('yourDataIsSafe')}</Text>
           <Text style={styles.infoText}>
-            Manage your account security and privacy preferences below.
+            {t('managePrivacyText')}
           </Text>
         </View>
 
@@ -77,7 +79,7 @@ export default function PrivacySecurityScreen() {
           >
             <View style={styles.menuItemLeft}>
               <ExternalLink size={20} color="#4B5563" />
-              <Text style={styles.menuItemTitle}>Privacy Policy</Text>
+              <Text style={styles.menuItemTitle}>{t('privacyPolicy')}</Text>
             </View>
             <ChevronRight size={20} color="#9CA3AF" />
           </TouchableOpacity>
@@ -89,7 +91,7 @@ export default function PrivacySecurityScreen() {
           >
             <View style={styles.menuItemLeft}>
               <Trash2 size={20} color="#EF4444" />
-              <Text style={[styles.menuItemTitle, styles.deleteText]}>Delete Account</Text>
+              <Text style={[styles.menuItemTitle, styles.deleteText]}>{t('deleteAccount')}</Text>
             </View>
             {loading ? (
               <ActivityIndicator size="small" color="#EF4444" />

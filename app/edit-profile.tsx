@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { router } from 'expo-router';
 import { ArrowLeft, User, Mail, Phone, MapPin, Save, Camera } from 'lucide-react-native';
 import { Formik } from 'formik';
@@ -18,6 +19,7 @@ const ProfileSchema = Yup.object().shape({
 
 export default function EditProfileScreen() {
   const { user, updateUserProfile } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -30,15 +32,15 @@ export default function EditProfileScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.notLoggedInContainer}>
           <User size={64} color="#6B7280" />
-          <Text style={styles.notLoggedInTitle}>Login Required</Text>
+          <Text style={styles.notLoggedInTitle}>{t('loginRequired')}</Text>
           <Text style={styles.notLoggedInText}>
-            Please log in to edit your profile
+            {t('pleaseLogInToEditProfile')}
           </Text>
           <TouchableOpacity 
             style={styles.loginButton}
             onPress={() => router.push('/(auth)/login')}
           >
-            <Text style={styles.loginButtonText}>Go to Login</Text>
+            <Text style={styles.loginButtonText}>{t('goToLogin')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -122,7 +124,7 @@ export default function EditProfileScreen() {
         >
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <Text style={styles.headerTitle}>{t('editProfile')}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -135,7 +137,7 @@ export default function EditProfileScreen() {
 
         {success && (
           <View style={styles.successContainer}>
-            <Text style={styles.successMessage}>Profile updated successfully!</Text>
+            <Text style={styles.successMessage}>{t('profileUpdated')}</Text>
           </View>
         )}
 
@@ -152,7 +154,7 @@ export default function EditProfileScreen() {
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
             <View style={styles.formContainer}>
               <View style={styles.imageSection}>
-                <Text style={styles.inputLabel}>Profile Picture</Text>
+                <Text style={styles.inputLabel}>{t('profilePicture')}</Text>
                 <View style={styles.imageContainer}>
                   {selectedImage || user.profileImage ? (
                     <Image 
@@ -175,17 +177,17 @@ export default function EditProfileScreen() {
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.imageHelpText}>
-                  Tap the camera icon to upload a profile picture
+                  {t('uploadProfilePictureHelp')}
                 </Text>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Full Name</Text>
+                <Text style={styles.inputLabel}>{t('enterNameLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <User size={20} color="#6B7280" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your full name"
+                    placeholder={t('enterYourFullName')}
                     placeholderTextColor="#9CA3AF"
                     value={values.name}
                     onChangeText={handleChange('name')}
@@ -199,12 +201,12 @@ export default function EditProfileScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email Address</Text>
+                <Text style={styles.inputLabel}>{t('enterEmailLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <Mail size={20} color="#6B7280" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your email"
+                    placeholder={t('enterYourEmail')}
                     placeholderTextColor="#9CA3AF"
                     value={values.email}
                     onChangeText={handleChange('email')}
@@ -219,12 +221,12 @@ export default function EditProfileScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Phone Number</Text>
+                <Text style={styles.inputLabel}>{t('enterPhoneLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <Phone size={20} color="#6B7280" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your phone number"
+                    placeholder={t('enterYourPhoneNumber')}
                     placeholderTextColor="#9CA3AF"
                     value={values.contact}
                     onChangeText={handleChange('contact')}
@@ -238,12 +240,12 @@ export default function EditProfileScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Address</Text>
+                <Text style={styles.inputLabel}>{t('enterAddressLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <MapPin size={20} color="#6B7280" style={styles.inputIcon} />
                   <TextInput
                     style={[styles.input, styles.textArea]}
-                    placeholder="Enter your address"
+                    placeholder={t('enterYourAddress')}
                     placeholderTextColor="#9CA3AF" 
                     value={values.address}
                     onChangeText={handleChange('address')}
@@ -267,7 +269,7 @@ export default function EditProfileScreen() {
                 ) : (
                   <>
                     <Save size={20} color="#FFFFFF" />
-                    <Text style={styles.saveButtonText}>Save Changes</Text>
+                    <Text style={styles.saveButtonText}>{t('saveChanges')}</Text>
                   </>
                 )}
               </TouchableOpacity>

@@ -2,8 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Image, ActivityIndicator, Linking, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { router, useFocusEffect } from 'expo-router';
-import { User, ChevronRight, CreditCard, MapPin, Bell, CircleHelp as HelpCircle, LogOut, Edit2, Shield, BookOpen } from 'lucide-react-native';
+import { User, ChevronRight, CreditCard, MapPin, Bell, CircleHelp as HelpCircle, LogOut, Edit2, Shield, BookOpen, Globe } from 'lucide-react-native';
 import ProfileAvatar from '@/components/ProfileAvatar';
 import BlogCard from '@/components/BlogCard';
 import { blogApi } from '@/api/blogApi';
@@ -11,6 +12,7 @@ import { Blog } from '@/types/blog';
 
 export default function ProfileScreen() {
   const { user, logout, loading, refreshUser } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [notifications, setNotifications] = useState(true);
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [blogsLoading, setBlogsLoading] = useState(true);
@@ -77,13 +79,13 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.notLoggedInContainer}>
           <User size={64} color="#6B7280" />
-          <Text style={styles.notLoggedInTitle}>You're not logged in</Text>
-          <Text style={styles.notLoggedInText}>Please log in to view your profile</Text>
+          <Text style={styles.notLoggedInTitle}>{t('notLoggedInTitle')}</Text>
+          <Text style={styles.notLoggedInText}>{t('notLoggedInText')}</Text>
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() => router.push('/(auth)/login')}
           >
-            <Text style={styles.loginButtonText}>Go to Login</Text>
+            <Text style={styles.loginButtonText}>{t('goToLogin')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -94,15 +96,15 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
+      t('logout'),
+      t('logoutConfirm'),
       [
         {
-          text: 'Cancel',
+          text: t('cancel'),
           style: 'cancel',
         },
         {
-          text: 'Logout',
+          text: t('logout'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -110,9 +112,30 @@ export default function ProfileScreen() {
               router.replace('/(auth)/login');
             } catch (error) {
               console.error('Error logging out:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
+              Alert.alert(t('oops'), t('failedLogout'));
             }
           },
+        },
+      ],
+    );
+  };
+
+  const handleLanguagePress = () => {
+    Alert.alert(
+      t('selectLanguage'),
+      undefined,
+      [
+        {
+          text: t('english'),
+          onPress: () => setLanguage('en'),
+        },
+        {
+          text: t('hindi'),
+          onPress: () => setLanguage('hi'),
+        },
+        {
+          text: t('cancel'),
+          style: 'cancel',
         },
       ],
     );
@@ -126,12 +149,23 @@ export default function ProfileScreen() {
     // },
     {
       icon: <MapPin size={20} color="#2563EB" />,
-      title: 'Saved Addresses',
+      title: t('savedAddresses'),
       onPress: () => router.push('/saved-addresses'),
     },
     {
+      icon: <Globe size={20} color="#2563EB" />,
+      title: t('language'),
+      onPress: handleLanguagePress,
+      rightComponent: (
+        <View style={styles.languageRight}>
+          <Text style={styles.languageValue}>{language === 'en' ? t('english') : t('hindi')}</Text>
+          <ChevronRight size={20} color="#9CA3AF" />
+        </View>
+      ),
+    },
+    {
       icon: <Bell size={20} color="#2563EB" />,
-      title: 'Notifications',
+      title: t('notifications'),
       onPress: undefined,
       rightComponent: (
         <Switch
@@ -144,28 +178,28 @@ export default function ProfileScreen() {
     },
     {
       icon: <Shield size={20} color="#2563EB" />,
-      title: 'Privacy & Security',
+      title: t('privacySecurity'),
       onPress: () => router.push('/privacy-security' as any),
     },
     {
       icon: <HelpCircle size={20} color="#2563EB" />,
-      title: 'Help & Support',
-      onPress: () => Linking.openURL('https://bookvenue.app/contact').catch((err) => Alert.alert('Error', 'Could not open the link at this time.')),
+      title: t('helpSupport'),
+      onPress: () => Linking.openURL('https://bookvenue.app/contact').catch((err) => Alert.alert(t('oops'), t('couldNotOpenLink'))),
     },
   ];
 
   if (user?.isVenueOwner) {
     menuItems.unshift({
       icon: <User size={20} color="#2563EB" />,
-      title: 'My Venues',
-      onPress: () => Alert.alert('Coming Soon', 'Venue management will be available soon'),
+      title: t('myVenues'),
+      onPress: () => Alert.alert(t('comingSoon'), t('venueManagementComingSoon')),
     });
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>{t('profile')}</Text>
       </View>
 
       <ScrollView
@@ -206,7 +240,7 @@ export default function ProfileScreen() {
 
           {user.isVenueOwner && (
             <View style={styles.ownerBadge}>
-              <Text style={styles.ownerBadgeText}>Venue Owner</Text>
+              <Text style={styles.ownerBadgeText}>{t('venueOwner')}</Text>
             </View>
           )}
 
@@ -214,7 +248,7 @@ export default function ProfileScreen() {
             style={styles.editProfileButton}
             onPress={() => router.push('/edit-profile')}
           >
-            <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+            <Text style={styles.editProfileButtonText}>{t('editProfile')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -243,9 +277,9 @@ export default function ProfileScreen() {
         {/* Blog Section */}
         <View style={styles.blogSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Latest Blogs</Text>
+            <Text style={styles.sectionTitle}>{t('latestBlogs')}</Text>
             <TouchableOpacity onPress={() => router.push('/blog-list' as any)}>
-              <Text style={styles.seeAllText}>See All</Text>
+              <Text style={styles.seeAllText}>{t('seeAll')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -263,7 +297,7 @@ export default function ProfileScreen() {
           ) : (
             <View style={styles.emptyBlogsContainer}>
               <BookOpen size={48} color="#9CA3AF" />
-              <Text style={styles.emptyBlogsText}>No blogs available</Text>
+              <Text style={styles.emptyBlogsText}>{t('noBlogsAvailable')}</Text>
             </View>
           )}
         </View>
@@ -273,11 +307,11 @@ export default function ProfileScreen() {
           onPress={handleLogout}
         >
           <LogOut size={20} color="#EF4444" />
-          <Text style={styles.logoutButtonText}>Logout</Text>
+          <Text style={styles.logoutButtonText}>{t('logout')}</Text>
         </TouchableOpacity>
 
         <View style={styles.versionContainer}>
-          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={styles.versionText}>{t('version')}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -407,6 +441,13 @@ const styles = StyleSheet.create({
     marginLeft: 12
   },
   menuItemRight: { flexDirection: 'row', alignItems: 'center' },
+  languageRight: { flexDirection: 'row', alignItems: 'center' },
+  languageValue: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#6B7280',
+    marginRight: 8,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',

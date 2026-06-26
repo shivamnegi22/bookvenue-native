@@ -5,12 +5,14 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Phone, CircleAlert as AlertCircle, ArrowRight } from 'lucide-react-native';
 import { authApi } from '@/api/authApi';
 
 export default function LoginScreen() {
   const { login, user } = useAuth();
+  const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
   const [showOTP, setShowOTP] = useState(false);
   const [identifier, setIdentifier] = useState('');
@@ -58,7 +60,7 @@ export default function LoginScreen() {
 
   const handleSendOTP = async () => {
     if (!validateInput()) {
-      setError(`Invalid ${showInput === 'email' ? 'email address' : 'phone number'}`);
+      setError(t('invalidInput', { field: showInput === 'email' ? t('emailAddress') : t('phoneNumber') }));
       return;
     }
 
@@ -76,7 +78,7 @@ export default function LoginScreen() {
       console.log('OTP sent successfully');
     } catch (err: any) {
       console.error('Send OTP error:', err);
-      setError(err.message || 'Failed to send OTP');
+      setError(err.message || t('failedToSendOtp'));
     } finally {
       setLoading(false);
     }
@@ -91,11 +93,11 @@ export default function LoginScreen() {
     const isOtpValid = otp !== '' && /^[0-9]{6}$/.test(otp);
 
     if (!isMobileValid && !isEmailValid) {
-      setError('Invalid Mobile No. or Email.');
+      setError(t('invalidEmailOrPhone'));
       return;
     }
     if (!isOtpValid) {
-      setError('Please enter a valid 6-digit OTP');
+      setError(t('invalidOTP'));
       return;
     }
     setError(null);
@@ -114,7 +116,7 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     } catch (err: any) {
       console.error('Verification error:', err);
-      setError(err.message || 'OTP verification failed');
+      setError(err.message || t('otpVerificationFailed'));
     } finally {
       setLoading(false);
     }
@@ -133,7 +135,7 @@ export default function LoginScreen() {
               style={styles.logo}
             />
             <Text style={styles.appName}>BookVenue</Text>
-            <Text style={styles.tagline}>Find and book venues with ease</Text>
+            <Text style={styles.tagline}>{t('loginTagline')}</Text>
           </View>
 
           {error && (
@@ -150,7 +152,7 @@ export default function LoginScreen() {
                 onPress={() => handleMethodSelect('email')}
               >
                 <Mail size={24} color="#2563EB" />
-                <Text style={styles.methodButtonText}>Continue with Email</Text>
+                <Text style={styles.methodButtonText}>{t('continueWithEmail')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -158,7 +160,7 @@ export default function LoginScreen() {
                 onPress={() => handleMethodSelect('phone')}
               >
                 <Phone size={24} color="#2563EB" />
-                <Text style={styles.methodButtonText}>Continue with Phone</Text>
+                <Text style={styles.methodButtonText}>{t('continueWithPhone')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -166,13 +168,13 @@ export default function LoginScreen() {
           {showInput && !showOTP && (
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>
-                Enter your {showInput === 'email' ? 'email address' : 'phone number'}
+                {showInput === 'email' ? t('enterYourEmail') : t('enterYourPhoneNumber')}
               </Text>
               <View style={styles.inputWrapper}>
                 {showInput === 'phone' && <Text style={styles.countryCode}>+91</Text>}
                 <TextInput
                   style={[styles.input, showInput === 'phone' && styles.phoneInput]}
-                  placeholder={showInput === 'email' ? 'Email address' : 'Phone number'}
+                  placeholder={showInput === 'email' ? t('emailAddress') : t('phoneNumber')}
                   value={identifier}
                   onChangeText={setIdentifier}
                   keyboardType={showInput === 'email' ? 'email-address' : 'phone-pad'}
@@ -189,7 +191,7 @@ export default function LoginScreen() {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
-                    <Text style={styles.actionButtonText}>Continue</Text>
+                    <Text style={styles.actionButtonText}>{t('continue')}</Text>
                     <ArrowRight size={20} color="#FFFFFF" />
                   </>
                 )}
@@ -199,13 +201,13 @@ export default function LoginScreen() {
 
           {showOTP && (
             <View style={styles.otpContainer}>
-              <Text style={styles.otpTitle}>Enter Verification Code</Text>
+              <Text style={styles.otpTitle}>{t('enterVerificationCode')}</Text>
               <Text style={styles.otpSubtitle}>
-                We've sent a 6-digit code to your {showInput === 'email' ? 'email' : 'phone'}
+                {t('otpSentMessage', { method: showInput === 'email' ? t('emailAddress') : t('phoneNumber') })}
               </Text>
               <TextInput
                 style={styles.otpInput}
-                placeholder="Enter 6-digit OTP"
+                placeholder={t('enterOTPPlaceholder')}
                 value={otp}
                 onChangeText={setOTP}
                 keyboardType="number-pad"
@@ -219,29 +221,26 @@ export default function LoginScreen() {
                 {loading ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.actionButtonText}>Verify & Continue</Text>
+                  <Text style={styles.actionButtonText}>{t('verifyAndContinue')}</Text>
                 )}
               </TouchableOpacity>
 
               {resendTimer > 0 ? (
                 <Text style={styles.resendTimer}>
-                  Resend OTP in {resendTimer} seconds
+                  {t('resendOtpTimer', { seconds: resendTimer })}
                 </Text>
               ) : (
                 <TouchableOpacity onPress={handleSendOTP} disabled={loading}>
-                  <Text style={styles.resendButtonText}>Resend OTP</Text>
+                  <Text style={styles.resendButtonText}>{t('resendOTP')}</Text>
                 </TouchableOpacity>
               )}
             </View>
           )}
 
           <View style={styles.registerContainer}>
-            {/* <Text style={styles.registerText}>Don't have an account?</Text>
+            <Text style={styles.registerText}>{t('dontHaveAccount')}</Text>
             <TouchableOpacity onPress={() => router.push('/register')}>
-              <Text style={styles.registerLink}>login/signup</Text> */}
-                          <Text style={styles.registerText}></Text>
-            <TouchableOpacity onPress={() => router.push('/register')}>
-              <Text style={styles.registerLink}></Text>
+              <Text style={styles.registerLink}>{t('signUpLink')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

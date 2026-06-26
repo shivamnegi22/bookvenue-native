@@ -7,16 +7,19 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Alert,
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Calendar, Share2, ExternalLink } from 'lucide-react-native';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { blogApi, Blog } from '@/api/blogApi';
 
 export default function BlogDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
+  const { t } = useLanguage();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,11 +37,11 @@ export default function BlogDetailScreen() {
         if (foundBlog) {
           setBlog(foundBlog);
         } else {
-          setError('Blog not found');
+          setError(t('blogNotFound'));
         }
       } catch (err) {
         console.error('Error fetching blog:', err);
-        setError('Failed to load blog');
+        setError(t('failedLoadBlog'));
       } finally {
         setLoading(false);
       }
@@ -89,6 +92,7 @@ export default function BlogDetailScreen() {
       await Linking.openURL(url);
     } catch (error) {
       console.error('Error sharing:', error);
+      Alert.alert(t('share'), t('shareBlogMessage'));
     }
   };
 
@@ -104,11 +108,11 @@ export default function BlogDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || 'Blog not found'}</Text>
+          <Text style={styles.errorText}>{error || t('blogNotFound')}</Text>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Go Back</Text>
+            <Text style={styles.backButtonText}>{t('goBack')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -123,7 +127,7 @@ export default function BlogDetailScreen() {
           onPress={() => router.back()}>
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Blog</Text>
+        <Text style={styles.headerTitle}>{t('latestBlogs')}</Text>
         <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
           <Share2 size={22} color="#1F2937" />
         </TouchableOpacity>
@@ -149,7 +153,7 @@ export default function BlogDetailScreen() {
           <View style={styles.footerContainer}>
             <View style={styles.separator} />
             <Text style={styles.footerText}>
-              Thank you for reading! For more information, visit{' '}
+              {t('thankYouReading')} {' '}
               <Text style={styles.linkText} onPress={() => Linking.openURL('https://bookvenue.app')}>
                 bookvenue.app
               </Text>

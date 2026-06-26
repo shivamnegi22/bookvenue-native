@@ -5,10 +5,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { bookingApi } from '@/api/bookingApi';
 import { Booking } from '@/types/booking';
 import { ArrowLeft, MapPin, Calendar, Clock, IndianRupee, CircleCheck as CheckCircle2, Circle as XCircle, Share2 } from 'lucide-react-native';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { t } = useLanguage();
   
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,15 +51,15 @@ export default function BookingDetailScreen() {
   
   const handleCancelBooking = () => {
     Alert.alert(
-      'Cancel Booking',
-      'Are you sure you want to cancel this booking?',
+      t('cancelBooking'),
+      t('cancelBookingConfirm'),
       [
         {
           text: 'No',
           style: 'cancel',
         },
         {
-          text: 'Yes, Cancel',
+          text: t('yesCancel'),
           style: 'destructive',
           onPress: confirmCancelBooking,
         },
@@ -81,7 +83,7 @@ export default function BookingDetailScreen() {
       
     } catch (error) {
       console.error('Error cancelling booking:', error);
-      Alert.alert('Error', 'Failed to cancel booking. Please try again.');
+      Alert.alert(t('oops'), t('failedCancelBooking'));
     } finally {
       setCancelLoading(false);
     }
@@ -89,7 +91,7 @@ export default function BookingDetailScreen() {
   
   const handleShareBooking = () => {
     // In a real app, this would use the Share API
-    Alert.alert('Share', 'Sharing functionality would be implemented here');
+    Alert.alert(t('share'), t('sharingFunctionality'));
   };
 
   if (loading) {
@@ -104,12 +106,12 @@ export default function BookingDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Booking not found</Text>
+          <Text style={styles.errorText}>{t('bookingsUnknownError')}</Text>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.backButtonText}>Go Back</Text>
+            <Text style={styles.backButtonText}>{t('goBack')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -125,7 +127,7 @@ export default function BookingDetailScreen() {
         >
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Booking Details</Text>
+        <Text style={styles.headerTitle}>{t('bookingDetails')}</Text>
         <TouchableOpacity 
           style={styles.shareButtonContainer}
           onPress={handleShareBooking}
@@ -139,21 +141,21 @@ export default function BookingDetailScreen() {
           {booking.status === 'confirmed' ? (
             <View style={styles.statusConfirmed}>
               <CheckCircle2 size={20} color="#10B981" />
-              <Text style={styles.statusTextConfirmed}>Confirmed</Text>
+              <Text style={styles.statusTextConfirmed}>{t('statusConfirmed')}</Text>
             </View>
           ) : booking.status === 'pending' ? (
             <View style={styles.statusPending}>
               <Clock size={20} color="#F59E0B" />
-              <Text style={styles.statusTextPending}>Pending</Text>
+              <Text style={styles.statusTextPending}>{t('statusPending')}</Text>
             </View>
           ) : (
             <View style={styles.statusCancelled}>
               <XCircle size={20} color="#EF4444" />
-              <Text style={styles.statusTextCancelled}>Cancelled</Text>
+              <Text style={styles.statusTextCancelled}>{t('statusCancelled')}</Text>
             </View>
           )}
           
-          <Text style={styles.bookingIdText}>Booking ID: #{booking.id}</Text>
+          <Text style={styles.bookingIdText}>{t('bookingId', { id: booking.id })}</Text>
         </View>
         
         <View style={styles.venueDetailsContainer}>
@@ -191,12 +193,12 @@ export default function BookingDetailScreen() {
         </View>
         
         <View style={styles.bookingInfoContainer}>
-          <Text style={styles.sectionTitle}>Booking Information</Text>
+          <Text style={styles.sectionTitle}>{t('bookingInformation')}</Text>
           
           <View style={styles.infoItem}>
             <Calendar size={20} color="#2563EB" />
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Date</Text>
+              <Text style={styles.infoLabel}>{t('date')}</Text>
               <Text style={styles.infoValue}>{formatDate(booking.date)}</Text>
             </View>
           </View>
@@ -204,7 +206,7 @@ export default function BookingDetailScreen() {
           <View style={styles.infoItem}>
             <Clock size={20} color="#2563EB" />
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Time</Text>
+              <Text style={styles.infoLabel}>{t('time')}</Text>
               <Text style={styles.infoValue}>{booking.startTime} - {booking.endTime}</Text>
             </View>
           </View>
@@ -212,7 +214,7 @@ export default function BookingDetailScreen() {
           <View style={styles.infoItem}>
             <IndianRupee size={20} color="#2563EB" />
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Total Amount</Text>
+              <Text style={styles.infoLabel}>{t('totalAmount')}</Text>
               <Text style={styles.infoValue}>${booking.totalAmount.toFixed(2)}</Text>
             </View>
           </View>
@@ -227,7 +229,7 @@ export default function BookingDetailScreen() {
             {cancelLoading ? (
               <ActivityIndicator color="#EF4444" />
             ) : (
-              <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+              <Text style={styles.cancelButtonText}>{t('cancelBooking')}</Text>
             )}
           </TouchableOpacity>
         )}
@@ -236,7 +238,7 @@ export default function BookingDetailScreen() {
           style={styles.contactButton}
           onPress={() => {/* Contact venue owner */}}
         >
-          <Text style={styles.contactButtonText}>Contact Venue Owner</Text>
+          <Text style={styles.contactButtonText}>{t('contactVenueOwner')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

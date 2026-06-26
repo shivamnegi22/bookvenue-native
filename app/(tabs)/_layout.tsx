@@ -1,12 +1,14 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Chrome as Home, CalendarClock, MapPin, User } from 'lucide-react-native';
 import { StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
 
   return (
@@ -32,7 +34,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('homeLabel'),
           tabBarIcon: ({ color, size }) => (
             <Home size={size} color={color} />
           ),
@@ -42,7 +44,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
+          title: t('explore'),
           tabBarIcon: ({ color, size }) => (
             <MapPin size={size} color={color} />
           ),
@@ -52,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
-          title: 'Bookings',
+          title: t('myBookings'),
           tabBarIcon: ({ color, size }) => (
             <CalendarClock size={size} color={color} />
           ),
@@ -62,7 +64,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t('profile'),
           tabBarIcon: ({ color, size }) => (
             <User size={size} color={color} />
           ),

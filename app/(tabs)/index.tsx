@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, MapPin, Filter, Star, Clock } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { venueApi } from '@/api/venueApi';
 import { useRouter } from 'expo-router';
 import { Venue } from '@/types/venue';
@@ -13,6 +14,7 @@ import * as Location from 'expo-location';
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [featuredVenues, setFeaturedVenues] = useState<Venue[]>([]);
@@ -141,12 +143,12 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.welcomeText}>
-              Hello, {user?.name?.split(' ')[0] || 'Welcome'}
+              {user ? t('hello', { name: user.name?.split(' ')[0] || t('welcome') }) : t('welcome')}
             </Text>
             <View style={styles.locationContainer}>
               <MapPin size={16} color="#6B7280" />
               <Text style={styles.locationText}>
-                {user?.address || 'Explore venues near you'}
+                {user?.address || t('exploreVenuesNearYou')}
               </Text>
             </View>
           </View>
@@ -167,7 +169,7 @@ export default function HomeScreen() {
               style={styles.loginButton}
               onPress={() => router.push('/(auth)/login')}
             >
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={styles.loginButtonText}>{t('login')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -177,7 +179,7 @@ export default function HomeScreen() {
             <Search size={20} color="#6B7280" />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search venues..."
+              placeholder={t('searchVenues')}
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -195,20 +197,20 @@ export default function HomeScreen() {
             style={styles.banner}
           >
             <View>
-              <Text style={styles.bannerTitle}>Book Your Perfect Venue</Text>
-              <Text style={styles.bannerSubtitle}>Get 15% off your first booking</Text>
+              <Text style={styles.bannerTitle}>{t('bannerTitle')}</Text>
+              <Text style={styles.bannerSubtitle}>{t('bannerSubtitle')}</Text>
             </View>
             <TouchableOpacity style={styles.bannerButton} onPress={() => router.push('/(tabs)/explore')}>
-              <Text style={styles.bannerButtonText}>Explore</Text>
+              <Text style={styles.bannerButtonText}>{t('explore')}</Text>
             </TouchableOpacity>
           </LinearGradient>
         </View>
 
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured Venues</Text>
+            <Text style={styles.sectionTitle}>{t('featuredVenues')}</Text>
             <TouchableOpacity onPress={() => handleShowAll('featured')}>
-              <Text style={styles.seeAllText}>See All</Text>
+              <Text style={styles.seeAllText}>{t('seeAll')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -219,7 +221,12 @@ export default function HomeScreen() {
           >
             {displayedFeatured.length === 0 ? (
               <View style={styles.emptyCategory}>
-                <Text style={styles.emptyCategoryText}>No {selectedCategory} venues found</Text>
+                <Text style={styles.emptyCategoryText}>
+                  {selectedCategory
+                    ? t('noCategoryVenuesFound', { category: selectedCategory })
+                    : t('noVenuesFound')
+                  }
+                </Text>
               </View>
             ) : (
               displayedFeatured.map((venue) => (
@@ -230,7 +237,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.categoriesContainer}>
-          <Text style={styles.sectionTitle}>Categories</Text>
+          <Text style={styles.sectionTitle}>{t('categories')}</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -276,15 +283,17 @@ export default function HomeScreen() {
 
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Nearby Venues</Text>
+            <Text style={styles.sectionTitle}>{t('nearbyVenues')}</Text>
             <TouchableOpacity onPress={() => handleShowAll('nearby')}>
-              <Text style={styles.seeAllText}>See All</Text>
+              <Text style={styles.seeAllText}>{t('seeAll')}</Text>
             </TouchableOpacity>
           </View>
 
           {displayedNearby.length === 0 ? (
             <View style={styles.emptyCategory}>
-              <Text style={styles.emptyCategoryText}>No {selectedCategory} venues nearby</Text>
+              <Text style={styles.emptyCategoryText}>
+                {selectedCategory ? t('noCategoryVenuesNearby', { category: selectedCategory }) : t('noVenuesFound')}
+              </Text>
             </View>
           ) : (
             displayedNearby.map((venue) => (
