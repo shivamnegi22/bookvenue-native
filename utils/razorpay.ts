@@ -161,7 +161,7 @@ export class RazorpayService {
         platform: Platform.OS
       },
       theme: {
-        color: '#2563EB'
+        color: '#15aa9b'
       }
     };
   }

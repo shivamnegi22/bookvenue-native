@@ -50,7 +50,7 @@ export default function BlogListScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#15aa9b" />
           <Text style={styles.loadingText}>{t('loadingBlogs')}</Text>
         </View>
       </SafeAreaView>

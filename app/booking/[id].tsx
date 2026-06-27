@@ -97,7 +97,7 @@ export default function BookingDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color="#15aa9b" />
       </View>
     );
   }
@@ -196,7 +196,7 @@ export default function BookingDetailScreen() {
           <Text style={styles.sectionTitle}>{t('bookingInformation')}</Text>
           
           <View style={styles.infoItem}>
-            <Calendar size={20} color="#2563EB" />
+            <Calendar size={20} color="#15aa9b" />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>{t('date')}</Text>
               <Text style={styles.infoValue}>{formatDate(booking.date)}</Text>
@@ -204,7 +204,7 @@ export default function BookingDetailScreen() {
           </View>
           
           <View style={styles.infoItem}>
-            <Clock size={20} color="#2563EB" />
+            <Clock size={20} color="#15aa9b" />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>{t('time')}</Text>
               <Text style={styles.infoValue}>{booking.startTime} - {booking.endTime}</Text>
@@ -212,7 +212,7 @@ export default function BookingDetailScreen() {
           </View>
           
           <View style={styles.infoItem}>
-            <IndianRupee size={20} color="#2563EB" />
+            <IndianRupee size={20} color="#15aa9b" />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>{t('totalAmount')}</Text>
               <Text style={styles.infoValue}>${booking.totalAmount.toFixed(2)}</Text>
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   backButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
   },
   backButtonText: {
@@ -455,6 +455,6 @@ const styles = StyleSheet.create({
   contactButtonText: {
     fontFamily: 'Inter-Medium',
     fontSize: 16,
-    color: '#2563EB',
+    color: '#15aa9b',
   },
 });

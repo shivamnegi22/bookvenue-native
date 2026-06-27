@@ -160,7 +160,7 @@ export default function HomeScreen() {
               <ProfileAvatar
                 name={user.name || 'User'}
                 size={40}
-                backgroundColor="#2563EB"
+                backgroundColor="#15aa9b"
                 textColor="#FFFFFF"
               />
             </TouchableOpacity>
@@ -189,21 +189,6 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.filterButton} onPress={() => router.push('/(tabs)/explore')}>
             <Filter size={20} color="#FFFFFF" />
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.bannerContainer}>
-          <LinearGradient
-            colors={['rgba(37, 99, 235, 0.9)', 'rgba(37, 99, 235, 0.7)']}
-            style={styles.banner}
-          >
-            <View>
-              <Text style={styles.bannerTitle}>{t('bannerTitle')}</Text>
-              <Text style={styles.bannerSubtitle}>{t('bannerSubtitle')}</Text>
-            </View>
-            <TouchableOpacity style={styles.bannerButton} onPress={() => router.push('/(tabs)/explore')}>
-              <Text style={styles.bannerButtonText}>{t('explore')}</Text>
-            </TouchableOpacity>
-          </LinearGradient>
         </View>
 
         <View style={styles.sectionContainer}>
@@ -341,7 +326,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   loginButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -363,7 +348,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
+    borderRadius: 24,
     paddingHorizontal: 12,
     height: 48,
     marginRight: 12,
@@ -378,45 +363,10 @@ const styles = StyleSheet.create({
   filterButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  bannerContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  banner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    padding: 16,
-  },
-  bannerTitle: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  bannerSubtitle: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#FFFFFF',
-    opacity: 0.8,
-  },
-  bannerButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  bannerButtonText: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 14,
-    color: '#2563EB',
   },
   sectionContainer: {
     marginBottom: 24,
@@ -436,7 +386,7 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
   },
   horizontalScrollContent: {
     paddingRight: 16,
@@ -470,7 +420,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   categoryNameActive: {
-    color: '#2563EB',
+    color: '#15aa9b',
     fontFamily: 'Inter-SemiBold',
   },
   categoryItemInactive: {
@@ -478,7 +428,7 @@ const styles = StyleSheet.create({
   },
   categoryIconActive: {
     borderWidth: 2,
-    borderColor: '#2563EB',
+    borderColor: '#15aa9b',
   },
   emptyCategory: {
     paddingVertical: 24,

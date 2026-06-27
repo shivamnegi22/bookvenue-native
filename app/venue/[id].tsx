@@ -11,6 +11,7 @@ import { Review } from '@/types/review';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowLeft, Star, MapPin, Clock, IndianRupee, ArrowRight, ChevronRight, ChevronLeft, CalendarDays, Send, MessageSquare } from 'lucide-react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 
@@ -197,6 +198,26 @@ export default function VenueDetailScreen() {
     setSelectedTimeSlots([]);
   };
 
+  const getSportIconName = (courtName: string): React.ComponentProps<typeof MaterialCommunityIcons>['name'] => {
+    const lower = courtName.toLowerCase();
+    if (lower.includes('cricket')) return 'cricket';
+    if (lower.includes('football') || lower.includes('soccer') || lower.includes('futsal')) return 'soccer';
+    if (lower.includes('basketball')) return 'basketball';
+    if (lower.includes('badminton')) return 'badminton';
+    if (lower.includes('tennis')) return 'tennis';
+    if (lower.includes('volleyball')) return 'volleyball';
+    if (lower.includes('table tennis') || lower.includes('table-tennis')) return 'table-tennis';
+    if (lower.includes('pickleball')) return 'table-tennis';
+    if (lower.includes('snooker') || lower.includes('billiards')) return 'pool';
+    if (lower.includes('rugby')) return 'rugby';
+    if (lower.includes('hockey')) return 'hockey-puck';
+    if (lower.includes('golf')) return 'golf';
+    if (lower.includes('bowling')) return 'bowling';
+    if (lower.includes('yoga')) return 'yoga';
+    if (lower.includes('gym')) return 'dumbbell';
+    return 'run';
+  };
+
   const MAX_SLOTS = 3;
 
   const handleTimeSlotToggle = (slot: string) => {
@@ -361,7 +382,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color="#15aa9b" />
       </View>
     );
   }
@@ -476,14 +497,14 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
 
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Clock size={16} color="#2563EB" />
+              <Clock size={16} color="#15aa9b" />
               <Text style={styles.infoText}>
                 {selectedCourtDetails ? `${selectedCourtDetails.day_start_time} - ${selectedCourtDetails.night_end_time}` : `${venue.openingTime} - ${venue.closingTime}`}
               </Text>
             </View>
 
             <View style={styles.infoItem}>
-              <IndianRupee size={16} color="#2563EB" />
+              <IndianRupee size={16} color="#15aa9b" />
               <Text style={styles.infoText}>
                 ₹{selectedCourtDetails ? selectedCourtDetails.day_slot_price : venue.pricePerHour}/hour
               </Text>
@@ -588,6 +609,12 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
                       ]}
                       onPress={() => handleCourtChange(courtName)}
                     >
+                      <MaterialCommunityIcons
+                        name={getSportIconName(courtName)}
+                        size={18}
+                        color={selectedCourtName === courtName ? '#FFFFFF' : '#15aa9b'}
+                        style={styles.serviceIcon}
+                      />
                       <Text
                         style={[
                           styles.serviceText,
@@ -659,7 +686,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
             onPress={() => setShowDatePicker(true)}
             activeOpacity={0.8}
           >
-            <CalendarDays size={22} color="#2563EB" />
+            <CalendarDays size={22} color="#15aa9b" />
           </TouchableOpacity>
 
           {showDatePicker && (
@@ -713,7 +740,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
             </View>
           ) : availabilityLoading ? (
             <View style={styles.loadingSlots}>
-              <ActivityIndicator size="small" color="#2563EB" />
+              <ActivityIndicator size="small" color="#15aa9b" />
               <Text style={styles.loadingSlotsText}>{t('loadingAvailableSlots')}</Text>
             </View>
           ) : availableTimeSlots.length > 0 ? (
@@ -764,7 +791,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
           {/* Reviews Section */}
           <View style={styles.reviewsSection}>
             <View style={styles.reviewsHeader}>
-              <MessageSquare size={20} color="#2563EB" />
+              <MessageSquare size={20} color="#15aa9b" />
               <Text style={styles.sectionTitle}>{t('reviews')}</Text>
               {reviews.length > 0 && (
                 <Text style={styles.reviewCount}>({reviews.length})</Text>
@@ -828,7 +855,7 @@ const bookingSlots = selectedTimeSlots.map((slotTime) => {
             {/* Reviews List */}
             {reviewsLoading ? (
               <View style={styles.reviewsLoadingContainer}>
-                <ActivityIndicator size="small" color="#2563EB" />
+                <ActivityIndicator size="small" color="#15aa9b" />
                 <Text style={styles.reviewsLoadingText}>{t('loadingReviews')}</Text>
               </View>
             ) : reviews.length === 0 ? (
@@ -969,7 +996,7 @@ const styles = StyleSheet.create({
   backButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
   },
   backButtonText: {
@@ -1127,7 +1154,7 @@ const styles = StyleSheet.create({
   showMoreText: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
   },
   amenitiesContainer: {
     flexDirection: 'row',
@@ -1143,7 +1170,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     marginRight: 8,
   },
   amenityText: {
@@ -1181,7 +1208,7 @@ const styles = StyleSheet.create({
   viewOnMapText: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
     marginRight: 4,
   },
   serviceContainer: {
@@ -1189,6 +1216,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   serviceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
@@ -1197,9 +1226,12 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     marginRight: 12,
   },
+  serviceIcon: {
+    marginRight: 8,
+  },
   selectedServiceItem: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    backgroundColor: '#15aa9b',
+    borderColor: '#15aa9b',
   },
   serviceText: {
     fontFamily: 'Inter-Medium',
@@ -1224,8 +1256,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedCourtItem: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    backgroundColor: '#15aa9b',
+    borderColor: '#15aa9b',
   },
   courtText: {
     fontFamily: 'Inter-Medium',
@@ -1288,8 +1320,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   selectedDateItem: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    backgroundColor: '#15aa9b',
+    borderColor: '#15aa9b',
   },
   dayText: {
     fontFamily: 'Inter-Regular',
@@ -1352,8 +1384,8 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   selectedTimeSlot: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    backgroundColor: '#15aa9b',
+    borderColor: '#15aa9b',
   },
   timeSlotContent: {
     alignItems: 'center',
@@ -1390,7 +1422,7 @@ const styles = StyleSheet.create({
   shareVenueIcon: {
     fontSize: 18,
     lineHeight: 18,
-    color: '#2563EB',
+    color: '#15aa9b',
     fontFamily: 'Inter-SemiBold',
   },
 
@@ -1452,7 +1484,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
   },
   bookButtonDisabled: {
@@ -1496,8 +1528,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   calendarDaySelected: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
+    backgroundColor: '#15aa9b',
+    borderColor: '#15aa9b',
   },
   calendarDayText: {
     fontFamily: 'Inter-SemiBold',
@@ -1586,7 +1618,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
     paddingVertical: 10,
     gap: 6,
@@ -1658,7 +1690,7 @@ const styles = StyleSheet.create({
   reviewerInitial: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
   },
   reviewerName: {
     fontFamily: 'Inter-SemiBold',
@@ -1694,6 +1726,6 @@ const styles = StyleSheet.create({
   viewMoreButtonText: {
     fontFamily: 'Inter-SemiBold',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
   },
 });

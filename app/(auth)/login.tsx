@@ -151,7 +151,7 @@ export default function LoginScreen() {
                 style={styles.methodButton}
                 onPress={() => handleMethodSelect('email')}
               >
-                <Mail size={24} color="#2563EB" />
+                <Mail size={24} color="#15aa9b" />
                 <Text style={styles.methodButtonText}>{t('continueWithEmail')}</Text>
               </TouchableOpacity>
 
@@ -159,7 +159,7 @@ export default function LoginScreen() {
                 style={styles.methodButton}
                 onPress={() => handleMethodSelect('phone')}
               >
-                <Phone size={24} color="#2563EB" />
+                <Phone size={24} color="#15aa9b" />
                 <Text style={styles.methodButtonText}>{t('continueWithPhone')}</Text>
               </TouchableOpacity>
             </View>
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
     padding: 16,
     gap: 8,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   resendButtonText: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
     textAlign: 'center',
     marginTop: 8,
   },
@@ -358,5 +358,5 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   registerText: { fontFamily: 'Inter-Regular', fontSize: 14, color: '#6B7280' },
-  registerLink: { fontFamily: 'Inter-SemiBold', fontSize: 14, color: '#2563EB', marginLeft: 4 },
+  registerLink: { fontFamily: 'Inter-SemiBold', fontSize: 14, color: '#15aa9b', marginLeft: 4 },
 });

@@ -25,7 +25,7 @@ export default function TabLayout() {
           },
         ],
 
-        tabBarActiveTintColor: '#2563EB',
+        tabBarActiveTintColor: '#15aa9b',
         tabBarInactiveTintColor: '#6B7280',
 
         tabBarLabelStyle: styles.tabBarLabel,

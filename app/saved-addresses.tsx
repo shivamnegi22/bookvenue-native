@@ -21,7 +21,7 @@ export default function SavedAddressesScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('savedAddressesTitle')}</Text>
         <TouchableOpacity style={styles.addButton}>
-          <Plus size={20} color="#2563EB" />
+          <Plus size={20} color="#15aa9b" />
         </TouchableOpacity>
       </View>
 
@@ -30,7 +30,7 @@ export default function SavedAddressesScreen() {
           <View style={styles.addressCard}>
             <View style={styles.addressHeader}>
               <View style={styles.addressIconContainer}>
-                <MapPin size={20} color="#2563EB" />
+                <MapPin size={20} color="#15aa9b" />
               </View>
               <View style={styles.addressInfo}>
                 <Text style={styles.addressLabel}>{t('home')}</Text>
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   addAddressButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,

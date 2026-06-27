@@ -99,7 +99,7 @@ export default function BlogDetailScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color="#15aa9b" />
       </View>
     );
   }
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   backButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
   },
   backButtonText: {
@@ -264,6 +264,6 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontFamily: 'Inter-SemiBold',
-    color: '#2563EB',
+    color: '#15aa9b',
   },
 });

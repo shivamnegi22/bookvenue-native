@@ -65,7 +65,7 @@ export default function PrivacySecurityScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
         <View style={styles.infoContainer}>
-          <Shield size={48} color="#2563EB" style={styles.icon} />
+          <Shield size={48} color="#15aa9b" style={styles.icon} />
           <Text style={styles.infoTitle}>{t('yourDataIsSafe')}</Text>
           <Text style={styles.infoText}>
             {t('managePrivacyText')}

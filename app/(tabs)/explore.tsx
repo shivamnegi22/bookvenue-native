@@ -215,7 +215,7 @@ export default function ExploreScreen() {
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.filterSection}>
               <View style={styles.filterSectionHeader}>
-                <Sliders size={20} color="#2563EB" />
+                <Sliders size={20} color="#15aa9b" />
                 <Text style={styles.filterSectionTitle}>{t('sportType')}</Text>
               </View>
               <View style={styles.sportTypeContainer}>
@@ -274,7 +274,7 @@ export default function ExploreScreen() {
 
             <View style={styles.filterSection}>
               <View style={styles.filterSectionHeader}>
-                <Star size={20} color="#2563EB" />
+                <Star size={20} color="#15aa9b" />
                 <Text style={styles.filterSectionTitle}>{t('minimumRating')}</Text>
               </View>
               <View style={styles.ratingContainer}>
@@ -314,7 +314,7 @@ export default function ExploreScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#15aa9b" />
         </View>
       ) : (
         <>
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 8,
+    borderRadius: 24,
     paddingHorizontal: 12,
     height: 48,
     marginRight: 12,
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   filterButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   sportTypeTextActive: {
-    color: '#2563EB',
+    color: '#15aa9b',
   },
   priceRangeContainer: {
     marginBottom: 8,
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   ratingTextActive: {
-    color: '#2563EB',
+    color: '#15aa9b',
   },
   filterActions: {
     flexDirection: 'row',
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
   applyButton: {
     flex: 2,
     paddingVertical: 12,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   webMapButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

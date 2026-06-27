@@ -181,7 +181,7 @@ useEffect(() => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#15aa9b" />
           <Text style={styles.loadingText}>{t('loadingBookingDetails')}</Text>
         </View>
       </SafeAreaView>
@@ -227,7 +227,7 @@ useEffect(() => {
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <MapPin size={20} color="#2563EB" />
+            <MapPin size={20} color="#15aa9b" />
             <Text style={styles.cardTitle}>{t('venueDetails')}</Text>
           </View>
           <Text style={styles.venueName}>{bookingData.venueName}</Text>
@@ -236,7 +236,7 @@ useEffect(() => {
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Calendar size={20} color="#2563EB" />
+            <Calendar size={20} color="#15aa9b" />
             <Text style={styles.cardTitle}>{t('dateTime')}</Text>
           </View>
           <Text style={styles.dateText}>{formatDate(bookingData.date)}</Text>
@@ -261,7 +261,7 @@ useEffect(() => {
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <User size={20} color="#2563EB" />
+            <User size={20} color="#15aa9b" />
             <Text style={styles.cardTitle}>{t('bookingDetails')}</Text>
           </View>
           <View style={styles.detailRow}>
@@ -276,7 +276,7 @@ useEffect(() => {
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <CreditCard size={20} color="#2563EB" />
+            <CreditCard size={20} color="#15aa9b" />
             <Text style={styles.cardTitle}>{t('paymentSummary')}</Text>
           </View>
           <View style={styles.priceBreakdown}>
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     marginHorizontal: 20,
     marginVertical: 24,
     paddingVertical: 16,

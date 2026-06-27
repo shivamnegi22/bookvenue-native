@@ -165,7 +165,7 @@ export default function EditProfileScreen() {
                     <ProfileAvatar 
                       name={user.name || 'User'} 
                       size={100}
-                      backgroundColor="#2563EB"
+                      backgroundColor="#15aa9b"
                       textColor="#FFFFFF"
                     />
                   )}
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   loginButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     borderRadius: 8,
     paddingVertical: 16,
     marginTop: 24,

@@ -190,7 +190,7 @@ export default function BookingsScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#15aa9b" />
           <Text style={styles.loadingText}>{t('loadingBookings')}</Text>
         </View>
       ) : error ? (
@@ -266,11 +266,11 @@ export default function BookingsScreen() {
                 <View style={styles.bookingDetails}>
                   <View style={styles.detailRow}>
                     <View style={styles.detailItem}>
-                      <Calendar size={16} color="#2563EB" />
+                      <Calendar size={16} color="#15aa9b" />
                       <Text style={styles.detailText}>{formatDate(booking.date)}</Text>
                     </View>
                     <View style={styles.detailItem}>
-                      <Clock size={16} color="#2563EB" />
+                      <Clock size={16} color="#15aa9b" />
                       <Text style={styles.detailText}>
                         {booking.startTime && booking.endTime 
                           ? `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   loginButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#2563EB',
+    borderBottomColor: '#15aa9b',
   },
   tabText: {
     fontFamily: 'Inter-Medium',
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   activeTabText: {
-    color: '#2563EB',
+    color: '#15aa9b',
   },
   loadingContainer: {
     flex: 1,
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   exploreButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   courtType: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
   },
   statusContainer: {
     flexDirection: 'row',

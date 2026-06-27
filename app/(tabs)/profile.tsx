@@ -67,7 +67,7 @@ export default function ProfileScreen() {
     console.log('ProfileScreen: Showing loading indicator');
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color="#15aa9b" />
       </View>
     );
   }
@@ -143,17 +143,17 @@ export default function ProfileScreen() {
 
   const menuItems = [
     // {
-    //   icon: <BookOpen size={20} color="#2563EB" />,
+    //   icon: <BookOpen size={20} color="#15aa9b" />,
     //   title: 'Blog',
     //   onPress: () => router.push('/blog-list' as any),
     // },
     {
-      icon: <MapPin size={20} color="#2563EB" />,
+      icon: <MapPin size={20} color="#15aa9b" />,
       title: t('savedAddresses'),
       onPress: () => router.push('/saved-addresses'),
     },
     {
-      icon: <Globe size={20} color="#2563EB" />,
+      icon: <Globe size={20} color="#15aa9b" />,
       title: t('language'),
       onPress: handleLanguagePress,
       rightComponent: (
@@ -164,7 +164,7 @@ export default function ProfileScreen() {
       ),
     },
     {
-      icon: <Bell size={20} color="#2563EB" />,
+      icon: <Bell size={20} color="#15aa9b" />,
       title: t('notifications'),
       onPress: undefined,
       rightComponent: (
@@ -172,17 +172,17 @@ export default function ProfileScreen() {
           value={notifications}
           onValueChange={setNotifications}
           trackColor={{ false: '#D1D5DB', true: '#BFDBFE' }}
-          thumbColor={notifications ? '#2563EB' : '#F3F4F6'}
+          thumbColor={notifications ? '#15aa9b' : '#F3F4F6'}
         />
       ),
     },
     {
-      icon: <Shield size={20} color="#2563EB" />,
+      icon: <Shield size={20} color="#15aa9b" />,
       title: t('privacySecurity'),
       onPress: () => router.push('/privacy-security' as any),
     },
     {
-      icon: <HelpCircle size={20} color="#2563EB" />,
+      icon: <HelpCircle size={20} color="#15aa9b" />,
       title: t('helpSupport'),
       onPress: () => Linking.openURL('https://bookvenue.app/contact').catch((err) => Alert.alert(t('oops'), t('couldNotOpenLink'))),
     },
@@ -190,7 +190,7 @@ export default function ProfileScreen() {
 
   if (user?.isVenueOwner) {
     menuItems.unshift({
-      icon: <User size={20} color="#2563EB" />,
+      icon: <User size={20} color="#15aa9b" />,
       title: t('myVenues'),
       onPress: () => Alert.alert(t('comingSoon'), t('venueManagementComingSoon')),
     });
@@ -219,7 +219,7 @@ export default function ProfileScreen() {
               <ProfileAvatar
                 name={user.name || user.phone || 'User'}
                 size={100}
-                backgroundColor="#2563EB"
+                backgroundColor="#15aa9b"
                 textColor="#FFFFFF"
               />
             )}
@@ -284,7 +284,7 @@ export default function ProfileScreen() {
           </View>
 
           {blogsLoading ? (
-            <ActivityIndicator size="large" color="#2563EB" style={styles.blogLoading} />
+            <ActivityIndicator size="large" color="#15aa9b" style={styles.blogLoading} />
           ) : blogs.length > 0 ? (
             <FlatList
               data={blogs}
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     marginBottom: 24
   },
   loginButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#15aa9b',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   ownerBadgeText: {
     fontFamily: 'Inter-Medium',
     fontSize: 12,
-    color: '#2563EB'
+    color: '#15aa9b'
   },
   editProfileButton: {
     paddingHorizontal: 20,
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
   },
   blogLoading: {
     marginVertical: 20,

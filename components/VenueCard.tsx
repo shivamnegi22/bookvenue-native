@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Venue } from '@/types/venue';
 import { MapPin, Star } from 'lucide-react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 type VenueCardProps = {
   venue: Venue;
@@ -22,41 +23,39 @@ function getSportsOffered(venue: Venue): string[] {
   return [];
 }
 
-function getSportLogoEmoji(sport: string) {
+function getSportIconName(sport: string): React.ComponentProps<typeof MaterialCommunityIcons>['name'] {
   const key = (sport || '').toLowerCase();
 
-  // Common mapping (extend as needed)
-  const map: Record<string, string> = {
-    cricket: '🏏',
-    football: '⚽',
-    soccer: '⚽',
-    swimming: '🏊',
-    badminton: '🏸',
-    tennis: '🎾',
-    tabletennis: '🏓',
-    table_tennis: '🏓',
-    volleyball: '🏐',
-    basket: '🏀',
-    basketball: '🏀',
-    kabaddi: '🤾',
-    hockey: '🏑',
-    golf: '⛳',
-    cycling: '🚴',
-    running: '🏃',
-    athletics: '🏃',
-    gym: '🏋️',
-    fitness: '🏋️',
-    yoga: '🧘',
+  const map: Record<string, React.ComponentProps<typeof MaterialCommunityIcons>['name']> = {
+    cricket: 'cricket',
+    football: 'soccer',
+    soccer: 'soccer',
+    futsal: 'soccer',
+    pickleball: 'table-tennis',
+    swimming: 'swim',
+    badminton: 'badminton',
+    tennis: 'tennis',
+    'table tennis': 'table-tennis',
+    'table-tennis': 'table-tennis',
+    volleyball: 'volleyball',
+    basket: 'basketball',
+    basketball: 'basketball',
+    snooker: 'pool',
+    billiards: 'pool',
+    kabaddi: 'handball',
+    hockey: 'hockey-puck',
+    golf: 'golf',
+    cycling: 'bike',
+    running: 'run',
+    athletics: 'run',
+    gym: 'dumbbell',
+    fitness: 'dumbbell',
+    yoga: 'yoga',
   };
 
   if (map[key]) return map[key];
-
-  // Try contains-based match
   const found = Object.keys(map).find((k) => key.includes(k));
-  if (found) return map[found];
-
-  // Fallback: use the first letter as a simple "logo"
-  return (sport || '?').trim().slice(0, 1).toUpperCase();
+  return found ? map[found] : 'run';
 }
 
 function renderSportsBoxes(sports: string[]) {
@@ -66,9 +65,12 @@ function renderSportsBoxes(sports: string[]) {
     <View style={styles.sportsBoxesContainer}>
       {sports.map((sport) => (
         <View key={sport} style={styles.sportBox}>
-          <Text style={styles.sportBoxLogo} numberOfLines={1}>
-            {getSportLogoEmoji(sport)}
-          </Text>
+          <MaterialCommunityIcons
+            name={getSportIconName(sport)}
+            size={16}
+            color="#15aa9b"
+            style={styles.sportBoxIcon}
+          />
         </View>
       ))}
     </View>
@@ -264,7 +266,7 @@ const styles = StyleSheet.create({
   priceText: {
     fontFamily: 'Inter-Medium',
     fontSize: 14,
-    color: '#2563EB',
+    color: '#15aa9b',
     marginLeft: 4,
   },
   bottomRow: {
@@ -318,18 +320,15 @@ const styles = StyleSheet.create({
   },
   sportBox: {
     backgroundColor: '#F3F4F6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
     marginBottom: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  sportBoxLogo: {
-    fontFamily: 'Inter-Medium',
-    fontSize: 16,
-    color: '#111827',
+  sportBoxIcon: {
     lineHeight: 18,
-    maxWidth: 28,
-    textAlign: 'center',
   },
 
   largeCardContent: {

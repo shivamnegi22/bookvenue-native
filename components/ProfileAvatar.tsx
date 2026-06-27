@@ -11,7 +11,7 @@ type ProfileAvatarProps = {
 export default function ProfileAvatar({
   name,
   size = 40,
-  backgroundColor = '#2563EB',
+  backgroundColor = '#15aa9b',
   textColor = '#FFFFFF'
 }: ProfileAvatarProps) {
 
