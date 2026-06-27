@@ -65,14 +65,28 @@ export default function BookingsScreen() {
 
   const formatTime = (timeString: string) => {
     if (!timeString) return '';
-    
-    // Handle multiple time slots
+
+    const formatSingleTime = (time: string) => {
+      const trimmed = time.trim();
+      const [hourPart, minutePart] = trimmed.split(':');
+      const hour = parseInt(hourPart, 10);
+      const minute = minutePart ? minutePart.padStart(2, '0') : '00';
+
+      if (Number.isNaN(hour)) {
+        return trimmed;
+      }
+
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const normalizedHour = ((hour + 11) % 12) + 1;
+      return `${normalizedHour}:${minute} ${period}`;
+    };
+
     if (timeString.includes(',')) {
-      const times = timeString.split(',').map(t => t.trim());
+      const times = timeString.split(',').map(t => formatSingleTime(t));
       return `${times[0]} - ${times[times.length - 1]}`;
     }
-    
-    return timeString;
+
+    return formatSingleTime(timeString);
   };
 
   const isUpcoming = (booking: Booking) => {
@@ -83,10 +97,18 @@ export default function BookingsScreen() {
     return bookingDate >= today;
   };
 
-  const pendingBookings = bookings.filter(booking => booking.status === 'pending');
+  const sortedBookings = [...bookings].sort((a, b) => {
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    return dateB - dateA;
+  });
+
+  const pendingBookings = sortedBookings.filter(
+    booking => booking.status === 'pending' && isUpcoming(booking)
+  );
 
   // Successful bookings go to Upcoming/Past.
-  const successfulBookings = bookings.filter(booking => booking.status !== 'pending');
+  const successfulBookings = sortedBookings.filter(booking => booking.status !== 'pending');
   const upcomingBookings = successfulBookings.filter(isUpcoming);
   const pastBookings = successfulBookings.filter(booking => !isUpcoming(booking));
 
@@ -108,6 +130,7 @@ export default function BookingsScreen() {
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
+      case 'success':
         return <CheckCircle2 size={16} color="#10B981" />;
       case 'pending':
         return <Clock size={16} color="#F59E0B" />;
@@ -121,6 +144,7 @@ export default function BookingsScreen() {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
+      case 'success':
         return '#10B981';
       case 'pending':
         return '#F59E0B';
@@ -240,19 +264,13 @@ export default function BookingsScreen() {
               >
                 <View style={styles.bookingHeader}>
                   <Image 
-                    source={{ uri: booking.venue.images[0] }} 
+                    source={{ uri: booking.venue.images?.[0] || 'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2' }} 
                     style={styles.venueImage}
                   />
                   <View style={styles.bookingInfo}>
                     <Text style={styles.venueName} numberOfLines={1}>
                       {booking.venue.name}
                     </Text>
-                    <View style={styles.locationContainer}>
-                      <MapPin size={14} color="#6B7280" />
-                      <Text style={styles.locationText} numberOfLines={1}>
-                        {booking.venue.location}
-                      </Text>
-                    </View>
                     <Text style={styles.courtType}>{booking.venue.type}</Text>
                   </View>
                   <View style={styles.statusContainer}>
@@ -260,6 +278,20 @@ export default function BookingsScreen() {
                     <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
                       {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                     </Text>
+                  </View>
+                </View>
+
+                <View style={styles.priceRow}>
+                  <View style={styles.slotsInfo}>
+                    {booking.slots && booking.slots > 1 && (
+                      <Text style={styles.slotsText}>
+                        {booking.slots} slots booked
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.priceContainer}>
+                    <IndianRupee size={16} color="#1F2937" />
+                    <Text style={styles.priceText}>{booking.totalAmount}</Text>
                   </View>
                 </View>
 
@@ -278,21 +310,6 @@ export default function BookingsScreen() {
                         }
                       </Text>
                     </View>
-                    </View>
-                  
-                  <View style={styles.priceRow}>
-                    <View style={styles.slotsInfo}>
-                      {booking.slots && booking.slots > 1 && (
-                        <Text style={styles.slotsText}>
-                          {booking.slots} slots booked
-                        </Text>
-                      )}
-                    </View>
-                    <View style={styles.priceContainer}>
-                      <IndianRupee size={16} color="#1F2937" />
-                      <Text style={styles.priceText}>₹{booking.totalAmount}</Text>
-                    </View>
-
                   </View>
                 </View>
               </TouchableOpacity>
@@ -457,7 +474,7 @@ const styles = StyleSheet.create({
   bookingCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -466,13 +483,13 @@ const styles = StyleSheet.create({
   },
   bookingHeader: {
     flexDirection: 'row',
-    padding: 16,
-    paddingBottom: 12,
+    padding: 12,
+    paddingBottom: 8,
   },
   venueImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+    width: 75,
+    height: 75,
+    borderRadius: 12,
     marginRight: 12,
   },
   bookingInfo: {
@@ -516,16 +533,16 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   bookingDetails: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
-    marginTop: 12,
+    marginBottom: 8,
+    marginTop: 8,
   },
   detailItem: {
     flexDirection: 'row',
@@ -554,6 +571,7 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 12,
   },
   priceText: {
     fontFamily: 'Inter-Bold',

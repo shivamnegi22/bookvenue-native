@@ -58,8 +58,55 @@ export const bookingApi = {
           endTime = endTimes.length > 0 ? endTimes[endTimes.length - 1] : '';
         }
 
-        // Default venue image
-        let venueImage = 'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+        const defaultImage = 'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+
+        const formatImageUrl = (url: string) => {
+          if (!url) return defaultImage;
+          const normalized = url.replace(/\\/g, '/');
+          return normalized.startsWith('http')
+            ? normalized
+            : `https://admin.bookvenue.app/${normalized}`;
+        };
+
+        const extractImages = (images: any): string[] => {
+          if (!images) return [];
+          if (typeof images === 'string') {
+            try {
+              const parsed = JSON.parse(images);
+              return extractImages(parsed);
+            } catch {
+              return [images];
+            }
+          }
+          if (Array.isArray(images)) {
+            return images
+              .map((img) => {
+                if (!img) return null;
+                if (typeof img === 'string') return img;
+                return img.url || img.image || null;
+              })
+              .filter(Boolean) as string[];
+          }
+          if (typeof images === 'object') {
+            return [images.url || images.image].filter(Boolean) as string[];
+          }
+          return [];
+        };
+
+        let venueImage = defaultImage;
+        const bookingImages = extractImages(booking.images || booking.facility?.images);
+
+        if (booking.facility_image) {
+          venueImage = formatImageUrl(booking.facility_image);
+        } else if (booking.venue_image) {
+          venueImage = formatImageUrl(booking.venue_image);
+        } else if (booking.facility?.featured_image) {
+          venueImage = formatImageUrl(booking.facility.featured_image);
+        } else if (booking.facility?.image) {
+          venueImage = formatImageUrl(booking.facility.image);
+        } else if (bookingImages.length > 0) {
+          venueImage = formatImageUrl(bookingImages[0]);
+        }
 
         const processedBooking = {
           id: booking.bookingId?.toString() || index.toString(),
