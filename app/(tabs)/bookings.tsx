@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Image } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Image, PanResponder } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -7,7 +7,6 @@ import { bookingApi } from '@/api/bookingApi';
 import { Booking } from '@/types/booking';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Calendar, Clock, MapPin, Star, IndianRupee, CircleCheck as CheckCircle2, Circle as XCircle, CircleAlert as AlertCircle } from 'lucide-react-native';
-import { useCallback } from 'react';
 
 export default function BookingsScreen() {
   const { user } = useAuth();
@@ -20,6 +19,31 @@ export default function BookingsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'pending' | 'past'>('upcoming');
 
+  const bookingTabs: Array<'upcoming' | 'pending' | 'past'> = ['upcoming', 'pending', 'past'];
+  const swipeThreshold = 70;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_evt, gestureState) => {
+        const { dx, dy } = gestureState;
+        return Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10;
+      },
+      onPanResponderRelease: (_evt, gestureState) => {
+        const { dx } = gestureState;
+        if (dx <= -swipeThreshold) {
+          setActiveTab((current) => {
+            const currentIndex = bookingTabs.indexOf(current);
+            return bookingTabs[Math.min(currentIndex + 1, bookingTabs.length - 1)];
+          });
+        } else if (dx >= swipeThreshold) {
+          setActiveTab((current) => {
+            const currentIndex = bookingTabs.indexOf(current);
+            return bookingTabs[Math.max(currentIndex - 1, 0)];
+          });
+        }
+      },
+    })
+  ).current;
 
   // Refresh bookings when screen comes into focus
   useFocusEffect(
@@ -227,12 +251,13 @@ export default function BookingsScreen() {
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
+        <View style={styles.swipeContainer} {...panResponder.panHandlers}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
           {currentBookings.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Calendar size={64} color="#9CA3AF" />
@@ -316,6 +341,7 @@ export default function BookingsScreen() {
             ))
           )}
         </ScrollView>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -572,6 +598,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 12,
+  },
+  swipeContainer: {
+    flex: 1,
   },
   priceText: {
     fontFamily: 'Inter-Bold',
