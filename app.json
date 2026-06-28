@@ -42,7 +42,7 @@
 "android": {
   "googleServicesFile": "./google-services.json",
   "adaptiveIcon": {
-    "foregroundImage": "./assets/images/BookVenue_Logo.png",
+    "foregroundImage": "./assets/images/removed_bg.png",
     "backgroundColor": "#ffffff"
   },
   "usesCleartextTraffic": true,
