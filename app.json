@@ -4,7 +4,7 @@
 "slug": "book-venue",
 "version": "1.0.3",
 "orientation": "portrait",
-"icon": "./assets/images/adaptive_icon2.png",
+"icon": "./assets/images/BookVenue_Logo.png",
 "scheme": "myapp",
 "userInterfaceStyle": "automatic",
 
