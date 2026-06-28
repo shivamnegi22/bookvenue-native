@@ -2,9 +2,9 @@
 "expo": {
 "name": "BookVenue",
 "slug": "book-venue",
-"version": "1.0.2",
+"version": "1.0.3",
 "orientation": "portrait",
-"icon": "./assets/images/BookVenue_Logo.png",
+"icon": "./assets/images/adaptive_icon.png",
 "scheme": "myapp",
 "userInterfaceStyle": "automatic",
 
