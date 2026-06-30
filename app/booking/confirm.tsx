@@ -167,7 +167,7 @@ useEffect(() => {
     } catch (error: any) {
       console.error('Payment error:', error);
       
-      if (error.message.includes('cancelled')) {
+      if (RazorpayService.isCancelledPaymentError(error)) {
         Alert.alert(t('paymentCancelled'), t('paymentCancelledMessage'));
       } else {
         Alert.alert(t('paymentFailed'), error.message || t('paymentFailedMessage'));

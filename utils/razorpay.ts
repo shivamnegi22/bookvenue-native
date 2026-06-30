@@ -32,6 +32,59 @@ export interface RazorpayResponse {
 export class RazorpayService {
   private static apiKey = 'rzp_live_qyWsOEPEllNahd';
 
+  private static getErrorPayloads(error: any): any[] {
+    const payloads = [error, error?.error].filter(Boolean);
+    const message = typeof error?.message === 'string' ? error.message : '';
+    const jsonText = message.startsWith('Payment failed:')
+      ? message.replace('Payment failed:', '').trim()
+      : message.trim();
+
+    if (jsonText.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(jsonText);
+        payloads.push(parsed, parsed?.error);
+      } catch {
+        // Keep the original SDK error if the message is not JSON.
+      }
+    }
+
+    return payloads.filter(Boolean);
+  }
+
+  private static isPaymentCancelled(error: any): boolean {
+    const payloads = this.getErrorPayloads(error);
+    const text = payloads
+      .flatMap((payload) => [
+        payload?.code,
+        payload?.description,
+        payload?.message,
+        payload?.reason,
+        payload?.step,
+        payload?.source,
+      ])
+      .filter((value) => value !== undefined && value !== null)
+      .join(' ')
+      .toLowerCase();
+
+    if (text.includes('cancel')) {
+      return true;
+    }
+
+    return payloads.some((payload) => {
+      const description = String(payload?.description ?? '').toLowerCase();
+      return (
+        payload?.source === 'customer' &&
+        payload?.step === 'payment_authentication' &&
+        payload?.reason === 'payment_error' &&
+        (!payload?.description || description === 'undefined')
+      );
+    });
+  }
+
+  static isCancelledPaymentError(error: any): boolean {
+    return this.isPaymentCancelled(error);
+  }
+
   static async openCheckout(options: RazorpayOptions): Promise<RazorpayResponse> {
     if (Platform.OS === 'web') {
       return this.openWebCheckout(options);
@@ -77,6 +130,10 @@ export class RazorpayService {
     
     rzp.on('payment.failed', function (response: any) {
       console.log('Razorpay payment failed:', response);
+      if (RazorpayService.isPaymentCancelled(response)) {
+        reject(new Error('Payment cancelled by user'));
+        return;
+      }
       reject(new Error(`Payment failed: ${response.error.description}`));
     });
     
@@ -97,7 +154,7 @@ export class RazorpayService {
     } catch (error: any) {
       console.log('Native Razorpay payment error:', error);
       
-      if (error.code === 'Cancelled' || error.code === 'PAYMENT_CANCELLED') {
+      if (this.isPaymentCancelled(error)) {
         throw new Error('Payment cancelled by user');
       }
       
