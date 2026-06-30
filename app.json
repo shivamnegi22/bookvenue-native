@@ -4,7 +4,7 @@
 "slug": "book-venue",
 "version": "1.0.3",
 "orientation": "portrait",
-"icon": "./assets/images/BookVenue_Logo.png",
+"icon": "./assets/images/icon.png",
 "scheme": "myapp",
 "userInterfaceStyle": "automatic",
 
@@ -42,7 +42,7 @@
 "android": {
   "googleServicesFile": "./google-services.json",
   "adaptiveIcon": {
-    "foregroundImage": "./assets/images/removed_bg.png",
+    "foregroundImage": "./assets/images/adaptive_icon2-removebg.png",
     "backgroundColor": "#ffffff"
   },
   "usesCleartextTraffic": true,
