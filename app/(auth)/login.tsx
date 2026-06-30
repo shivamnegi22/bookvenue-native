@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Image, TextInput,
   Platform, KeyboardAvoidingView, ScrollView, ActivityIndicator
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { authApi } from '@/api/authApi';
 
 export default function LoginScreen() {
   const { login, user } = useAuth();
+  const params = useLocalSearchParams();
   const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
   const [showOTP, setShowOTP] = useState(false);
@@ -21,12 +22,33 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
 
+  const getPostLoginRoute = React.useCallback(() => {
+    const redirectToParam = params.redirectTo;
+    const redirectTo = Array.isArray(redirectToParam) ? redirectToParam[0] : redirectToParam;
+    const canRedirect = redirectTo === '/booking/confirm' || redirectTo === '/venue/[id]';
+
+    if (!canRedirect) {
+      return '/(tabs)' as const;
+    }
+
+    const redirectParams: Record<string, string> = {};
+    Object.entries(params).forEach(([key, value]) => {
+      if (key === 'redirectTo' || value == null) return;
+      redirectParams[key] = Array.isArray(value) ? value[0] : value;
+    });
+
+    return {
+      pathname: redirectTo,
+      params: redirectParams,
+    } as const;
+  }, [params]);
+
   useEffect(() => {
     if (user) {
-      console.log('User already logged in, redirecting to tabs');
-      router.replace('/(tabs)');
+      console.log('User already logged in, redirecting after login');
+      router.replace(getPostLoginRoute() as any);
     }
-  }, [user]);
+  }, [user, getPostLoginRoute]);
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (resendTimer > 0) {
@@ -112,8 +134,8 @@ export default function LoginScreen() {
       }
       console.log('OTP verified successfully, token saved');
       await login();
-      console.log('Login completed, navigating to tabs');
-      router.replace('/(tabs)');
+      console.log('Login completed, navigating after login');
+      router.replace(getPostLoginRoute() as any);
     } catch (err: any) {
       console.error('Verification error:', err);
       setError(err.message || t('otpVerificationFailed'));
@@ -239,7 +261,14 @@ export default function LoginScreen() {
 
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>{t('dontHaveAccount')}</Text>
-            <TouchableOpacity onPress={() => router.push('/register')}>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: '/(auth)/register',
+                  params,
+                } as any)
+              }
+            >
               <Text style={styles.registerLink}>{t('signUpLink')}</Text>
             </TouchableOpacity>
           </View>

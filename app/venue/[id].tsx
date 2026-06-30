@@ -17,9 +17,28 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 
 const toISODate = (d: Date) => d.toISOString().split('T')[0];
 
+const getStringParam = (param: string | string[] | undefined) =>
+  Array.isArray(param) ? param[0] : param;
+
+const parseStringArrayParam = (param: string | string[] | undefined) => {
+  const value = getStringParam(param);
+  if (!value) return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((slot): slot is string => typeof slot === 'string') : [];
+  } catch {
+    return [];
+  }
+};
 
 export default function VenueDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, resumeDate, resumeCourtName, resumeTimeSlots } = useLocalSearchParams<{
+    id: string;
+    resumeDate?: string;
+    resumeCourtName?: string;
+    resumeTimeSlots?: string;
+  }>();
   const router = useRouter();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -45,6 +64,7 @@ export default function VenueDetailScreen() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const flatListRef = React.useRef<FlatList>(null);
+  const pendingRestoreSlotsRef = React.useRef<string[] | null>(null);
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -77,9 +97,14 @@ export default function VenueDetailScreen() {
         const courtNamesArray = response.court_names || [];
         setCourtNames(courtNamesArray);
 
-        setSelectedDate(nextDays[0].fullDate);
+        const restoredDate = getStringParam(resumeDate);
+        const restoredCourtName = getStringParam(resumeCourtName);
+        const restoredTimeSlots = parseStringArrayParam(resumeTimeSlots);
+        pendingRestoreSlotsRef.current = restoredTimeSlots.length > 0 ? restoredTimeSlots : null;
+
+        setSelectedDate(restoredDate || nextDays[0].fullDate);
         if (courtNamesArray.length > 0) {
-          setSelectedCourtName(courtNamesArray[0]);
+          setSelectedCourtName(restoredCourtName || courtNamesArray[0]);
         }
       } catch (error) {
         console.error('Error fetching venue:', error);
@@ -89,7 +114,7 @@ export default function VenueDetailScreen() {
     };
 
     fetchVenue();
-  }, [id]);
+  }, [id, resumeDate, resumeCourtName, resumeTimeSlots]);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -137,6 +162,12 @@ export default function VenueDetailScreen() {
               if (resolvedCourt?.slots && Array.isArray(resolvedCourt.slots)) {
                 const filteredSlots = filterPastSlots(resolvedCourt.slots, selectedDate);
                 setAvailableTimeSlots(filteredSlots);
+                if (pendingRestoreSlotsRef.current) {
+                  const availableSlots = new Set(filteredSlots.map((slot) => slot.time));
+                  const restorableSlots = pendingRestoreSlotsRef.current.filter((slot) => availableSlots.has(slot));
+                  setSelectedTimeSlots(restorableSlots);
+                  pendingRestoreSlotsRef.current = null;
+                }
               } else {
                 setAvailableTimeSlots([]);
               }
@@ -159,7 +190,9 @@ export default function VenueDetailScreen() {
     };
 
     fetchAvailability();
-    setSelectedTimeSlots([]);
+    if (!pendingRestoreSlotsRef.current) {
+      setSelectedTimeSlots([]);
+    }
   }, [selectedDate, selectedCourtName, venue]);
 
   const filterPastSlots = (slots: { time: string; price: number }[], date: string) => {
@@ -275,22 +308,6 @@ export default function VenueDetailScreen() {
   };
 
   const handleBooking = () => {
-    if (!user) {
-      Alert.alert(
-        t('loginRequired'),
-        t('pleaseLogInToBookVenue'),
-        [
-          { text: t('cancel'), style: 'cancel' },
-          {
-            text: t('login'),
-            onPress: () => router.push('/(auth)/login')
-          }
-        ]
-      );
-      return;
-    }
-
-
     if (selectedTimeSlots.length === 0 || !selectedCourtDetails || !venue) {
       Alert.alert(t('oops'), t('errorSelectTimeSlots'));
       return;
@@ -302,8 +319,31 @@ export default function VenueDetailScreen() {
       return;
     }
 
+    if (!user) {
+      Alert.alert(
+        t('loginRequired'),
+        t('pleaseLogInToBookVenue'),
+        [
+          { text: t('cancel'), style: 'cancel' },
+          {
+            text: t('login'),
+            onPress: () => router.push({
+              pathname: '/(auth)/login',
+              params: {
+                redirectTo: '/venue/[id]',
+                id: venue.slug,
+                resumeDate: selectedDate,
+                resumeCourtName: selectedCourtName,
+                resumeTimeSlots: JSON.stringify(selectedTimeSlots),
+              },
+            })
+          }
+        ]
+      );
+      return;
+    }
 
-const bookingSlots = selectedTimeSlots.map((slotTime) => {
+    const bookingSlots = selectedTimeSlots.map((slotTime) => {
       const [startTime, endTime] = slotTime.split(' - ');
       const slotData = availableTimeSlots.find((s) => s.time === slotTime);
       return {

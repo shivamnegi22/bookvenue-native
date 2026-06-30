@@ -89,7 +89,13 @@ useEffect(() => {
 
     if (!bookingData || !user) {
       Alert.alert(t('oops'), t('loginToCompleteBooking'));
-      router.push('/(auth)/login');
+      router.push({
+        pathname: '/(auth)/login',
+        params: {
+          redirectTo: '/booking/confirm',
+          ...params,
+        },
+      });
       return;
     }
 

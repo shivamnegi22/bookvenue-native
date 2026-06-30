@@ -3,15 +3,16 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Image, TextInput,
   Platform, KeyboardAvoidingView, ScrollView, ActivityIndicator
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Phone, CircleAlert as AlertCircle, ArrowRight, User } from 'lucide-react-native';
+import { Phone, CircleAlert as AlertCircle, ArrowRight } from 'lucide-react-native';
 import { authApi } from '@/api/authApi';
 
 export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
+  const params = useLocalSearchParams();
   const { t } = useLanguage();
   const [showOTP, setShowOTP] = useState(false);
   const [identifier, setIdentifier] = useState('');
@@ -19,7 +20,28 @@ export default function RegisterScreen() {
   const [showInput, setShowInput] = useState<'email' | 'phone' | null>(null);
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-  const { login, user } = useAuth();
+  const { login } = useAuth();
+
+  const getPostLoginRoute = () => {
+    const redirectToParam = params.redirectTo;
+    const redirectTo = Array.isArray(redirectToParam) ? redirectToParam[0] : redirectToParam;
+    const canRedirect = redirectTo === '/booking/confirm' || redirectTo === '/venue/[id]';
+
+    if (!canRedirect) {
+      return '/' as const;
+    }
+
+    const redirectParams: Record<string, string> = {};
+    Object.entries(params).forEach(([key, value]) => {
+      if (key === 'redirectTo' || value == null) return;
+      redirectParams[key] = Array.isArray(value) ? value[0] : value;
+    });
+
+    return {
+      pathname: redirectTo,
+      params: redirectParams,
+    } as const;
+  };
   
   // Timer logic for resend OTP
   useEffect(() => {
@@ -100,8 +122,7 @@ export default function RegisterScreen() {
       console.log('Registration successful, user data:', userData);
       // Update auth context with user data
       await login();
-      // Navigate to home page
-      router.replace('/');
+      router.replace(getPostLoginRoute() as any);
     } catch (err: any) {
       console.error('Registration verification error:', err);
       setError(err.message || t('registrationFailed'));
