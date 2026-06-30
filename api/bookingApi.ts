@@ -4,6 +4,8 @@ import { Booking } from '@/types/booking';
 
 const API_URL = 'https://admin.bookvenue.app/api';
 
+type BookingTimeSlot = NonNullable<Booking['timeSlots']>[number];
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -11,6 +13,79 @@ const api = axios.create({
     'Accept': 'application/json'
   }
 });
+
+const defaultVenueImage = 'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
+
+const normalizeTime = (time: string) => {
+  const trimmed = (time || '').trim();
+  const [hours, minutes] = trimmed.split(':');
+
+  if (!hours || !minutes) {
+    return trimmed;
+  }
+
+  return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+};
+
+const splitTimeList = (time: string) =>
+  (time || '')
+    .split(',')
+    .map(normalizeTime)
+    .filter(Boolean);
+
+const extractTimeSlots = (booking: any): BookingTimeSlot[] => {
+  if (Array.isArray(booking.slots) && booking.slots.length > 0) {
+    return booking.slots
+      .map((slot: any) => ({
+        startTime: normalizeTime(slot.start_time || slot.startTime || ''),
+        endTime: normalizeTime(slot.end_time || slot.endTime || ''),
+      }))
+      .filter((slot: BookingTimeSlot) => slot.startTime && slot.endTime);
+  }
+
+  const startTimes = splitTimeList(booking.start_time || booking.startTime || '');
+  const endTimes = splitTimeList(booking.end_time || booking.endTime || '');
+
+  return startTimes
+    .map((startTime, index) => ({
+      startTime,
+      endTime: endTimes[index] || '',
+    }))
+    .filter((slot: BookingTimeSlot) => slot.startTime && slot.endTime);
+};
+
+const formatImageUrl = (url: string) => {
+  if (!url) return defaultVenueImage;
+  const normalized = url.replace(/\\/g, '/');
+  return normalized.startsWith('http')
+    ? normalized
+    : `https://admin.bookvenue.app/${normalized}`;
+};
+
+const extractImages = (images: any): string[] => {
+  if (!images) return [];
+  if (typeof images === 'string') {
+    try {
+      const parsed = JSON.parse(images);
+      return extractImages(parsed);
+    } catch {
+      return [images];
+    }
+  }
+  if (Array.isArray(images)) {
+    return images
+      .map((img) => {
+        if (!img) return null;
+        if (typeof img === 'string') return img;
+        return img.url || img.image || null;
+      })
+      .filter(Boolean) as string[];
+  }
+  if (typeof images === 'object') {
+    return [images.url || images.image].filter(Boolean) as string[];
+  }
+  return [];
+};
 
 // Add token to requests
 api.interceptors.request.use(async (config) => {
@@ -40,60 +115,34 @@ export const bookingApi = {
       
       return bookingsData.map((booking: any, index: number) => {
         // Handle Laravel backend data structure
-        const facilityName = booking.facility || 'Unknown Venue';
-        const courtName = booking.court || 'Court';
+        const facility = typeof booking.facility === 'object' ? booking.facility : null;
+        const court = typeof booking.court === 'object' ? booking.court : null;
+        const facilityName =
+          booking.facility_name ||
+          facility?.official_name ||
+          facility?.name ||
+          (typeof booking.facility === 'string' ? booking.facility : 'Unknown Venue');
+        const courtName =
+          booking.court_name ||
+          court?.court_name ||
+          court?.name ||
+          (typeof booking.court === 'string' ? booking.court : 'Court');
         const bookingDate = booking.date;
-        const totalPrice = parseFloat(booking.price || '0');
+        const totalPrice = parseFloat(booking.total_price || booking.price || '0');
         const bookingStatus = (booking.status || 'pending').toLowerCase();
 
         // Handle time slots from Laravel backend
         let startTime = '';
         let endTime = '';
-        let slotsCount = booking.slots ? booking.slots.length : 1;
+        const timeSlots = extractTimeSlots(booking);
+        let slotsCount = timeSlots.length || (booking.slots ? booking.slots.length : 1);
 
-        if (booking.slots && booking.slots.length > 0) {
-          const startTimes = booking.slots.map((slot: any) => slot.start_time || slot.startTime).filter(Boolean);
-          const endTimes = booking.slots.map((slot: any) => slot.end_time || slot.endTime).filter(Boolean);
-          startTime = startTimes.length > 0 ? startTimes[0] : '';
-          endTime = endTimes.length > 0 ? endTimes[endTimes.length - 1] : '';
+        if (timeSlots.length > 0) {
+          startTime = timeSlots.map((slot) => slot.startTime).join(', ');
+          endTime = timeSlots.map((slot) => slot.endTime).join(', ');
         }
 
-        const defaultImage = 'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
-
-        const formatImageUrl = (url: string) => {
-          if (!url) return defaultImage;
-          const normalized = url.replace(/\\/g, '/');
-          return normalized.startsWith('http')
-            ? normalized
-            : `https://admin.bookvenue.app/${normalized}`;
-        };
-
-        const extractImages = (images: any): string[] => {
-          if (!images) return [];
-          if (typeof images === 'string') {
-            try {
-              const parsed = JSON.parse(images);
-              return extractImages(parsed);
-            } catch {
-              return [images];
-            }
-          }
-          if (Array.isArray(images)) {
-            return images
-              .map((img) => {
-                if (!img) return null;
-                if (typeof img === 'string') return img;
-                return img.url || img.image || null;
-              })
-              .filter(Boolean) as string[];
-          }
-          if (typeof images === 'object') {
-            return [images.url || images.image].filter(Boolean) as string[];
-          }
-          return [];
-        };
-
-        let venueImage = defaultImage;
+        let venueImage = defaultVenueImage;
         const bookingImages = extractImages(booking.images || booking.facility?.images);
 
         if (booking.facility_image) {
@@ -109,17 +158,17 @@ export const bookingApi = {
         }
 
         const processedBooking = {
-          id: booking.bookingId?.toString() || index.toString(),
+          id: booking.bookingId?.toString() || booking.id?.toString() || index.toString(),
           venue: {
-            id: 'venue-1',
+            id: booking.facility_id?.toString() || facility?.id?.toString() || 'venue-1',
             name: facilityName,
-            location: 'Location not available',
+            location: booking.venue_location || booking.facility_location || facility?.address || 'Location not available',
             type: courtName,
-            slug: 'venue-1',
+            slug: booking.facility_slug || facility?.slug || booking.slug || 'venue-1',
             images: [venueImage],
             coordinates: {
-              latitude: 28.6139,
-              longitude: 77.2090
+              latitude: parseFloat(booking.venue_lat || facility?.lat || '28.6139'),
+              longitude: parseFloat(booking.venue_lng || facility?.lng || '77.2090')
             }
           },
           date: bookingDate,
@@ -128,6 +177,7 @@ export const bookingApi = {
           totalAmount: totalPrice,
           status: bookingStatus as 'pending' | 'confirmed' | 'cancelled',
           slots: slotsCount,
+          timeSlots,
         };
 
         console.log('Processed booking:', processedBooking);
@@ -155,7 +205,8 @@ export const bookingApi = {
       const venueImage = booking.venue_image || 
         (booking.facility?.featured_image ? 
         `https://admin.bookvenue.app/${booking.facility.featured_image.replace(/\\/g, '/')}` :
-        'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
+        defaultVenueImage);
+      const timeSlots = extractTimeSlots(booking);
       
       return {
         id: booking.id?.toString() || id,
@@ -172,10 +223,12 @@ export const bookingApi = {
           }
         },
         date: booking.date,
-        startTime: booking.start_time,
-        endTime: booking.end_time,
+        startTime: timeSlots.length > 0 ? timeSlots.map((slot) => slot.startTime).join(', ') : booking.start_time,
+        endTime: timeSlots.length > 0 ? timeSlots.map((slot) => slot.endTime).join(', ') : booking.end_time,
         totalAmount: parseFloat(booking.total_price || booking.price || '0'),
-        status: (booking.status || 'pending').toLowerCase() as 'pending' | 'confirmed' | 'cancelled'
+        status: (booking.status || 'pending').toLowerCase() as 'pending' | 'confirmed' | 'cancelled',
+        slots: timeSlots.length || undefined,
+        timeSlots,
       };
     } catch (error: any) {
       console.error('Error fetching booking by ID:', error);

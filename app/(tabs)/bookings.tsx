@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Image, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl, Image, PanResponder, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { bookingApi } from '@/api/bookingApi';
+import { venueApi } from '@/api/venueApi';
 import { Booking } from '@/types/booking';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Calendar, Clock, MapPin, Star, IndianRupee, CircleCheck as CheckCircle2, Circle as XCircle, CircleAlert as AlertCircle } from 'lucide-react-native';
@@ -143,12 +144,121 @@ export default function BookingsScreen() {
         ? pendingBookings
         : pastBookings;
 
+  const buildResumeTimeSlots = (booking: Booking) => {
+    if (booking.timeSlots && booking.timeSlots.length > 0) {
+      return booking.timeSlots
+        .filter((slot) => slot.startTime && slot.endTime)
+        .map((slot) => `${slot.startTime} - ${slot.endTime}`);
+    }
 
-  const handleBookingPress = (booking: Booking) => {
+    const startTimes = (booking.startTime || '').split(',').map((time) => time.trim()).filter(Boolean);
+    const endTimes = (booking.endTime || '').split(',').map((time) => time.trim()).filter(Boolean);
+
+    return startTimes
+      .map((startTime, index) => {
+        const endTime = endTimes[index];
+        return endTime ? `${startTime} - ${endTime}` : '';
+      })
+      .filter(Boolean);
+  };
+
+  const normalizeSlotTime = (slot: string) =>
+    slot
+      .split(' - ')
+      .map((time) => {
+        const trimmed = time.trim();
+        const [hours, minutes] = trimmed.split(':');
+
+        if (!hours || !minutes) {
+          return trimmed;
+        }
+
+        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+      })
+      .join(' - ');
+
+  const arePendingSlotsAvailable = async (booking: Booking, venueId: string, resumeTimeSlots: string[]) => {
+    if (!booking.date || !venueId || resumeTimeSlots.length === 0) {
+      return true;
+    }
+
+    const fetchedSlotsData = await venueApi.getSlotsByDate(booking.date, venueId);
+    const services = fetchedSlotsData?.services || [];
+    const selectedCourtName = booking.venue.type || '';
+
+    const matchingService = services.find((service: any) => service.name === selectedCourtName);
+    const matchingCourt = services
+      .flatMap((service: any) => service.courts || service.court || [])
+      .find((court: any) => court.court_name === selectedCourtName || court.name === selectedCourtName);
+    const resolvedCourt = matchingCourt || (matchingService?.courts?.[0] ?? matchingService?.court?.[0]);
+
+    if (!resolvedCourt?.slots || !Array.isArray(resolvedCourt.slots)) {
+      return false;
+    }
+
+    const availableSlots = new Set(
+      resolvedCourt.slots
+        .map((slot: any) => slot.time)
+        .filter(Boolean)
+        .map(normalizeSlotTime)
+    );
+
+    return resumeTimeSlots.every((slot) => availableSlots.has(normalizeSlotTime(slot)));
+  };
+
+  const navigateToPendingVenue = (booking: Booking, venueId: string, resumeTimeSlots: string[]) => {
     router.push({
-      pathname: '/booking/[id]',
-      params: { id: booking.id }
+      pathname: '/venue/[id]',
+      params: {
+        id: venueId,
+        resumeDate: booking.date,
+        resumeCourtName: booking.venue.type || '',
+        resumeTimeSlots: JSON.stringify(resumeTimeSlots),
+      }
     });
+  };
+
+  const handleBookingPress = async (booking: Booking) => {
+    if (activeTab !== 'pending' || booking.status !== 'pending') {
+      return;
+    }
+
+    let pendingBooking = booking;
+
+    if (!pendingBooking.venue.slug || pendingBooking.venue.slug === 'venue-1') {
+      try {
+        pendingBooking = await bookingApi.getBookingById(booking.id);
+      } catch (error) {
+        console.error('Error fetching pending booking details:', error);
+      }
+    }
+
+    const venueId = pendingBooking.venue.slug || pendingBooking.venue.id;
+    const resumeTimeSlots = buildResumeTimeSlots(pendingBooking);
+    let pendingSlotsAvailable = true;
+
+    try {
+      pendingSlotsAvailable = await arePendingSlotsAvailable(pendingBooking, venueId, resumeTimeSlots);
+    } catch (error) {
+      console.error('Error checking pending slot availability:', error);
+    }
+
+    if (!pendingSlotsAvailable) {
+      Alert.alert(
+        'slot not available , book another slot?',
+        undefined,
+        [
+          { text: 'No', style: 'cancel' },
+          {
+            text: 'Yes',
+            onPress: () => navigateToPendingVenue(pendingBooking, venueId, resumeTimeSlots),
+          },
+        ]
+      );
+      return;
+    }
+
+    navigateToPendingVenue(pendingBooking, venueId, resumeTimeSlots);
   };
 
   const getStatusIcon = (status: string) => {
@@ -281,64 +391,70 @@ export default function BookingsScreen() {
               )}
             </View>
           ) : (
-            currentBookings.map((booking) => (
-              <TouchableOpacity 
-                key={booking.id}
-                style={styles.bookingCard}
-                onPress={() => handleBookingPress(booking)}
-              >
-                <View style={styles.bookingHeader}>
-                  <Image 
-                    source={{ uri: booking.venue.images?.[0] || 'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2' }} 
-                    style={styles.venueImage}
-                  />
-                  <View style={styles.bookingInfo}>
-                    <Text style={styles.venueName} numberOfLines={1}>
-                      {booking.venue.name}
-                    </Text>
-                    <Text style={styles.courtType}>{booking.venue.type}</Text>
-                  </View>
-                  <View style={styles.statusContainer}>
-                    {getStatusIcon(booking.status)}
-                    <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </Text>
-                  </View>
-                </View>
+            currentBookings.map((booking) => {
+              const isPendingBooking = activeTab === 'pending' && booking.status === 'pending';
 
-                <View style={styles.priceRow}>
-                  <View style={styles.slotsInfo}>
-                    {booking.slots && booking.slots > 1 && (
-                      <Text style={styles.slotsText}>
-                        {booking.slots} slots booked
+              return (
+                <TouchableOpacity
+                  key={booking.id}
+                  style={styles.bookingCard}
+                  onPress={isPendingBooking ? () => handleBookingPress(booking) : undefined}
+                  disabled={!isPendingBooking}
+                  activeOpacity={isPendingBooking ? 0.2 : 1}
+                >
+                  <View style={styles.bookingHeader}>
+                    <Image
+                      source={{ uri: booking.venue.images?.[0] || 'https://images.pexels.com/photos/1263426/pexels-photo-1263426.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2' }}
+                      style={styles.venueImage}
+                    />
+                    <View style={styles.bookingInfo}>
+                      <Text style={styles.venueName} numberOfLines={1}>
+                        {booking.venue.name}
                       </Text>
-                    )}
-                  </View>
-                  <View style={styles.priceContainer}>
-                    <IndianRupee size={16} color="#1F2937" />
-                    <Text style={styles.priceText}>{booking.totalAmount}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.bookingDetails}>
-                  <View style={styles.detailRow}>
-                    <View style={styles.detailItem}>
-                      <Calendar size={16} color="#15aa9b" />
-                      <Text style={styles.detailText}>{formatDate(booking.date)}</Text>
+                      <Text style={styles.courtType}>{booking.venue.type}</Text>
                     </View>
-                    <View style={styles.detailItem}>
-                      <Clock size={16} color="#15aa9b" />
-                      <Text style={styles.detailText}>
-                        {booking.startTime && booking.endTime 
-                          ? `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`
-                          : 'Time not specified'
-                        }
+                    <View style={styles.statusContainer}>
+                      {getStatusIcon(booking.status)}
+                      <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                       </Text>
                     </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))
+
+                  <View style={styles.priceRow}>
+                    <View style={styles.slotsInfo}>
+                      {booking.slots && booking.slots > 1 && (
+                        <Text style={styles.slotsText}>
+                          {booking.slots} slots booked
+                        </Text>
+                      )}
+                    </View>
+                    <View style={styles.priceContainer}>
+                      <IndianRupee size={16} color="#1F2937" />
+                      <Text style={styles.priceText}>{booking.totalAmount}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.bookingDetails}>
+                    <View style={styles.detailRow}>
+                      <View style={styles.detailItem}>
+                        <Calendar size={16} color="#15aa9b" />
+                        <Text style={styles.detailText}>{formatDate(booking.date)}</Text>
+                      </View>
+                      <View style={styles.detailItem}>
+                        <Clock size={16} color="#15aa9b" />
+                        <Text style={styles.detailText}>
+                          {booking.startTime && booking.endTime
+                            ? `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}`
+                            : 'Time not specified'
+                          }
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
           )}
         </ScrollView>
         </View>
