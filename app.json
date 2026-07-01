@@ -21,7 +21,7 @@
 // },
 "ios": {
   "supportsTablet": true,
-  "bundleIdentifier": "com.shivamnegi.bookvenue",
+  "bundleIdentifier": "com.giksindia.bookvenue",
   "googleServicesFile": "./GoogleService-Info.plist",
 
   "infoPlist": {
