@@ -1,4 +1,4 @@
-package com.shivamnegi.bookvenue
+package com.giksindia.bookvenue
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

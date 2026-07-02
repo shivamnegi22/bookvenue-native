@@ -46,7 +46,7 @@
     "backgroundColor": "#ffffff"
   },
   "usesCleartextTraffic": true,
-  "package": "com.shivamnegi.bookvenue",
+  "package": "com.giksindia.bookvenue",
   "config": {
     "googleMaps": {
       "apiKey": "AIzaSyCvcX-wdx9MFmhsYrcNpvTz49KQkHFE73Y"

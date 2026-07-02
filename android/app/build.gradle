@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.shivamnegi.bookvenue'
+    namespace 'com.giksindia.bookvenue'
     defaultConfig {
-        applicationId 'com.shivamnegi.bookvenue'
+        applicationId 'com.giksindia.bookvenue'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
