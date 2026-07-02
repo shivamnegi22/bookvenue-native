@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:337130202621:android:982e54a1b1b2d6e38ae594",
+        "android_client_info": {
+          "package_name": "com.giksindia.bookvenue"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSIoDDH-k9WfHWZEGdWQBGuuI5Mkg5rC8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:337130202621:android:35ff04c24eb303fa8ae594",
         "android_client_info": {
           "package_name": "com.shivamnegi.bookvenue"
