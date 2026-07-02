@@ -45,7 +45,6 @@
     "foregroundImage": "./assets/images/adaptive_icon2-removebg.png",
     "backgroundColor": "#ffffff"
   },
-  "usesCleartextTraffic": true,
   "package": "com.giksindia.bookvenue",
   "config": {
     "googleMaps": {
@@ -76,7 +75,6 @@
   "expo-font",
   "expo-web-browser",
 [ "expo-image-picker", { "photosPermission": "BookVenue uses your photos so you can upload and update your profile picture and share venue images.", "cameraPermission": "BookVenue uses your camera so you can capture and upload profile pictures and venue images." } ],
-  "@react-native-community/datetimepicker",
 
   [
     "@stripe/stripe-react-native",
