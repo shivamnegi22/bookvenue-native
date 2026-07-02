@@ -1,4 +1,4 @@
-package com.shivamnegi.bookvenue
+package com.giksindia.bookvenue
 
 import android.app.Application
 import android.content.res.Configuration
